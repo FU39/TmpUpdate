@@ -464,6 +464,329 @@ class ISService:
         # 用户自定义库中设备变量
         # 能量流顺序 0：电   1：热   2：冷   3：氢   4：气   5：自定义能量流1   6：自定义能量流2 ......
 
+
+
+########### 添加约束 #############
+        #---------------创建约束条件--------------#
+        #----------------------------------------------------------#
+        # 规划容量上下限约束
+
+        # 基本设备库中设备的规划容量上下限，与if_use相关联，判断前端是否勾选了该设备：1，勾选使用；0，未勾选使用
+        #----fc----#
+        m.addCons(p_fc_max <= crf(OptimizationBody.device.fc.power_max) * crf(OptimizationBody.device.fc.power_already))
+        m.addCons(p_fc_max >= crf(OptimizationBody.device.fc.power_min) * crf(OptimizationBody.device.fc.power_already))
+
+        #----el----#
+        m.addCons(p_el_max <= crf(OptimizationBody.device.el.power_max) * crf(OptimizationBody.device.el.nm3_already))
+        m.addCons(p_el_max <= 50 * crf(OptimizationBody.device.el.nm3_max) * crf(OptimizationBody.device.el.nm3_already) / 11.2)
+        m.addCons(p_el_max >= 50 * crf(OptimizationBody.device.el.nm3_min) * crf(OptimizationBody.device.el.nm3_already) / 11.2)
+        m.addCons(p_el_max >= crf(OptimizationBody.device.el.nm3_min) * crf(OptimizationBody.device.el.nm3_already))
+
+        #----hst----#
+        m.addCons(hst <= crf(OptimizationBody.device.hst.sto_max) * crf(OptimizationBody.device.hst.sto_already))
+        m.addCons(hst >= crf(OptimizationBody.device.hst.sto_min) * crf(OptimizationBody.device.hst.sto_already))
+
+        #----ht----#
+        m.addCons(m_ht <= crf(OptimizationBody.device.ht.water_max) * crf(OptimizationBody.device.ht.water_already))
+        m.addCons(m_ht >= crf(OptimizationBody.device.ht.water_min) * crf(OptimizationBody.device.ht.water_already))
+
+        #----ct----#
+        m.addCons(m_ct <= crf(OptimizationBody.device.ct.water_max) * crf(OptimizationBody.device.ct.water_already))
+        m.addCons(m_ct >= crf(OptimizationBody.device.ct.water_min) * crf(OptimizationBody.device.ct.water_already))
+
+        #----pv----#
+        m.addCons(p_pv_max <= crf(OptimizationBody.device.pv.power_max) * crf(OptimizationBody.device.pv.power_already))
+        m.addCons(p_pv_max >= crf(OptimizationBody.device.pv.power_min) * crf(OptimizationBody.device.pv.power_already))
+
+        # ----wd----#
+        m.addCons(num_wd <= crf(OptimizationBody.device.wd.number_max) * crf(OptimizationBody.device.wd.number_already))
+        m.addCons(num_wd >= crf(OptimizationBody.device.wd.number_min) * crf(OptimizationBody.device.wd.number_already))
+
+        #----sc----#
+        m.addCons(s_sc <= crf(OptimizationBody.device.sc.area_max) * crf(OptimizationBody.device.sc.area_already))
+        m.addCons(s_sc >= crf(OptimizationBody.device.sc.area_min) * crf(OptimizationBody.device.sc.area_already))
+
+        #----eb----#
+        m.addCons(p_eb_max <= crf(OptimizationBody.device.eb.power_max) * crf(OptimizationBody.device.eb.power_already))
+        m.addCons(p_eb_max >= crf(OptimizationBody.device.eb.power_min) * crf(OptimizationBody.device.eb.power_already))
+
+        #----ac----#
+        m.addCons(p_ac_max <= crf(OptimizationBody.device.ac.power_max) * crf(OptimizationBody.device.ac.power_already))
+        m.addCons(p_ac_max >= crf(OptimizationBody.device.ac.power_min) * crf(OptimizationBody.device.ac.power_already))
+
+        #----hp----#
+        m.addCons(p_hp_max <= crf(OptimizationBody.device.hp.power_max) * crf(OptimizationBody.device.hp.power_already))
+        m.addCons(p_hp_max >= crf(OptimizationBody.device.hp.power_min) * crf(OptimizationBody.device.hp.power_already))
+
+        #----ghp----#
+        m.addCons(p_ghp_max <= crf(OptimizationBody.device.ghp.power_max) * crf(OptimizationBody.device.ghp.power_already))
+        m.addCons(p_ghp_max >= crf(OptimizationBody.device.ghp.power_min) * crf(OptimizationBody.device.ghp.power_already))
+        m.addCons(
+            p_ghp_deep_max <= crf(OptimizationBody.device.ghp_deep.power_max) * crf(OptimizationBody.device.ghp_deep.power_already))
+        m.addCons(
+            p_ghp_deep_max >= crf(OptimizationBody.device.ghp_deep.power_min) * crf(OptimizationBody.device.ghp_deep.power_already))
+        
+        #----gtw----#
+        m.addCons(num_gtw <= crf(OptimizationBody.device.gtw.number_max) * crf(OptimizationBody.device.gtw.number_already))
+        m.addCons(num_gtw >= crf(OptimizationBody.device.gtw.number_min) * crf(OptimizationBody.device.gtw.number_already))
+
+        #----co----#
+        m.addCons(p_co_max <= crf(OptimizationBody.device.co.power_max) * crf(OptimizationBody.device.co.power_already))
+        m.addCons(p_co_max >= crf(OptimizationBody.device.co.power_min) * crf(OptimizationBody.device.co.power_already))
+
+        #----xb----#               #json文件里有，但是基本设备库中的设备符号解释里没有#
+        m.addCons(g_xb_max <= input_json['device']['xb']['s_max'] * input_json['device']['xb']['if_use'])
+        m.addCons(g_xb_max <= input_json['device']['xb']['s_min'] * input_json['device']['xb']['if_use'])
+
+        #----whp----#
+        m.addCons(p_whp_max <= crf(OptimizationBody.device.whp.power_max) * crf(OptimizationBody.device.whp.power_already))
+        m.addCons(p_whp_max >= crf(OptimizationBody.device.whp.power_min) * crf(OptimizationBody.device.whp.power_already))
+
+        #----hp120----#
+        m.addCons(p_hp120_max <= crf(OptimizationBody.device.hp120.power_max) * crf(OptimizationBody.device.hp120.power_already))
+        m.addCons(p_hp120_max >= crf(OptimizationBody.device.hp120.power_min) * crf(OptimizationBody.device.hp120.power_already))
+
+        #----co180----#
+        m.addCons(p_co180_max <= crf(OptimizationBody.device.co180.power_max) * crf(OptimizationBody.device.co180.power_already))
+        m.addCons(p_co180_max >= crf(OptimizationBody.device.co180.power_max) * crf(OptimizationBody.device.co180.power_already))
+
+        # 用户自定义设备的规划容量上下限
+        for i in range(custom_device_num):
+            m.addCons(x_plan[i] <= input_json['custom_device']['x' + str(i)]['power_max'])
+            m.addCons(x_plan[i] >= input_json['custom_device']['x' + str(i)]['power_min'])
+        for i in range(custom_storge_device_num[0]):
+            m.addCons(s_i_ele_plan[i] <= input_json['custom_device']['storage_device_ele' + str(i)]['power_max'])
+            m.addCons(s_i_ele_plan[i] >= input_json['custom_device']['storage_device_ele' + str(i)]['power_min'])
+            # m.addCons(s_i_ele_plan[i]<=p_fc_max)
+            for j in range(period):
+                m.addCons(s_i_ele_plan[i] >= s_i_ele_state[i][j])
+        for i in range(custom_storge_device_num[1]):
+            m.addCons(s_i_hot_plan[i] <= input_json['custom_device']['storage_device_hot' + str(i)]['power_max'])
+            m.addCons(s_i_hot_plan[i] >= input_json['custom_device']['storage_device_hot' + str(i)]['power_min'])
+            for j in range(period):
+                m.addCons(s_i_hot_plan[i] >= s_i_hot_state[i][j])
+        for i in range(custom_storge_device_num[2]):
+            m.addCons(s_i_cold_plan[i] <= input_json['custom_device']['storage_device_cold' + str(i)]['power_max'])
+            m.addCons(s_i_cold_plan[i] >= input_json['custom_device']['storage_device_cold' + str(i)]['power_min'])
+            for j in range(period):
+                m.addCons(s_i_cold_plan[i] >= s_i_cold_state[i][j])
+        for i in range(custom_storge_device_num[3]):
+            m.addCons(s_i_hydr_plan[i] <= input_json['custom_device']['storage_device_hydr' + str(i)]['power_max'])
+            m.addCons(s_i_hydr_plan[i] >= input_json['custom_device']['storage_device_hydr' + str(i)]['power_min'])
+            for j in range(period):
+                m.addCons(s_i_hydr_plan[i] >= s_i_hydr_state[i][j])
+        for i in range(custom_storge_device_num[4]):
+            m.addCons(s_i_gas_plan[i] <= input_json['custom_device']['storage_device_gas' + str(i)]['power_max'])
+            m.addCons(s_i_gas_plan[i] >= input_json['custom_device']['storage_device_gas' + str(i)]['power_min'])
+            for j in range(period):
+                m.addCons(s_i_gas_plan[i] >= s_i_gas_state[i][j])
+        for j in range(custom_energy_num):
+            for i in range(custom_storge_device_num[5 + j]):
+                m.addCons(
+                    s_i_xj_plan[j][i] <= input_json['custom_device']['storage_device_x' + str(j) + str(i)]['power_max'])
+                m.addCons(
+                    s_i_xj_plan[j][i] >= input_json['custom_device']['storage_device_x' + str(j) + str(i)]['power_min'])
+                for l in range(period):
+                    m.addCons(s_i_xj_plan[j][i] >= s_i_xj_state[j][i][l])
+
+        #-----------------------------系统约束-----------------------------#
+        # 能量流顺序 0：电   1：热   2：冷   3：氢   4：气   5：自定义能量流1   6：自定义能量流2 ......
+        for i in range(period):  # 最后一天分开写的必要性？
+            # 电总线约束
+            m.addCons(
+                p_whp[i] + p_co180[i] + p_hp120[i] + p_el[i] + p_sol[i] + p_hp[i] + p_hpc[i] + p_ghp[i] + p_ghp_deep[i] +
+                p_ghpc[i] + p_eb[i] + p_ac[i] + p_co[i] + ele_load[i]
+                + (quicksum([x_j_in[0][device_index][i] for device_index in range(custom_device_num)]))
+                + (quicksum(
+                    [s_i_ele_in[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[0])]))
+                == p_hyd[i] + p_pur[i] + p_fc[i] + p_pv[i] + p_wd[i]
+                + (quicksum([x_j_out[0][device_index][i] for device_index in range(custom_device_num)]))
+                + (quicksum(
+                    [s_i_ele_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[0])])))
+            # 热总线约束
+            m.addCons(g_tubeTosteam120[i] + g_tube[i]
+                    + (quicksum([x_j_in[1][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_hot_in[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[1])]))
+                    == g_fc[i] + g_whp[i] + g_ghp_deep[i] + g_eb[i] + g_sc[i] - g_ghp_gr[i] - g_ht_in[i] + g_ht_out[i] -
+                    g_xb[i] + g_hp[i] + g_ghp[i]
+                    + (quicksum([x_j_out[1][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_hot_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[1])])))
+            m.addCons(g_demand[i] == g_tube[i])  #区分能灌热的和不能灌热的
+            # 冷总线约束
+            m.addCons(q_demand[i]
+                    + (quicksum([x_j_in[2][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_cold_in[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[2])]))
+                    == q_ct_out[i] - q_ct_in[i] + q_hp[i] + q_ac[i] + q_ghp[i] + q_whp[i]
+                    + (quicksum([x_j_out[2][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_cold_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[2])])))
+            # 天然气约束
+            m.addCons((quicksum([x_j_in[4][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_gas_in[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[4])]))
+                    == gas_pur[i]
+                    + (quicksum([x_j_out[4][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_gas_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[4])])))
+
+            # 高温120度蒸气约束
+            m.addCons(steam120_demand[i] == m_hp120[i] + steam120_pur[i] - steam120_sol[i] - m_steam120Tosteam180[i])
+
+            # 高温120度热泵hp120约束
+            m.addCons(750 * m_hp120[i] == g_hp120[i])
+            m.addCons(cop_hp120 * p_hp120[i] == g_hp120[i])
+            m.addCons((cop_hp120 - 1) * g_tubeTosteam120[i] + p_hp120[i] == g_hp120[i])
+            m.addCons(p_hp120[i] <= p_hp120_max)
+
+            # 高温180度蒸气约束
+            m.addCons(steam180_demand[i] == m_steam120Tosteam180[i] + steam180_pur[i] - steam180_sol[i])
+
+            # co180约束
+            m.addCons(200 * m_steam120Tosteam180[i] == p_co180[i])
+            m.addCons(m_hp120[i] >= m_steam120Tosteam180[i])
+            m.addCons(p_co180[i] <= p_co180_max)
+
+            # 其他能量流的系统约束
+            for j in range(custom_energy_num):
+                m.addCons((quicksum([x_j_in[j][device_index][i] for device_index in range(custom_device_num)]))
+                        + (quicksum([s_i_xj_in[j][storage_device_index][i] for storage_device_index in
+                                    range(custom_storge_device_num[5 + j])]))
+                        == y_pur[j][i]
+                        + (quicksum([x_j_out[j][device_index][i] for device_index in range(custom_device_num)]))
+                        + (quicksum([s_i_xj_out[j][storage_device_index][i] for storage_device_index in
+                                    range(custom_storge_device_num[5 + j])])))
+                # 第j条自定义能量流的系统平衡约束： 设备用能 = 买能 + 设备产能
+
+        for i in range(period - 1):
+            # 氢气约束
+            m.addCons(h_sto[i + 1] - h_sto[i] == h_pur[i] + h_el[i] - h_fc[i] - h_demand[i]
+                    + (quicksum([x_j_out[3][device_index][i] for device_index in range(custom_device_num)])) - (
+                        quicksum([x_j_in[3][device_index][i] for device_index in range(custom_device_num)]))
+                    + (quicksum(
+                [s_i_hydr_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[3])])) - (
+                        quicksum([s_i_hydr_in[storage_device_index][i] for storage_device_index in
+                                    range(custom_storge_device_num[3])])))
+            # 氢气储罐在t+1时刻的储量为t时刻+买氢-燃料电池消耗
+        m.addCons(h_sto[0] - h_sto[-1] == h_pur[-1] + h_el[-1] - h_fc[-1] - h_demand[-1]
+                + (quicksum([x_j_out[3][device_index][-1] for device_index in range(custom_device_num)])) - (
+                    quicksum([x_j_in[3][device_index][-1] for device_index in range(custom_device_num)]))
+                + (quicksum(
+            [s_i_hydr_out[storage_device_index][-1] for storage_device_index in range(custom_storge_device_num[3])])) - (
+                    quicksum([s_i_hydr_in[storage_device_index][-1] for storage_device_index in
+                                range(custom_storge_device_num[3])])))
+        # 初始状态和末状态平衡
+
+        #-----------------------------设备约束-----------------------------#
+        if crf(OptimizationBody.device.ghp.balance_flag) == 1:  #如果需要考虑全年热平衡
+            m.addCons(quicksum([g_ghp[i] - p_ghp[i] - q_ghp[i] - p_ghpc[i] - g_ghp_gr[i] for i in range(period)]) == 0)
+        for i in range(period):
+            # 买能约束      没有对g_sol和gas_pur的定义以及对120度蒸汽和180度蒸汽的定义
+            m.addCons(p_pur[i] <= 1000000000 * crf(OptimizationBody.trading.power_buy_enable))  # 是否允许电网买电
+            m.addCons(p_sol[i] <= 1000000000 * crf(OptimizationBody.trading.power_sell_enable))  # 是否允许电网卖电
+            m.addCons(h_pur[i] <= 1000000000 * crf(OptimizationBody.trading.h2_buy_enable))  # 是否允许购买氢气
+            m.addCons(g_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['g_sol'])  # 是否允许出售天然气
+            m.addCons(h_sol[i] <= 1000000000 * crf(OptimizationBody.trading.h2_sell_enable))  # 是否允许出售氢气
+            m.addCons(gas_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['gas_pur'])  # 是否允许购买天然气
+            m.addCons(steam120_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['steam120_pur'])  # 是否允许买120度蒸汽
+            m.addCons(steam120_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['steam120_sol'])  # 是否允许卖120度蒸汽
+            m.addCons(steam180_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['steam180_pur'])  # 是否允许买180度蒸汽
+            m.addCons(steam180_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['steam180_sol'])  # 是否允许卖180度蒸汽
+            for j in range(custom_energy_num):
+                m.addCons(y_pur[j][i] <= 1000000000 * (isloate[6 + j]))  # 是否允许购买第j条能量流
+
+            #-----------------------------基础设备库的设备约束-----------------------------#
+            #----fc----#
+            m.addCons(g_fc[i] <= eta_ex * k_fc_g * h_fc[i])  # 氢转热约束，允许弃热
+            m.addCons(1000000 * z_fc[i] >= g_fc[i])  # 可以弃掉燃料电池的热
+            m.addCons(p_fc[i] == k_fc_p * h_fc[i])  # 氢转电约束
+            m.addCons(p_fc[i] <= p_fc_max)  # 运行功率 <= 规划功率（运行最大功率）
+
+            #----el----#
+            m.addCons(p_el[i] <= p_el_max)  # 运行功率 <= 规划功率（运行最大功率）
+            m.addCons(h_el[i] <= k_el * p_el[i])  # 电转氢约束
+            m.addCons(h_el[i] <= hst)  # 有问题？产生的氢气质量要小于储氢罐最大储氢容量
+
+            #----hst----#
+            m.addCons(h_sto[i] <= hst)
+
+            #----ht----#
+            m.addCons(g_ht[i] <= c * m_ht * crf(OptimizationBody.device.ht.t_max))  # 储热罐存储热量上限
+            m.addCons(g_ht[i] >= c * m_ht * crf(OptimizationBody.device.ht.t_min))  # 储热罐存储热量下限
+        for i in range(period - 1):
+            m.addCons(g_ht[i + 1] - g_ht[i] == g_ht_in[i] - g_ht_out[i] - 0.001 * g_ht[i])  # 储热罐存储动态变化
+        m.addCons(g_ht[0] - g_ht[-1] == g_ht_in[-1] - g_ht_out[-1] - 0.001 * g_ht[-1])
+
+        #----ct----#
+        for i in range(period):
+            m.addCons(q_ct[i] <= c * m_ct * crf(OptimizationBody.device.ct.t_max))  # 储冷罐存储冷量上限
+            m.addCons(q_ct[i] >= c * m_ct * crf(OptimizationBody.device.ct.t_min))  # 储冷罐存储冷量下限
+        for i in range(period - 1):
+            m.addCons(q_ct[i] - q_ct[i + 1] == q_ct_in[i] - q_ct_out[i] + 0.001 * q_ct[i])  # 储冷罐存储动态变化
+        m.addCons(q_ct[-1] - q_ct[0] == q_ct_in[-1] - q_ct_out[-1] + 0.001 * q_ct[-1])
+
+        for i in range(period):
+            #----pv----#
+            m.addCons(p_pv[i] <= p_pv_max * r_solar[i])  # 允许丢弃可再生能源
+
+            # ----wd----#
+            m.addCons(p_wd[i] <= num_wd * wind_power[i] * crf(OptimizationBody.device.wd.capacity_unit))  # 允许丢弃可再生能源
+
+            #----sc----#
+            m.addCons(g_sc[i] <= k_sc * theta_ex * s_sc * r_solar[i])  # 允许丢弃可再生能源
+
+            #----eb----#
+            m.addCons(k_eb * p_eb[i] == g_eb[i])  # 电转热约束
+            m.addCons(p_eb[i] <= p_eb_max)  # 运行功率 <= 规划功率（运行最大功率）
+
+            #----ac----#
+            m.addCons(q_ac[i] == k_ac * p_ac[i])  # 电转冷约束
+            m.addCons(p_ac[i] <= p_ac_max)  # 运行功率 <= 规划功率（运行最大功率）
+
+            #----hp----#
+            m.addCons(p_hp[i] * k_hp_g == g_hp[i])  # 电转热约束
+            m.addCons(p_hp[i] <= p_hp_max)  # 热泵供热运行功率 <= 规划功率（运行最大功率）
+
+            m.addCons(p_hpc[i] * k_hp_q == q_hp[i])  # 电转冷约束
+            m.addCons(p_hpc[i] <= p_hp_max)  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
+
+            #----ghp----#
+            m.addCons(p_ghp[i] * k_ghp_g == g_ghp[i])  # 地源热泵电转热约束
+            m.addCons(p_ghp[i] <= p_ghp_max)  # 热泵供热运行功率 <= 规划功率（运行最大功率）
+
+            m.addCons(p_ghpc[i] * k_ghp_q == q_ghp[i])  # 地源热泵电转冷约束
+            m.addCons(p_ghpc[i] <= p_ghp_max)  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
+
+            m.addCons(p_ghp_deep[i] * k_ghp_deep_g == g_ghp_deep[i])  # 地源热泵电转热约束
+            m.addCons(p_ghp_deep[i] <= p_ghp_deep_max)  # 热泵供热运行功率 <= 规划功率（运行最大功率）
+
+            #----gtw----#
+            m.addCons(num_gtw * p_gtw >= g_ghp[i] - p_ghp[i])  #井和热泵有关联，制热量-电功率=取热量
+            m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  #井和热泵有关联，制冷量+电功率=灌热量
+            m.addCons(
+                num_gtw1 * p_gtw1 + num_gtw2 * p_gtw2 + num_gtw3 * p_gtw3 + num_gtw4 * p_gtw4 >= g_ghp_deep[i] - p_ghp_deep[
+                    i])
+
+            #----co----#
+            m.addCons(p_co[i] == k_co * h_el[i])  # 压缩氢耗电量约束
+            m.addCons(p_co[i] <= p_co_max)  #压缩机运行功率上限
+
+            #----whp----#               找不到heat_resourceg和heat_resourceq的对应
+            m.addCons(p_whpg[i] * k_whp == g_whp[i])
+            m.addCons(g_whp[i] - p_whpg[i] <= input_json['device']['whp']['heat_resourceg'])
+            m.addCons(p_whpq[i] * k_whp == q_whp[i])
+            m.addCons(q_whp[i] - p_whpq[i] <= input_json['device']['whp']['heat_resourceq'])
+            m.addCons(p_whp[i] <= p_whp_max)
+            m.addCons(p_whp[i] == p_whpg[i] + p_whpq[i])
+
+            #----xb----#
+            m.addCons(s_xb[i] <= g_xb_max)  #相变储热t时刻储量不能超过模块规划大小
+        for i in range(period - 1):
+            m.addCons(s_xb[i + 1] == s_xb[i] + g_xb[i])
+        m.addCons(s_xb[0] == s_xb[-1] + g_xb[-1])
+
         return 'success'
 
 
