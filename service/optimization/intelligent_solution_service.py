@@ -189,15 +189,11 @@ class ISService:
         p_gtw = inputBody.device.gtw.beta_gtw
         # ----gtw2500----#
         p_gtw2500 = inputBody.device.gtw2500.beta_gtw
-
-
-        # ----whp----#
-        # k_whp =
-        # ----co180----#
-
         # ----hp120----#
         cop_hp120 = inputBody.device.hp120.cop
-
+        # ----co180----#
+        # ----whp----#
+        k_whp = input_json['device']['whp']['beta_whp']  #电转热，以及热转冷的效率
 
         # ---------------------------用户自定义设备---------------------------#
         # ---------------第i个自定义设备的年化收益率数据---------------#
