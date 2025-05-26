@@ -233,8 +233,8 @@ class ISService:
         steam120_sol = [m.addVar(vtype="C", lb=0, name=f"steam120_sol{t}") for t in range(period)]  # 卖steam120
         steam180_pur = [m.addVar(vtype="C", lb=0, name=f"steam180_pur{t}") for t in range(period)]  # 买steam180
         steam180_sol = [m.addVar(vtype="C", lb=0, name=f"steam180_sol{t}") for t in range(period)]  # 卖steam180
-        # y_pur = [[m.addVar(vtype="C", lb=0, name=f"y_pur{i}{t}") for t in range(period)] for i in
-                # range(custom_energy_num)]  # 买天然气  # 涉及自定义能量流
+        y_pur = [[m.addVar(vtype="C", lb=0, name=f"y_pur{i}{t}") for t in range(period)] for i in
+                     range(custom_energy_num)]  # 买天然气  # 涉及自定义能量流
 
         # 基本设备库中设备变量
         # ----fc----#
