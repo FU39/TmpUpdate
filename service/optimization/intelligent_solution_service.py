@@ -53,6 +53,8 @@ class ISService:
                 q_demand = inputBody.objective_load[i].load8760
             elif inputBody.objective_load[i].type == "hydrogen":
                 h_demand = inputBody.objective_load[i].load8760
+            elif inputBody.objective_load[i].type == "hotwater":
+                hotwater_demand = inputBody.objective_load[i].load8760
 
         r_solar = inputBody.device.pv.pv_data8760  # 光照强度
         wind_power = inputBody.device.wd.wd_data8760  # 风电数据
