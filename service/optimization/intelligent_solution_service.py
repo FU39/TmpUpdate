@@ -118,6 +118,10 @@ class ISService:
         # ------------导入负荷数据------------#
         #ele_load = OptimizationBody.objective_load#??????
 
+        r_solar = OptimizationBody.device.pv.pv_data8760  # 光照强度
+        # 添加风电数据
+        wind_data = OptimizationBody.device.wd.wd_data8760
+
 
         # ------------导入价格等数据------------#
         alpha_e = 0.5839                                                        #电网排放因子kg/kWh
