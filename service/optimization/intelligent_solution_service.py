@@ -41,8 +41,19 @@ class ISService:
 
         #------------导入负荷数据------------#
         for i in range(len(inputBody.objective_load)):
-            if inputBody.objective_load[i].name == "":
-                ele_load = inputBody.objective_load[i]
+            if inputBody.objective_load[i].type == "steam" and inputBody.objective_load[i].temperature == "180":
+                steam180_demand = inputBody.objective_load[i].load8760
+            elif inputBody.objective_load[i].type == "steam" and inputBody.objective_load[i].temperature == "120":
+                steam120_demand = inputBody.objective_load[i].load8760
+            elif inputBody.objective_load[i].type == "power":
+                ele_load = inputBody.objective_load[i].load8760
+            elif inputBody.objective_load[i].type == "heating":
+                g_demand = inputBody.objective_load[i].load8760
+            elif inputBody.objective_load[i].type == "cooling":
+                q_demand = inputBody.objective_load[i].load8760
+            elif inputBody.objective_load[i].type == "hydrogen":
+                h_demand = inputBody.objective_load[i].load8760
+
 
         r_solar = inputBody.device.pv.pv_data8760  # 光照强度
         wind_power = inputBody.device.wd.wd_data8760  # 风电数据
@@ -100,8 +111,8 @@ class ISService:
         # --------------单位投资成本数据--------------#
         cost_fc = inputBody.device.fc.cost + support_device(inputBody.device.fc.cost,
                                                             inputBody.device.fc.se)
-        # cost_el = inputBody.device.el.cost + support_device(inputBody.device.el.cost,
-        #                                                     inputBody.device.el.se)#???
+        cost_el = inputBody.device.el.cost + support_device(inputBody.device.el.cost,
+                                                            inputBody.device.el.se)#??
         cost_hst = inputBody.device.hst.cost + support_device(inputBody.device.hst.cost,
                                                               inputBody.device.hst.se)
         cost_ht = inputBody.device.ht.cost + support_device(inputBody.device.ht.cost,
@@ -183,9 +194,6 @@ class ISService:
         # ----hp120----#
         cop_hp120 = inputBody.device.hp120.cop
 
-        # ----------------特殊场景下的数据导入---------------#
-        # 含有水电场景下的接口
-        # 无hyd
 
         # ---------------------------用户自定义设备---------------------------#
         # ---------------第i个自定义设备的年化收益率数据---------------#
@@ -605,7 +613,7 @@ class ISService:
             m.addCons(g_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['g_sol'])  # 是否允许出售天然气
             m.addCons(h_sol[i] <= 1000000000 * crf(inputBody.trading.h2_sell_enable))  # 是否允许出售氢气
             m.addCons(gas_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['gas_pur'])  # 是否允许购买天然气
-            m.addCons(steam120_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['steam120_pur'])  # 是否允许买120度蒸汽
+            m.addCons(steam120_pur[i] <= 1000000000 * inputBody.trading.steam_buy[0].enable  # 是否允许买120度蒸汽
             m.addCons(steam120_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['steam120_sol'])  # 是否允许卖120度蒸汽
             m.addCons(steam180_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['steam180_pur'])  # 是否允许买180度蒸汽
             m.addCons(steam180_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['steam180_sol'])  # 是否允许卖180度蒸汽
