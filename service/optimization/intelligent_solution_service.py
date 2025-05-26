@@ -116,27 +116,26 @@ class ISService:
         # ------------导入自定义数据------------#
 
         # ------------导入负荷数据------------#
-        #ele_load = OptimizationBody.objective_load#??????
+        # ele_load = OptimizationBody.objective_load#??????
 
         r_solar = OptimizationBody.device.pv.pv_data8760  # 光照强度
         # 添加风电数据
         wind_data = OptimizationBody.device.wd.wd_data8760
 
-
         # ------------导入价格等数据------------#
-        alpha_e = 0.5839                                                        #电网排放因子kg/kWh
-        gas_price = 1.2                                                         #天然气价钱
-        lambda_ele_in = OptimizationBody.trading.power_buy_8760_price           #每个小时的电价
-        lambda_ele_out = OptimizationBody.trading.power_sell_price              #卖电价格
-        lambda_g_out = OptimizationBody.trading.heat_sell_price                 #卖热价格
-        lambda_h_out = OptimizationBody.trading.hydrogen_sell_price             #卖氢价格
-        lambda_h = OptimizationBody.trading.hydrogen_buy_price                  #买氢价格
-        cer = OptimizationBody.base.cer                                         #碳减排率
-        lambda_steam120_in = OptimizationBody.trading.steam_buy[1].price        #120蒸汽购入价格
-        lambda_steam120_out = OptimizationBody.trading.steam_sell[1].price     #120蒸汽出售价格
-        lambda_steam180_in = OptimizationBody.trading.steam_buy[0].price        #180蒸汽购入价格
-        lambda_steam180_out = OptimizationBody.trading.steam_sell[0].price      #180蒸汽出售价格
-        c = 4.2 / 3600                                                          #水的比热容
+        alpha_e = 0.5839                                                        # 电网排放因子kg/kWh
+        gas_price = 1.2                                                         # 天然气价钱
+        lambda_ele_in = OptimizationBody.trading.power_buy_8760_price           # 每个小时的电价
+        lambda_ele_out = OptimizationBody.trading.power_sell_price              # 卖电价格
+        lambda_g_out = OptimizationBody.trading.heat_sell_price                 # 卖热价格
+        lambda_h_out = OptimizationBody.trading.hydrogen_sell_price             # 卖氢价格
+        lambda_h = OptimizationBody.trading.hydrogen_buy_price                  # 买氢价格
+        cer = OptimizationBody.base.cer                                         # 碳减排率
+        lambda_steam120_in = OptimizationBody.trading.steam_buy[1].price        # 120蒸汽购入价格
+        lambda_steam120_out = OptimizationBody.trading.steam_sell[1].price      # 120蒸汽出售价格
+        lambda_steam180_in = OptimizationBody.trading.steam_buy[0].price        # 180蒸汽购入价格
+        lambda_steam180_out = OptimizationBody.trading.steam_sell[0].price      # 180蒸汽出售价格
+        c = 4.2 / 3600                                                          # 水的比热容
         M = 1000000
         epsilon = 0.0000001
 
