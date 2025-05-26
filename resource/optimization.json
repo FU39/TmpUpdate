@@ -414,7 +414,8 @@
             "bio_min": 0,
             "cost": 0.5,
             "crf": 20
-        }, "steam_storage": {
+        },
+        "steam_storage": {
             "water_already": 1,
             "water_max": 2000000,
             "water_min": 0,

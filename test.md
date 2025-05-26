@@ -7,9 +7,6 @@ el 电解槽
 hst 储氢罐
 ht 储热水箱
 ct 储冷水箱
-bat 电池 ?
-bio_storage ?
-steam_storage ?
 pv 光伏板
 sc 太阳能集热器
 wd 风机
@@ -23,6 +20,9 @@ gtw2500 ?
 hp120 高温热泵
 co180 高温蒸汽压缩机
 whp 余热热泵
+bat 电池 ?
+bio_storage ?
+steam_storage ?
 ```
 
 
@@ -221,4 +221,78 @@ opex  # 运行成本
 
 
 ## 问题
+
+| 键                                  | 值                         | 现名称 | 是否已添加 |
+| ----------------------------------- | -------------------------- | ------ | ---------- |
+| all_revenue                         | revenue                    |        |            |
+| fixed_revenue                       | fixed_revenue              |        |            |
+| p_revenue                           | 卖电+电负荷                |        |            |
+| p_sol_revenue                       | 卖电                       |        |            |
+| revenue_ele                         | revenue_ele                |        |            |
+| revenue_heat                        | revenue_heat               |        |            |
+| revenue_cold                        | revenue_cold               |        |            |
+| revenue_steam120                    |                            |        |            |
+| revenue_steam180                    |                            |        |            |
+| revenue_sol_ele                     |                            |        |            |
+| revenue_sol_heat                    |                            |        |            |
+| revenue_sol_steam120                |                            |        |            |
+| revenue_sol_steam180                |                            |        |            |
+| receive_year                        |                            |        |            |
+| all_op_cost                         | op_sum_pure                |        |            |
+| p_pur_cost                          | 买电                       |        |            |
+| h_pur_cost                          | 买氢                       |        |            |
+| net_revenue                         | revenue-op_sum             |        |            |
+| operation_cost_per_month_per_square | 单位面积月均运行成本       |        |            |
+| cost_save_rate                      | (折合为电-op_sum)/折合为电 |        |            |
+| co2                                 | ce_h                       |        |            |
+| cer_rate                            |                            |        |            |
+| cer_perm2                           |                            |        |            |
+| cer                                 |                            |        |            |
+| all_cap                             |                            |        |            |
+| year_cap                            |                            |        |            |
+| year_operation                      |                            |        |            |
+| cost_year                           |                            |        |            |
+| cost_per_energy                     |                            |        |            |
+| ele_all_cap                         |                            |        |            |
+| ele_year_cap                        |                            |        |            |
+| ele_year_operation                  |                            |        |            |
+| ele_cost_year                       |                            |        |            |
+| ele_cost_per_energy                 |                            |        |            |
+| ele_co2                             |                            |        |            |
+| gas_all_cap                         |                            |        |            |
+| gas_year_cap                        |                            |        |            |
+| gas_year_operation                  |                            |        |            |
+| gas_cost_year                       |                            |        |            |
+| gas_cost_per_energy                 |                            |        |            |
+| gas_co2                             |                            |        |            |
+| co2_reduce_ele                      |                            |        |            |
+| co2_reduce_gas                      |                            |        |            |
+| co2_reduce_ele_rate                 |                            |        |            |
+| co2_reduce_gas_rate                 |                            |        |            |
+| flag_isloate                        |                            |        |            |
+|                                     |                            |        |            |
+| h_cost                              |                            |        |            |
+| p_cost                              |                            |        |            |
+| p_sol_earn                          |                            |        |            |
+| hyd_pur_cost                        | p_hyd * hyd_cost           |        |            |
+| gas_cost                            |                            |        |            |
+| y_cost_j                            |                            |        |            |
+|                                     |                            |        |            |
+|                                     |                            |        |            |
+
+
+
+```
+output_json_dict
+```
+
+
+
+```
+custom_?
+
+whp
+battery
+steam_storage
+```
 

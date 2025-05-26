@@ -390,3 +390,129 @@ class OptimizationBody(BaseModel):
     device: Device
     custom_device_storage: List[CustomDeviceStorage]
     custom_device_exchange: List[CustomDeviceExchange]
+
+
+class DeviceCapacity(BaseModel):
+    p_co_installed: float
+    p_fc_installed: float
+    p_el_installed: float
+    h_hst_installed: float
+    m_ht_installed: float
+    m_ct_installed: float
+    p_pv_installed: float
+    s_sc_installed: float
+    num_wd_installed: int
+    p_eb_installed: float
+    p_ac_installed: float
+    p_hp_installed: float
+    p_ghp_installed: float
+    p_ghp_deep_installed: float
+    num_gtw_installed: int
+    num_gtw2500_installed: int
+    p_hp120_installed: float
+    p_co180_installed: float
+    p_whp_installed: float
+    p_bat_installed: float
+    steam_storage_installed: float
+
+
+class DeviceCAPEX(BaseModel):
+    capex_co: float
+    capex_fc: float
+    capex_el: float
+    capex_hst: float
+    capex_ht: float
+    capex_ct: float
+    capex_pv: float
+    capex_sc: float
+    capex_wd: float
+    capex_eb: float
+    capex_ac: float
+    capex_hp: float
+    capex_ghp: float
+    capex_ghp_deep: float
+    capex_gtw: float
+    capex_gtw2500: float
+    capex_hp120: float
+    capex_co180: float
+    capex_whp: float
+    capex_bat: float
+    capex_storage: float
+
+
+class SystemPerformance(BaseModel):
+    capex: float
+    opex_sum: float
+    opex_pure: float
+    opex_ele_buy: float
+    opex_hydrogen_buy: float
+    revenue_sum: float
+    revenue_net: float
+    revenue_fixed: float
+    revenue_ele: float
+    revenue_ele_sell: float
+    revenue_heat: float
+    revenue_cool: float
+
+
+class DeviceResult(BaseModel):
+    device_capacity: DeviceCapacity
+    device_capex: DeviceCAPEX
+
+
+class SchedulingResult(BaseModel):
+    ele_buy: List[float]
+    ele_sell: List[float]
+    hydrogen_buy: List[float]
+    gas_buy: List[float]
+    steam120_buy: List[float]
+    steam120_sell: List[float]
+    steam180_buy: List[float]
+    steam180_sell: List[float]
+    custom_buy: List[float]
+    p_hyd: List[float]
+    p_co: List[float]
+    p_fc: List[float]
+    g_fc: List[float]
+    h_fc: List[float]
+    p_el: List[float]
+    h_el: List[float]
+    h_sto: List[float]
+    g_ht: List[float]
+    g_ht_in: List[float]
+    g_ht_out: List[float]
+    q_ct: List[float]
+    q_ct_in: List[float]
+    q_ct_out: List[float]
+    p_pv_theory: List[float]
+    p_pv: List[float]
+    g_sc: List[float]
+    p_wd: List[float]
+    p_eb: List[float]
+    g_eb: List[float]
+    p_ac: List[float]
+    q_ac: List[float]
+    p_hp: List[float]
+    g_hp: List[float]
+    p_hp_c: List[float]
+    q_hp: List[float]
+    p_ghp: List[float]
+    g_ghp: List[float]
+    p_ghp_c: List[float]
+    q_ghp: List[float]
+    g_ghp_inject: List[float]
+    p_ghp_deep: List[float]
+    g_ghp_deep: List[float]
+    p_hp120: List[float]
+    m_hp120: List[float]
+    g_hp120: List[float]
+    p_co180: List[float]
+    g_tube: List[float]
+    g_tube2steam120: List[float]
+    m_steam1202steam180: List[float]
+
+
+class PlanningResult(BaseModel):
+    sys_performance: SystemPerformance
+    device_result: DeviceResult
+    scheduling_result: SchedulingResult
