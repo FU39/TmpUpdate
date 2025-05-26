@@ -155,17 +155,25 @@ class ISService:
                                                               inputBody.device.whp.se) #???
 
         # ---------------效率数据，包括产热、制冷、发电、热转换等--------------#
+        # ----co----#
+        k_co = inputBody.device.co.beta_co
         # ----fc----#
-        eta_ex = 0.95  # fc产的热通过热交换器后的剩余热量系数
+        eta_ex = 0.95  # fc产的热通过热交换器后的剩余热量系数  # 待匹配
         k_fc_p = inputBody.device.fc.eta_fc_p  # 氢转电系数kg——>kWh
         k_fc_g = inputBody.device.fc.eta_ex_g  # 氢转热系数kg——>kWh
         # ----el----#
-        # k_el =
+        k_el = input_json['device']['el']['beta_el']  #电转氢效率
+        # ---hst----#
+        # ---ht----#
+        # ---ct----#
+        # ---bat----#
+        # ---steam_storage----#
         # ----pv----#
-        # eta_pv =
+        eta_pv = input_json['device']['pv']['beta_pv']  #单位面积下光转电效率
         # ----sc----#
         k_sc = inputBody.device.sc.beta_sc
         theta_ex = inputBody.device.sc.theta_ex
+        # ----wd----#
         # ----eb----#
         k_eb = inputBody.device.eb.beta_eb
         # ----ac----#
@@ -179,16 +187,10 @@ class ISService:
         k_ghp_deep_g = inputBody.device.ghp_deep.beta_ghpg
         # ----gtw----#
         p_gtw = inputBody.device.gtw.beta_gtw
-        # p_gtw1
-        # p_gtw2
-        # p_gtw3
-        # p_gtw4
-        # ----co----#
-        k_co = inputBody.device.co.beta_co
-        # ----hyd----#
-        # water_hyd_peak =
-        # ----xb----#
-        # k_xb =
+        # ----gtw2500----#
+        p_gtw2500 = inputBody.device.gtw2500.beta_gtw
+
+
         # ----whp----#
         # k_whp =
         # ----co180----#
