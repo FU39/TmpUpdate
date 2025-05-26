@@ -110,24 +110,29 @@ class ISService:
         crf_whp = crf(inputBody.device.whp.crf)
 
         # --------------单位投资成本数据--------------#
+        cost_co = inputBody.device.co.cost + support_device(inputBody.device.co.cost,
+                                                            inputBody.device.co.se)
         cost_fc = inputBody.device.fc.cost + support_device(inputBody.device.fc.cost,
                                                             inputBody.device.fc.se)
         cost_el = inputBody.device.el.cost + support_device(inputBody.device.el.cost,
-                                                            inputBody.device.el.se)#??
+                                                            inputBody.device.el.se)#???
         cost_hst = inputBody.device.hst.cost + support_device(inputBody.device.hst.cost,
                                                               inputBody.device.hst.se)
         cost_ht = inputBody.device.ht.cost + support_device(inputBody.device.ht.cost,
                                                             inputBody.device.ht.se)
         cost_ct = inputBody.device.ct.cost + support_device(inputBody.device.ct.cost,
                                                             inputBody.device.ct.se)
-        # cost_pv = inputBody.device.pv.cost + support_device(inputBody.device.pv.cost,
-        #                                                     inputBody.device.pv.se)#???
+        cost_bat = inputBody.device.bat.cost + support_device(inputBody.device.bat.cost,
+                                                              inputBody.device.bat.se)#???
+        cost_steam_storage = inputBody.device.steam_storage.cost + support_device(inputBody.device.steam_storage.cost,
+                                                                                  inputBody.device.steam_storage.se)#???
+        cost_pv = inputBody.device.pv.cost + support_device(inputBody.device.pv.cost,
+                                                            inputBody.device.pv.se)#???
+        cost_sc = inputBody.device.sc.cost + support_device(inputBody.device.sc.cost,
+                                                             inputBody.device.sc.se)#???
         capacity_wd = inputBody.device.wd.capacity_unit
-        # cost_wd = capacity_wd * inputBody.device.wd.cost + support_device(inputBody.device.wd.cost,
-        #                                                                   inputBody.device.wd.se)#???
-        # cost_sc = inputBody.device.sc.cost + support_device(inputBody.device.sc.cost,
-        #                                                     inputBody.device.sc.se)#???
-
+        cost_wd = capacity_wd * inputBody.device.wd.cost + support_device(inputBody.device.wd.cost,
+                                                                         inputBody.device.wd.se)#???
         cost_eb = inputBody.device.eb.cost + support_device(inputBody.device.eb.cost,
                                                             inputBody.device.eb.se)
         cost_ac = inputBody.device.ac.cost + support_device(inputBody.device.ac.cost,
@@ -140,18 +145,14 @@ class ISService:
                                                                         inputBody.device.ghp_deep.se)
         cost_gtw = inputBody.device.gtw.cost + support_device(inputBody.device.gtw.cost,
                                                               inputBody.device.gtw.se)
-        # cost_gtw1
-        # cost_gtw2
-        # cost_gtw3
-        # cost_gtw4
-        cost_co = inputBody.device.co.cost + support_device(inputBody.device.co.cost,
-                                                            inputBody.device.co.se)
-        # cost_co180 = inputBody.device.co180.cost + support_device(inputBody.device.co180.cost,
-        #                                                           inputBody.device.co180.se) #???
-        # cost_hyd
-        # cost_xb =
-        # cost_whp = inputBody.device.whp.cost + support_device(inputBody.device.whp.cost,
-        #                                                       inputBody.device.whp.se) #???
+        cost_gtw2500 = inputBody.device.gtw2500.cost + support_device(inputBody.device.gtw2500.cost,
+                                                                      inputBody.device.gtw2500.se)
+        cost_hp120 = inputBody.device.hp120.cost + support_device(inputBody.device.hp120.cost,
+                                                                  inputBody.device.hp120.se)#???
+        cost_co180 = inputBody.device.co180.cost + support_device(inputBody.device.co180.cost,
+                                                                  inputBody.device.co180.se)#???
+        cost_whp = inputBody.device.whp.cost + support_device(inputBody.device.whp.cost,
+                                                              inputBody.device.whp.se) #???
 
         # ---------------效率数据，包括产热、制冷、发电、热转换等--------------#
         # ----fc----#
