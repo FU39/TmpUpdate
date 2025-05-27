@@ -581,28 +581,28 @@ class ISService:
             for j in range(custom_energy_num):
                 m.addCons(y_pur[j][i] <= 1000000000 * (isloate[6 + j]))  # 是否允许购买第j条能量流
 
-            #-----------------------------基础设备库的设备约束-----------------------------#
-            #----fc----#
+        #-----------------------------基础设备库的设备约束-----------------------------#
+        for i in range(period):
+        # ----co----#
+            m.addCons(p_co[i] == k_co * h_el[i])  # 压缩氢耗电量约束
+            m.addCons(p_co[i] <= p_co_max)  # 压缩机运行功率上限
+        # ----fc----#
             m.addCons(g_fc[i] <= eta_ex * k_fc_g * h_fc[i])  # 氢转热约束，允许弃热
             m.addCons(1000000 * z_fc[i] >= g_fc[i])  # 可以弃掉燃料电池的热
             m.addCons(p_fc[i] == k_fc_p * h_fc[i])  # 氢转电约束
             m.addCons(p_fc[i] <= p_fc_max)  # 运行功率 <= 规划功率（运行最大功率）
-
-            #----el----#
+        #----el----#
             m.addCons(p_el[i] <= p_el_max)  # 运行功率 <= 规划功率（运行最大功率）
             m.addCons(h_el[i] <= k_el * p_el[i])  # 电转氢约束
             m.addCons(h_el[i] <= hst)  # 有问题？产生的氢气质量要小于储氢罐最大储氢容量
-
-            #----hst----#
+        #----hst----#
             m.addCons(h_sto[i] <= hst)
-
-            #----ht----#
+        #----ht----#
             m.addCons(g_ht[i] <= c * m_ht * inputBody.device.ht.t_max)  # 储热罐存储热量上限
             m.addCons(g_ht[i] >= c * m_ht * inputBody.device.ht.t_min)  # 储热罐存储热量下限
         for i in range(period - 1):
             m.addCons(g_ht[i + 1] - g_ht[i] == g_ht_in[i] - g_ht_out[i] - 0.001 * g_ht[i])  # 储热罐存储动态变化
         m.addCons(g_ht[0] - g_ht[-1] == g_ht_in[-1] - g_ht_out[-1] - 0.001 * g_ht[-1])
-
         #----ct----#
         for i in range(period):
             m.addCons(q_ct[i] <= c * m_ct * inputBody.device.ct.t_max)  # 储冷罐存储冷量上限
@@ -610,54 +610,44 @@ class ISService:
         for i in range(period - 1):
             m.addCons(q_ct[i] - q_ct[i + 1] == q_ct_in[i] - q_ct_out[i] + 0.001 * q_ct[i])  # 储冷罐存储动态变化
         m.addCons(q_ct[-1] - q_ct[0] == q_ct_in[-1] - q_ct_out[-1] + 0.001 * q_ct[-1])
+        # ----bat----#
+
+        # ----steam_storage----#
 
         for i in range(period):
-            #----pv----#
+        # ---pv----#
             m.addCons(p_pv[i] <= p_pv_max * r_solar[i])  # 允许丢弃可再生能源
-
-            # ----wd----#
-            m.addCons(p_wd[i] <= num_wd * wind_power[i] * crf(inputBody.device.wd.capacity_unit))  # 允许丢弃可再生能源
-
-            #----sc----#
+        # ----sc----#
             m.addCons(g_sc[i] <= k_sc * theta_ex * s_sc * r_solar[i])  # 允许丢弃可再生能源
-
-            #----eb----#
+        # ----wd----#
+            m.addCons(p_wd[i] <= num_wd * wind_power[i] * crf(inputBody.device.wd.capacity_unit))  # 允许丢弃可再生能源
+        # ---eb----#
             m.addCons(k_eb * p_eb[i] == g_eb[i])  # 电转热约束
             m.addCons(p_eb[i] <= p_eb_max)  # 运行功率 <= 规划功率（运行最大功率）
-
-            #----ac----#
+        # ---ac----#
             m.addCons(q_ac[i] == k_ac * p_ac[i])  # 电转冷约束
             m.addCons(p_ac[i] <= p_ac_max)  # 运行功率 <= 规划功率（运行最大功率）
-
-            #----hp----#
+        # ---hp----#
             m.addCons(p_hp[i] * k_hp_g == g_hp[i])  # 电转热约束
             m.addCons(p_hp[i] <= p_hp_max)  # 热泵供热运行功率 <= 规划功率（运行最大功率）
-
             m.addCons(p_hpc[i] * k_hp_q == q_hp[i])  # 电转冷约束
             m.addCons(p_hpc[i] <= p_hp_max)  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
-
-            #----ghp----#
+        # ---ghp----#
             m.addCons(p_ghp[i] * k_ghp_g == g_ghp[i])  # 地源热泵电转热约束
             m.addCons(p_ghp[i] <= p_ghp_max)  # 热泵供热运行功率 <= 规划功率（运行最大功率）
-
             m.addCons(p_ghpc[i] * k_ghp_q == q_ghp[i])  # 地源热泵电转冷约束
             m.addCons(p_ghpc[i] <= p_ghp_max)  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
-
             m.addCons(p_ghp_deep[i] * k_ghp_deep_g == g_ghp_deep[i])  # 地源热泵电转热约束
             m.addCons(p_ghp_deep[i] <= p_ghp_deep_max)  # 热泵供热运行功率 <= 规划功率（运行最大功率）
-
-            #----gtw----#
+        #----gtw----#
             m.addCons(num_gtw * p_gtw >= g_ghp[i] - p_ghp[i])  #井和热泵有关联，制热量-电功率=取热量
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  #井和热泵有关联，制冷量+电功率=灌热量
-            m.addCons(
-                num_gtw1 * p_gtw1 + num_gtw2 * p_gtw2 + num_gtw3 * p_gtw3 + num_gtw4 * p_gtw4 >= g_ghp_deep[i] - p_ghp_deep[
-                    i])
+            m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i]) # 存疑
+        # ---hp120----#
 
-            #----co----#
-            m.addCons(p_co[i] == k_co * h_el[i])  # 压缩氢耗电量约束
-            m.addCons(p_co[i] <= p_co_max)  #压缩机运行功率上限
+        # ---co180----#
 
-            #----whp----#               找不到heat_resourceg和heat_resourceq的对应
+        # ---whp----#               找不到heat_resourceg和heat_resourceq的对应
             m.addCons(p_whpg[i] * k_whp == g_whp[i])
             m.addCons(g_whp[i] - p_whpg[i] <= input_json['device']['whp']['heat_resourceg'])
             m.addCons(p_whpq[i] * k_whp == q_whp[i])
@@ -735,7 +725,6 @@ class ISService:
                 - quicksum(steam180_sol[i] * lambda_steam180_out for i in range(period))
                 )  # 买自定义能量流花费
         m.addCons(op_sum_pure == quicksum([p_pur[i] * lambda_ele_in[i] for i in range(period)])  # 买电花费
-                + quicksum(p_hyd) * input_json["device"]["hyd"]["power_cost"]  # 买水电花费
                 + lambda_h * quicksum([h_pur[i] for i in range(period)])  # 买氢气花费
                 + gas_price * quicksum([gas_pur[i] for i in range(period)])  # 买天然气花费
                 + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])  # 买天然气花费
@@ -912,6 +901,17 @@ class ISService:
         co2_ele_only = sum(ele_sum_ele_only) * alpha_e
         result = {
             "sys_performance": {
+
+                'all_revenue':revenue,
+                'fixed_revenue':fixed_revenue,
+                'p_revenue': p_revenue,
+                'p_sol_revenue':p_sol_revenue,
+                'revenue_ele':revenue_ele,
+                'revenue_heat':revenue_heat,
+                'revenue_cold':revenue_cold,
+                'revenue_steam120':revenue_steam120,
+
+
 
             },
             "device_result": {
