@@ -909,21 +909,134 @@ class ISService:
                 'revenue_ele': revenue_ele,
                 'revenue_heat': revenue_heat,
                 'revenue_cold': revenue_cold,
-                'revenue_steam120': revenue_steam120,
+                'revenue_steam120': format(revenue_steam120 / 10000, '.2f'), # 万元
+                'revenue_steam180': revenue_steam180,
+                'revenue_sol_ele': revenue_sol_ele,
+                'revenue_sol_heat': revenue_sol_heat,
 
 
 
             },
             "device_result": {
                 "device_capacity": {
-
+                    'p_co_installed': m.getVal(p_co_max),
+                    'p_fc_installed': m.getVal(p_fc_max),
+                    'p_el_installed': m.getVal(p_el_max),
+                    'h_hst_installed': m.getVal(hst),
+                    'm_ht_installed': m.getVal(m_ht),
+                    'm_ct_installed': m.getVal(m_ct),
+                    # 'bat'
+                    # 'steam_storage'
+                    'p_pv_installed': m.getVal(p_pv_max),
+                    's_sc_installed': m.getVal(s_sc),
+                    'num_wd_installed': m.getVal(num_wd),
+                    'p_eb_installed': m.getVal(p_eb_max),
+                    'p_ac_installed': m.getVal(p_ac_max),
+                    'p_hp_installed': m.getVal(p_hp_max),
+                    'p_ghp_installed': m.getVal(p_ghp_max),
+                    'p_ghp_deep_installed': m.getVal(p_ghp_deep_max),
+                    'num_gtw_installed': m.getVal(num_gtw),
+                    'num_gtw2500_installed': m.getVal(num_gtw2500),
+                    'p_hp120_installed': m.getVal(p_hp120_max),
+                    'p_co180_installed': m.getVal(p_co180_max),
+                    'p_whp_installed': m.getVal(p_whp_max),
                 },
                 "device_capex": {
-
+                    'capex_co': cost_co * m.getVal(p_co_max),
+                    'capex_fc': cost_fc * m.getVal(p_fc_max),
+                    'capex_el': cost_el * m.getVal(p_el_max),
+                    'capex_hst': cost_hst * m.getVal(hst),
+                    'capex_ht': cost_ht * m.getVal(m_ht),
+                    'capex_ct': cost_ct * m.getVal(m_ct),
+                    # bat
+                    # steam_storage
+                    'capex_pv': cost_pv * m.getVal(p_pv_max),
+                    'capex_sc': cost_sc * m.getVal(s_sc),
+                    'capex_wd': cost_wd * m.getVal(num_wd),
+                    'capex_eb': cost_eb * m.getVal(p_eb_max),
+                    'capex_ac': cost_ac * m.getVal(p_ac_max),
+                    'capex_hp': cost_hp * m.getVal(p_hp_max),
+                    'capex_ghp': cost_ghp * m.getVal(p_ghp_max),
+                    'capex_ghp_deep': cost_ghp_deep * m.getVal(p_ghp_deep_max),
+                    'capex_gtw': cost_gtw * m.getVal(num_gtw),
+                    'capex_gtw2500': cost_gtw * m.getVal(num_gtw2500),
+                    'capex_hp120': cost_hp120 * m.getVal(p_hp120_max),
+                    'capex_co180': cost_co180 * m.getVal(p_co180_max),
+                    'capex_whp': cost_whp * m.getVal(p_whp_max),
                 },
             },
             "scheduling_result": {
+                # 能量流买卖
+                'p_pur': [m.getVal(p_pur[i]) for i in range(period)],
+                'p_sol': [m.getVal(p_sol[i]) for i in range(period)],
+                'h_pur': [m.getVal(h_pur[i]) for i in range(period)],
+                'gas_pur': [m.getVal(gas_pur[i]) for i in range(period)],
+                'steam120_pur': [m.getVal(steam120_pur[i]) for i in range(period)],
+                'steam120_sol': [m.getVal(steam120_sol[i]) for i in range(period)],
+                'steam180_pur': [m.getVal(steam180_pur[i]) for i in range(period)],
+                'steam180_sol': [m.getVal(steam180_sol[i]) for i in range(period)],
+                'y_pur': [[m.getVal(y_pur[j][i]) for i in range(period)] for j in range(custom_energy_num)],  # 自定义能量流
+                # co
+                'p_co': [m.getVal(p_co[i]) for i in range(period)],
+                # fc
+                'p_fc': [m.getVal(p_fc[i]) for i in range(period)],
+                'g_fc': [m.getVal(g_fc[i]) for i in range(period)],
+                'h_fc': [m.getVal(h_fc[i]) for i in range(period)],
+                # el
+                'p_el': [m.getVal(p_el[i]) for i in range(period)],
+                'h_el': [m.getVal(h_el[i]) for i in range(period)],
+                # hst
+                'h_sto': [m.getVal(h_sto[i]) for i in range(period)],
+                # ht
+                'g_ht': [m.getVal(g_ht[i]) for i in range(period)],
+                'g_ht_in': [m.getVal(g_ht_in[i]) for i in range(period)],
+                'g_ht_out': [m.getVal(g_ht_out[i]) for i in range(period)],
+                # ct
+                'q_ct': [m.getVal(q_ct[i]) for i in range(period)],
+                'q_ct_in': [m.getVal(q_ct_in[i]) for i in range(period)],
+                'q_ct_out': [m.getVal(q_ct_out[i]) for i in range(period)],
+                # bat
 
+                # steam_storage
+                # pv
+                'p_solar_pv': [m.getVal(eta_pv * s_pv) * r_solar[i] for i in range(period)],  # pv吸收太阳能理论发电量
+                'p_pv': [m.getVal(p_pv[i]) for i in range(period)],  # 实际pv发电量（可能存在弃光）
+                # sc
+                'g_sc': [m.getVal(g_sc[i]) for i in range(period)],
+                # wd
+                'p_wind': [m.getVal(p_wd[i]) for i in range(period)],
+                # eb
+                'p_eb': [m.getVal(p_eb[i]) for i in range(period)],
+                'g_eb': [m.getVal(g_eb[i]) for i in range(period)],
+                # ac
+                'p_ac': [m.getVal(p_ac[i]) for i in range(period)],
+                'q_ac': [m.getVal(q_ac[i]) for i in range(period)],
+                # hp
+                'p_hp': [m.getVal(p_hp[i]) for i in range(period)],
+                'g_hp': [m.getVal(g_hp[i]) for i in range(period)],
+                'p_hpc': [m.getVal(p_hpc[i]) for i in range(period)],
+                'q_hp': [m.getVal(q_hp[i]) for i in range(period)],
+                # ghp
+                'p_ghp': [m.getVal(p_ghp[i]) for i in range(period)],
+                'p_ghpc': [m.getVal(p_ghpc[i]) for i in range(period)],
+                'q_ghp': [m.getVal(q_ghp[i]) for i in range(period)],
+                'g_ghp': [m.getVal(g_ghp[i]) for i in range(period)],
+                'g_ghp_gr': [m.getVal(g_ghp_gr[i]) for i in range(period)],
+                # ghp_deep
+                'p_ghp_deep': [m.getVal(p_ghp_deep[i]) for i in range(period)],
+                'g_ghp_deep': [m.getVal(g_ghp_deep[i]) for i in range(period)],
+                # gtw
+
+                # gtw2500
+
+                # hp120
+                'p_hp120': [m.getVal(p_hp120[i]) for i in range(period)],
+                'm_hp120': [m.getVal(m_hp120[i]) for i in range(period)],
+                'g_hp120': [m.getVal(g_hp120[i]) for i in range(period)],
+                # co180
+                'p_co180': [m.getVal(p_co180[i]) for i in range(period)],
+                # whp
+                'p_whp': [m.getVal(p_whp[i]) for i in range(period)],
             },
         }
         return result
