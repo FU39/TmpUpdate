@@ -360,17 +360,11 @@ class ISService:
         p_whpq = [m.addVar(vtype="C", lb=0, name=f"p_whpq{t}") for t in range(period)]  # 余热热泵产冷耗电量
         g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
         q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
-
-
-
-
-
         # 用户自定义库中设备变量
         # 能量流顺序 0：电   1：热   2：冷   3：氢   4：气   5：自定义能量流1   6：自定义能量流2 ......
 
+        # 自定义储能设备的设备变量
 
-
-########### 添加约束 #############
         #---------------创建约束条件--------------#
         #----------------------------------------------------------#
         # 规划容量上下限约束
