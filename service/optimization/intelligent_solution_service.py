@@ -285,18 +285,18 @@ class ISService:
         p_pv_max = m.addVar(vtype="C", lb=0, name=f"p_pv_max")  # 光伏板投资面积
         p_pv = [m.addVar(vtype="C", lb=0, ub= inputBody.device.pv.power_max * inputBody.device.pv.power_already,
                      name=f"p_pv{t}") for t in range(period)]  # 光伏板发电功率
-
-        # ----wd----#    p_pv_max = [m.addVar(vtype="C", lb=0,ub= input_json['device']['pv']['power_max']*input_json['device']['pv']['if_use'], name=f"p_pv{t}") for t in range(period)]# 光伏板发电功率
+        # ----sc----#
+        s_sc = m.addVar(vtype="C", lb=0,
+                        ub=inputBody.device.sc.area_max * inputBody.device.sc.area_already,
+                        name=f"s_sc")  # 太阳能集热器投资面积
+        g_sc = [m.addVar(vtype="C", lb=0, name=f"g_sc{t}") for t in range(period)]  # 太阳能集热器收集的热量
+        # ----wd----#
         num_wd = m.addVar(vtype="INTEGER", lb=0,
                           ub= inputBody.device.wd.number_max * inputBody.device.wd.number_already,
                           name=f"num_wd")  # 风电投资数量
         p_wd = [m.addVar(vtype="C", lb=0, name=f"p_wd{t}") for t in range(period)]  # 风电发电功率
 
-        # ----sc----#
-        s_sc = m.addVar(vtype="C", lb=0,
-                        ub= inputBody.device.sc.area_max * inputBody.device.sc.area_already,
-                        name=f"s_sc")  # 太阳能集热器投资面积
-        g_sc = [m.addVar(vtype="C", lb=0, name=f"g_sc{t}") for t in range(period)]  # 太阳能集热器收集的热量
+
 
         # ----eb----#
         p_eb_max = m.addVar(vtype="C", lb=0,
