@@ -568,16 +568,16 @@ class ISService:
             m.addCons(quicksum([g_ghp[i] - p_ghp[i] - q_ghp[i] - p_ghpc[i] - g_ghp_gr[i] for i in range(period)]) == 0)
         for i in range(period):
             # 买能约束      g_sol和gas_pur的未定义以及对120度蒸汽和180度蒸汽的定义未区分
-            m.addCons(p_pur[i] <= 1000000000 * crf(inputBody.trading.power_buy_enable))  # 是否允许电网买电
-            m.addCons(p_sol[i] <= 1000000000 * crf(inputBody.trading.power_sell_enable))  # 是否允许电网卖电
-            m.addCons(h_pur[i] <= 1000000000 * crf(inputBody.trading.h2_buy_enable))  # 是否允许购买氢气
+            m.addCons(p_pur[i] <= 1000000000 * inputBody.trading.power_buy_enable)  # 是否允许电网买电
+            m.addCons(p_sol[i] <= 1000000000 * inputBody.trading.power_sell_enable)  # 是否允许电网卖电
+            m.addCons(h_pur[i] <= 1000000000 * inputBody.trading.h2_buy_enable)  # 是否允许购买氢气
             m.addCons(g_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['g_sol'])  # 是否允许出售天然气
-            m.addCons(h_sol[i] <= 1000000000 * crf(inputBody.trading.h2_sell_enable))  # 是否允许出售氢气
+            m.addCons(h_sol[i] <= 1000000000 * inputBody.trading.h2_sell_enable)  # 是否允许出售氢气
             m.addCons(gas_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['gas_pur'])  # 是否允许购买天然气
-            m.addCons(steam120_pur[i] <= 1000000000 * inputBody.trading.steam_buy[0].enable  # 是否允许买120度蒸汽
-            m.addCons(steam120_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['steam120_sol'])  # 是否允许卖120度蒸汽
-            m.addCons(steam180_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['steam180_pur'])  # 是否允许买180度蒸汽
-            m.addCons(steam180_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['steam180_sol'])  # 是否允许卖180度蒸汽
+            m.addCons(steam120_pur[i] <= 1000000000 * inputBody.trading.steam_buy[1].enable)  # 是否允许买120度蒸汽
+            m.addCons(steam120_sol[i] <= 1000000000 * inputBody.trading.steam_sol[1].enable)  # 是否允许卖120度蒸汽
+            m.addCons(steam180_pur[i] <= 1000000000 * inputBody.trading.steam_buy[0].enable)  # 是否允许买180度蒸汽
+            m.addCons(steam180_sol[i] <= 1000000000 * inputBody.trading.steam_sol[0].enable)  # 是否允许卖180度蒸汽
             for j in range(custom_energy_num):
                 m.addCons(y_pur[j][i] <= 1000000000 * (isloate[6 + j]))  # 是否允许购买第j条能量流
 
@@ -597,16 +597,16 @@ class ISService:
             m.addCons(h_sto[i] <= hst)
 
             #----ht----#
-            m.addCons(g_ht[i] <= c * m_ht * crf(inputBody.device.ht.t_max))  # 储热罐存储热量上限
-            m.addCons(g_ht[i] >= c * m_ht * crf(inputBody.device.ht.t_min))  # 储热罐存储热量下限
+            m.addCons(g_ht[i] <= c * m_ht * inputBody.device.ht.t_max)  # 储热罐存储热量上限
+            m.addCons(g_ht[i] >= c * m_ht * inputBody.device.ht.t_min)  # 储热罐存储热量下限
         for i in range(period - 1):
             m.addCons(g_ht[i + 1] - g_ht[i] == g_ht_in[i] - g_ht_out[i] - 0.001 * g_ht[i])  # 储热罐存储动态变化
         m.addCons(g_ht[0] - g_ht[-1] == g_ht_in[-1] - g_ht_out[-1] - 0.001 * g_ht[-1])
 
         #----ct----#
         for i in range(period):
-            m.addCons(q_ct[i] <= c * m_ct * crf(inputBody.device.ct.t_max))  # 储冷罐存储冷量上限
-            m.addCons(q_ct[i] >= c * m_ct * crf(inputBody.device.ct.t_min))  # 储冷罐存储冷量下限
+            m.addCons(q_ct[i] <= c * m_ct * inputBody.device.ct.t_max)  # 储冷罐存储冷量上限
+            m.addCons(q_ct[i] >= c * m_ct * inputBody.device.ct.t_min)  # 储冷罐存储冷量下限
         for i in range(period - 1):
             m.addCons(q_ct[i] - q_ct[i + 1] == q_ct_in[i] - q_ct_out[i] + 0.001 * q_ct[i])  # 储冷罐存储动态变化
         m.addCons(q_ct[-1] - q_ct[0] == q_ct_in[-1] - q_ct_out[-1] + 0.001 * q_ct[-1])
