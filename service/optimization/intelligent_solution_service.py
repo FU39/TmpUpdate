@@ -227,7 +227,7 @@ class ISService:
         p_pur = [m.addVar(vtype="C", lb=0, name=f"p_pur{t}") for t in range(period)]  # 买电power purchase
         p_sol = [m.addVar(vtype="C", lb=0, name=f"p_sol{t}") for t in range(period)]  # 卖电power sold
         g_sol = [m.addVar(vtype="C", lb=0, name=f"g_sol{t}") for t in range(period)]  # 卖电power sold
-        h_sol = [m.addVar(vtype="C", lb=0, name=f"h_sol{t}") for t in range(period)]  # 卖电power sold
+        h_sol = [m.addVar(vtype="C", lb=0, name=f"h_sol{t}") for t in range(period)]  # 卖氢hydrogen sold
         gas_pur = [m.addVar(vtype="C", lb=0, name=f"gas_pur{t}") for t in range(period)]  # 买天然气
         steam120_pur = [m.addVar(vtype="C", lb=0, name=f"steam120_pur{t}") for t in range(period)]  # 买steam120
         steam120_sol = [m.addVar(vtype="C", lb=0, name=f"steam120_sol{t}") for t in range(period)]  # 卖steam120
@@ -237,6 +237,11 @@ class ISService:
                      range(custom_energy_num)]  # 买天然气  # 涉及自定义能量流
 
         # 基本设备库中设备变量
+        # ----co----#
+        p_co_max = m.addVar(vtype="C", lb=0,
+                            ub=inputBody.device.co.power_max * inputBody.device.co.power_already,
+                            name=f"p_co_max")  # 氢气压缩机投资容量（最大功率）
+        p_co = [m.addVar(vtype="C", lb=0, name=f"p_co{t}") for t in range(period)]  # 氢气压缩机工作功率
         # ----fc----#
         z_fc = [m.addVar(lb=0, ub=1, vtype="B", name=f"z_fc{t}") for t in range(period)]
         p_fc_max = m.addVar(vtype="C", lb=0,
@@ -245,20 +250,17 @@ class ISService:
         g_fc = [m.addVar(vtype="C", lb=0, name=f"g_fc{t}") for t in range(period)]  # 燃料电池产热量
         p_fc = [m.addVar(vtype="C", lb=0, name=f"p_fc{t}") for t in range(period)]  # 燃料电池产电量
         h_fc = [m.addVar(vtype="C", lb=0, name=f"h_fc{t}") for t in range(period)]  # 燃料电池用氢量
-
         # ----el----#
         p_el_max = m.addVar(vtype="C", lb=0,
                             ub= inputBody.device.el.nm3_max * inputBody.device.el.nm3_already,
                             name="p_el_max")  # el的投资容量（最大功率）
         h_el = [m.addVar(vtype="C", lb=0, name=f"h_el{t}") for t in range(period)]  # 电解槽产氢量
         p_el = [m.addVar(vtype="C", lb=0, name=f"p_el{t}") for t in range(period)]  # 电解槽功率
-
         # ----hst----#
         hst = m.addVar(vtype="C", lb=0,
                        ub= inputBody.device.hst.sto_max * inputBody.device.hst.sto_already,
                        name=f"hst")  # 储氢罐规划容量
         h_sto = [m.addVar(vtype="C", lb=0, name=f"h_sto{t}") for t in range(period)]  # 储氢罐t时刻储氢量
-
         # ----ht----#
         m_ht = m.addVar(vtype="C", lb=0,
                         ub= inputBody.device.ht.water_max * inputBody.device.ht.water_already,
@@ -267,7 +269,6 @@ class ISService:
         g_ht_out = [m.addVar(vtype="C", lb=0, name=f"g_ht_out{t}") for t in range(period)]
         g_ht = [m.addVar(vtype="C", lb=0, name=f"g_ht{t}") for t in range(period)]  # 存储的热量
         # 写完约束之后再看看有没有需要创建的变量
-
         # ----ct----#
         m_ct = m.addVar(vtype="C", lb=0,
                         ub= inputBody.device.ct.water_max * inputBody.device.ct.water_already,
@@ -275,6 +276,9 @@ class ISService:
         q_ct_in = [m.addVar(vtype="C", lb=0, name=f"q_ct_in{t}") for t in range(period)]
         q_ct_out = [m.addVar(vtype="C", lb=0, name=f"q_ct_out{t}") for t in range(period)]  # 写完约束之后再看看有没有需要创建的变量
         q_ct = [m.addVar(vtype="C", lb=0, name=f"q_ct{t}") for t in range(period)]  # 存储的冷量
+        # ----bat----#
+
+        # ----steam_storage----#
 
         # ----pv----#
         s_pv = m.addVar(vtype="C", lb=0, name=f"s_pv")  # 光伏板投资面积
@@ -348,11 +352,6 @@ class ISService:
                            # ub=input_json['device']['gtw4']['number_max'] * input_json['device']['gtw4']['if_use'],
                            # name='num_gtw4')  # 2700深度地热井投资数量
 
-        # ----co----#
-        p_co_max = m.addVar(vtype="C", lb=0,
-                            ub= inputBody.device.co.power_max * inputBody.device.co.power_already,
-                            name=f"p_co_max")  # 氢气压缩机投资容量（最大功率）
-        p_co = [m.addVar(vtype="C", lb=0, name=f"p_co{t}") for t in range(period)]  # 氢气压缩机工作功率
 
         # ----hyd----#
         # p_hyd = [m.addVar(vtype="C", lb=0,
