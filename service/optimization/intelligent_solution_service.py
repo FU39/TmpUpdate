@@ -902,14 +902,14 @@ class ISService:
         result = {
             "sys_performance": {
 
-                'all_revenue':revenue,
-                'fixed_revenue':fixed_revenue,
+                'all_revenue': revenue,
+                'fixed_revenue': fixed_revenue,
                 'p_revenue': p_revenue,
-                'p_sol_revenue':p_sol_revenue,
-                'revenue_ele':revenue_ele,
-                'revenue_heat':revenue_heat,
-                'revenue_cold':revenue_cold,
-                'revenue_steam120':revenue_steam120,
+                'p_sol_revenue': p_sol_revenue,
+                'revenue_ele': revenue_ele,
+                'revenue_heat': revenue_heat,
+                'revenue_cold': revenue_cold,
+                'revenue_steam120': revenue_steam120,
 
 
 
