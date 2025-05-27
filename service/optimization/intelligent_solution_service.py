@@ -295,23 +295,18 @@ class ISService:
                           ub= inputBody.device.wd.number_max * inputBody.device.wd.number_already,
                           name=f"num_wd")  # 风电投资数量
         p_wd = [m.addVar(vtype="C", lb=0, name=f"p_wd{t}") for t in range(period)]  # 风电发电功率
-
-
-
         # ----eb----#
         p_eb_max = m.addVar(vtype="C", lb=0,
                             ub= inputBody.device.eb.power_max * inputBody.device.eb.power_already,
                             name=f"p_eb_max")  # 电锅炉投资容量（最大功率）
         g_eb = [m.addVar(vtype="C", lb=0, name=f"g_eb{t}") for t in range(period)]  # 电锅炉产热
         p_eb = [m.addVar(vtype="C", lb=0, name=f"p_eb{t}") for t in range(period)]  # 电锅炉耗电
-
         # ----ac----#
         p_ac_max = m.addVar(vtype="C", lb=0,
                             ub= inputBody.device.ac.power_max * inputBody.device.ac.power_already,
                             name=f"p_ac_max")  # 空调投资容量（最大功率）
         p_ac = [m.addVar(vtype="C", lb=0, name=f"p_ac{t}") for t in range(period)]  # 电锅炉产热
         q_ac = [m.addVar(vtype="C", lb=0, name=f"q_ac{t}") for t in range(period)]  # 电锅炉耗电
-
         # ----hp----#
         p_hp_max = m.addVar(vtype="C", lb=0,
                             ub= inputBody.device.hp.power_max * inputBody.device.hp.power_already,
@@ -320,7 +315,6 @@ class ISService:
         p_hpc = [m.addVar(vtype="C", lb=0, name=f"p_hpc{t}") for t in range(period)]  # 热泵产冷的耗电
         q_hp = [m.addVar(vtype="C", lb=0, name=f"q_hp{t}") for t in range(period)]  # 热泵产冷
         g_hp = [m.addVar(vtype="C", lb=0, name=f"g_hp{t}") for t in range(period)]  # 热泵产热
-
         # ----ghp----#
         p_ghp_max = m.addVar(vtype="C", lb=0,
                              ub= inputBody.device.ghp.power_max * inputBody.device.ghp.power_already,
@@ -330,64 +324,46 @@ class ISService:
         g_ghp = [m.addVar(vtype="C", lb=0, name=f"g_ghp{t}") for t in range(period)]  # 热泵产热
         q_ghp = [m.addVar(vtype="C", lb=0, name=f"q_ghp{t}") for t in range(period)]  # 热泵产冷
         g_ghp_gr = [m.addVar(vtype="C", lb=0, name=f"g_ghp_gr{t}") for t in range(period)]  # 热泵灌热
+        # ----ghp_deep----#
         p_ghp_deep_max = m.addVar(vtype="C", lb=0,
                                   ub= inputBody.device.ghp_deep.power_max * inputBody.device.ghp_deep.power_already,
                                   name=f"p_ghp_deep_max")  # 地源热泵投资容量（最大功率）
         p_ghp_deep = [m.addVar(vtype="C", lb=0, name=f"p_ghp_deep{t}") for t in range(period)]  # 热泵产热耗电
         g_ghp_deep = [m.addVar(vtype="C", lb=0, name=f"g_ghp_deep{t}") for t in range(period)]  # 热泵产热
-
+        # ----gtw----#
         num_gtw = m.addVar(vtype="INTEGER", lb=0,
                            ub= inputBody.device.gtw.number_max * inputBody.device.gtw.number_already,
                            name='num_gtw')  # 地热井投资数量
-        # num_gtw1 = m.addVar(vtype="INTEGER", lb=0,
-                           # ub=input_json['device']['gtw1']['number_max'] * input_json['device']['gtw1']['if_use'],
-                           # name='num_gtw1')  # 2200深度地热井投资数量
-        # num_gtw2 = m.addVar(vtype="INTEGER", lb=0,
-                           # ub=input_json['device']['gtw2']['number_max'] * input_json['device']['gtw2']['if_use'],
-                            # name='num_gtw2')  # 2500深度地热井投资数量
-        # num_gtw3 = m.addVar(vtype="INTEGER", lb=0,
-                            # ub=input_json['device']['gtw3']['number_max'] * input_json['device']['gtw3']['if_use'],
-                            # name='num_gtw3')  # 2600深度地热井投资数量
-        # num_gtw4 = m.addVar(vtype="INTEGER", lb=0,
-                           # ub=input_json['device']['gtw4']['number_max'] * input_json['device']['gtw4']['if_use'],
-                           # name='num_gtw4')  # 2700深度地热井投资数量
-
-
-        # ----hyd----#
-        # p_hyd = [m.addVar(vtype="C", lb=0,
-                         # ub=input_json["device"]["hyd"]["power_max"] * input_json["device"]["hyd"]["if_use"],
-                         # name=f"p_hyd{t}") for t in range(period)]  # 水电使用量
-        # ----xb----#
-        # g_xb_max = m.addVar(vtype="C", lb=0,
-                           # ub=input_json['device']['xb']['s_max'] * input_json['device']['xb']['if_use'],
-                           # name=f"g_xb_max")  # 相变储能模块大小（投资容量）
-        # s_xb = [m.addVar(vtype="C", lb=0, name=f"s_xb{t}") for t in range(period)]  # 相变储能模块在t时刻的储热量
-        # g_xb = [m.addVar(vtype="C", lb=-1000000, name=f"g_xb{t}") for t in range(period)]  # 相变储热充放功率，正值充热，负值放热
-
-        # ----whp----#
-        p_whp_max = m.addVar(vtype="C", lb=0,
-                             ub=inputBody.device.whp.power_max * inputBody.device.whp.power_already,
-                             name=f"p_whp_max")  # 余热热泵投资容量（最大功率）
-        p_whp = [m.addVar(vtype="C", lb=0, name=f"p_whp{t}") for t in range(period)]  # 余热热泵产热耗电量
-        p_whpg = [m.addVar(vtype="C", lb=0, name=f"p_whpg{t}") for t in range(period)]  # 余热热泵产热耗电量
-        p_whpq = [m.addVar(vtype="C", lb=0, name=f"p_whpq{t}") for t in range(period)]  # 余热热泵产热耗电量
-        g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
-        q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
-
-        # ----co180----#
-        p_co180_max = m.addVar(vtype="C", lb=0,
-                               ub= inputBody.device.co180.power_max * inputBody.device.co180.power_already,
-                               name=f"p_co180_max")  # 余热热泵投资容量（最大功率）
-        p_co180 = [m.addVar(vtype="C", lb=0, name=f"p_co180{t}") for t in range(period)]  # 高温压缩机耗电量
-        m_co180 = [m.addVar(vtype="C", lb=0, name=f"m_co180{t}") for t in range(period)]
-
+        # ----gtw2500----#
+        num_gtw2500 = m.addVar(vtype="INTEGER", lb=0,
+                           ub=inputBody.device.gtw2500.number_max * inputBody.device.gtw2500.number_already,
+                           name='num_gtw2')  # 2500深度地热井投资数量
         # ----hp120----#
         p_hp120_max = m.addVar(vtype="C", lb=0,
-                               ub= inputBody.device.hp120.power_max * inputBody.device.hp120.power_already,
+                               ub=inputBody.device.hp120.power_max * inputBody.device.hp120.power_already,
                                name=f"p_hp120_max")  # 余热热泵投资容量（最大功率）
         p_hp120 = [m.addVar(vtype="C", lb=0, name=f"p_hp120{t}") for t in range(period)]  # 高温热泵耗电量
         m_hp120 = [m.addVar(vtype="C", lb=0, name=f"m_hp120{t}") for t in range(period)]
         g_hp120 = [m.addVar(vtype="C", lb=0, name=f"g_hp120{t}") for t in range(period)]
+        # ----co180----#
+        p_co180_max = m.addVar(vtype="C", lb=0,
+                               ub=inputBody.device.co180.power_max * inputBody.device.co180.power_already,
+                               name=f"p_co180_max")  # 余热热泵投资容量（最大功率）
+        p_co180 = [m.addVar(vtype="C", lb=0, name=f"p_co180{t}") for t in range(period)]  # 高温压缩机耗电量
+        m_co180 = [m.addVar(vtype="C", lb=0, name=f"m_co180{t}") for t in range(period)]
+        # ----whp----#
+        p_whp_max = m.addVar(vtype="C", lb=0,
+                             ub=inputBody.device.whp.power_max * inputBody.device.whp.power_already,
+                             name=f"p_whp_max")  # 余热热泵投资容量（最大功率）
+        p_whp = [m.addVar(vtype="C", lb=0, name=f"p_whp{t}") for t in range(period)]  # 余热热泵功率
+        p_whpg = [m.addVar(vtype="C", lb=0, name=f"p_whpg{t}") for t in range(period)]  # 余热热泵产热耗电量
+        p_whpq = [m.addVar(vtype="C", lb=0, name=f"p_whpq{t}") for t in range(period)]  # 余热热泵产冷耗电量
+        g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
+        q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
+
+
+
+
 
         # 用户自定义库中设备变量
         # 能量流顺序 0：电   1：热   2：冷   3：氢   4：气   5：自定义能量流1   6：自定义能量流2 ......
