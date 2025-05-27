@@ -370,77 +370,69 @@ class ISService:
         # 规划容量上下限约束
 
         # 基本设备库中设备的规划容量上下限，与if_use相关联，判断前端是否勾选了该设备：1，勾选使用；0，未勾选使用
+        # ----co----#
+        m.addCons(p_co_max <= inputBody.device.co.power_max * inputBody.device.co.power_already)
+        m.addCons(p_co_max >= inputBody.device.co.power_min * inputBody.device.co.power_already)
         #----fc----#
-        m.addCons(p_fc_max <= crf(inputBody.device.fc.power_max) * crf(inputBody.device.fc.power_already))
-        m.addCons(p_fc_max >= crf(inputBody.device.fc.power_min) * crf(inputBody.device.fc.power_already))
-
+        m.addCons(p_fc_max <= inputBody.device.fc.power_max * inputBody.device.fc.power_already)
+        m.addCons(p_fc_max >= inputBody.device.fc.power_min * inputBody.device.fc.power_already)
         #----el----#
-        m.addCons(p_el_max <= crf(inputBody.device.el.power_max) * crf(inputBody.device.el.nm3_already))
-        m.addCons(p_el_max <= 50 * crf(inputBody.device.el.nm3_max) * crf(inputBody.device.el.nm3_already) / 11.2)
-        m.addCons(p_el_max >= 50 * crf(inputBody.device.el.nm3_min) * crf(inputBody.device.el.nm3_already) / 11.2)
-        m.addCons(p_el_max >= crf(inputBody.device.el.nm3_min) * crf(inputBody.device.el.nm3_already))
-
+        m.addCons(p_el_max <= inputBody.device.el.power_max * inputBody.device.el.nm3_already)
+        m.addCons(p_el_max <= 50 * inputBody.device.el.nm3_max * inputBody.device.el.nm3_already / 11.2)
+        m.addCons(p_el_max >= 50 * inputBody.device.el.nm3_min * inputBody.device.el.nm3_already / 11.2)
+        m.addCons(p_el_max >= inputBody.device.el.nm3_min * inputBody.device.el.nm3_already)
         #----hst----#
-        m.addCons(hst <= crf(inputBody.device.hst.sto_max) * crf(inputBody.device.hst.sto_already))
-        m.addCons(hst >= crf(inputBody.device.hst.sto_min) * crf(inputBody.device.hst.sto_already))
-
+        m.addCons(hst <= inputBody.device.hst.sto_max * inputBody.device.hst.sto_already)
+        m.addCons(hst >= inputBody.device.hst.sto_min * inputBody.device.hst.sto_already)
         #----ht----#
-        m.addCons(m_ht <= crf(inputBody.device.ht.water_max) * crf(inputBody.device.ht.water_already))
-        m.addCons(m_ht >= crf(inputBody.device.ht.water_min) * crf(inputBody.device.ht.water_already))
-
+        m.addCons(m_ht <= inputBody.device.ht.water_max * inputBody.device.ht.water_already)
+        m.addCons(m_ht >= inputBody.device.ht.water_min * inputBody.device.ht.water_already)
         #----ct----#
-        m.addCons(m_ct <= crf(inputBody.device.ct.water_max) * crf(inputBody.device.ct.water_already))
-        m.addCons(m_ct >= crf(inputBody.device.ct.water_min) * crf(inputBody.device.ct.water_already))
+        m.addCons(m_ct <= inputBody.device.ct.water_max * inputBody.device.ct.water_already)
+        m.addCons(m_ct >= inputBody.device.ct.water_min * inputBody.device.ct.water_already)
+        # ----bat----#
+
+        # ----steam_storage----#
 
         #----pv----#
-        m.addCons(p_pv_max <= crf(inputBody.device.pv.power_max) * crf(inputBody.device.pv.power_already))
-        m.addCons(p_pv_max >= crf(inputBody.device.pv.power_min) * crf(inputBody.device.pv.power_already))
-
+        m.addCons(p_pv_max <= inputBody.device.pv.power_max * inputBody.device.pv.power_already)
+        m.addCons(p_pv_max >= inputBody.device.pv.power_min * inputBody.device.pv.power_already)
+        # ----sc----#
+        m.addCons(s_sc <= inputBody.device.sc.area_max * inputBody.device.sc.area_already)
+        m.addCons(s_sc >= inputBody.device.sc.area_min * inputBody.device.sc.area_already)
         # ----wd----#
-        m.addCons(num_wd <= crf(inputBody.device.wd.number_max) * crf(inputBody.device.wd.number_already))
-        m.addCons(num_wd >= crf(inputBody.device.wd.number_min) * crf(inputBody.device.wd.number_already))
-
-        #----sc----#
-        m.addCons(s_sc <= crf(inputBody.device.sc.area_max) * crf(inputBody.device.sc.area_already))
-        m.addCons(s_sc >= crf(inputBody.device.sc.area_min) * crf(inputBody.device.sc.area_already))
-
+        m.addCons(num_wd <= inputBody.device.wd.number_max * inputBody.device.wd.number_already)
+        m.addCons(num_wd >= inputBody.device.wd.number_min * inputBody.device.wd.number_already)
         #----eb----#
-        m.addCons(p_eb_max <= crf(inputBody.device.eb.power_max) * crf(inputBody.device.eb.power_already))
-        m.addCons(p_eb_max >= crf(inputBody.device.eb.power_min) * crf(inputBody.device.eb.power_already))
-
+        m.addCons(p_eb_max <= inputBody.device.eb.power_max * inputBody.device.eb.power_already)
+        m.addCons(p_eb_max >= inputBody.device.eb.power_min * inputBody.device.eb.power_already)
         #----ac----#
-        m.addCons(p_ac_max <= crf(inputBody.device.ac.power_max) * crf(inputBody.device.ac.power_already))
-        m.addCons(p_ac_max >= crf(inputBody.device.ac.power_min) * crf(inputBody.device.ac.power_already))
-
+        m.addCons(p_ac_max <= inputBody.device.ac.power_max * inputBody.device.ac.power_already)
+        m.addCons(p_ac_max >= inputBody.device.ac.power_min * inputBody.device.ac.power_already)
         #----hp----#
-        m.addCons(p_hp_max <= crf(inputBody.device.hp.power_max) * crf(inputBody.device.hp.power_already))
-        m.addCons(p_hp_max >= crf(inputBody.device.hp.power_min) * crf(inputBody.device.hp.power_already))
-
+        m.addCons(p_hp_max <= inputBody.device.hp.power_max * inputBody.device.hp.power_already)
+        m.addCons(p_hp_max >= inputBody.device.hp.power_min * inputBody.device.hp.power_already)
         #----ghp----#
-        m.addCons(p_ghp_max <= crf(inputBody.device.ghp.power_max) * crf(inputBody.device.ghp.power_already))
-        m.addCons(p_ghp_max >= crf(inputBody.device.ghp.power_min) * crf(inputBody.device.ghp.power_already))
-        m.addCons(p_ghp_deep_max <= crf(inputBody.device.ghp_deep.power_max) * crf(inputBody.device.ghp_deep.power_already))
-        m.addCons(p_ghp_deep_max >= crf(inputBody.device.ghp_deep.power_min) * crf(inputBody.device.ghp_deep.power_already))
-        
+        m.addCons(p_ghp_max <= inputBody.device.ghp.power_max * inputBody.device.ghp.power_already)
+        m.addCons(p_ghp_max >= inputBody.device.ghp.power_min * inputBody.device.ghp.power_already)
+        # ----ghp_deep----#
+        m.addCons(p_ghp_deep_max <= inputBody.device.ghp_deep.power_max * inputBody.device.ghp_deep.power_already)
+        m.addCons(p_ghp_deep_max >= inputBody.device.ghp_deep.power_min * inputBody.device.ghp_deep.power_already)
         #----gtw----#
-        m.addCons(num_gtw <= crf(inputBody.device.gtw.number_max) * crf(inputBody.device.gtw.number_already))
-        m.addCons(num_gtw >= crf(inputBody.device.gtw.number_min) * crf(inputBody.device.gtw.number_already))
-
-        #----co----#
-        m.addCons(p_co_max <= crf(inputBody.device.co.power_max) * crf(inputBody.device.co.power_already))
-        m.addCons(p_co_max >= crf(inputBody.device.co.power_min) * crf(inputBody.device.co.power_already))
-
+        m.addCons(num_gtw <= inputBody.device.gtw.number_max * inputBody.device.gtw.number_already)
+        m.addCons(num_gtw >= inputBody.device.gtw.number_min * inputBody.device.gtw.number_already)
+        # ----gtw2500----#
+        m.addCons(num_gtw2500 <= inputBody.device.gtw2500.number_max * inputBody.device.gtw2500.number_already)
+        m.addCons(num_gtw2500 >= inputBody.device.gtw2500.number_min * inputBody.device.gtw2500.number_already)
+        # ----hp120----#
+        m.addCons(p_hp120_max <= inputBody.device.hp120.power_max * inputBody.device.hp120.power_already)
+        m.addCons(p_hp120_max >= inputBody.device.hp120.power_min * inputBody.device.hp120.power_already)
+        # ----co180----#
+        m.addCons(p_co180_max <= inputBody.device.co180.power_max * inputBody.device.co180.power_already)
+        m.addCons(p_co180_max >= inputBody.device.co180.power_max * inputBody.device.co180.power_already)
         #----whp----#
-        m.addCons(p_whp_max <= crf(inputBody.device.whp.power_max) * crf(inputBody.device.whp.power_already))
-        m.addCons(p_whp_max >= crf(inputBody.device.whp.power_min) * crf(inputBody.device.whp.power_already))
-
-        #----hp120----#
-        m.addCons(p_hp120_max <= crf(inputBody.device.hp120.power_max) * crf(inputBody.device.hp120.power_already))
-        m.addCons(p_hp120_max >= crf(inputBody.device.hp120.power_min) * crf(inputBody.device.hp120.power_already))
-
-        #----co180----#
-        m.addCons(p_co180_max <= crf(inputBody.device.co180.power_max) * crf(inputBody.device.co180.power_already))
-        m.addCons(p_co180_max >= crf(inputBody.device.co180.power_max) * crf(inputBody.device.co180.power_already))
+        m.addCons(p_whp_max <= inputBody.device.whp.power_max * inputBody.device.whp.power_already)
+        m.addCons(p_whp_max >= inputBody.device.whp.power_min * inputBody.device.whp.power_already)
 
         # 用户自定义设备的规划容量上下限
         for i in range(custom_device_num):
