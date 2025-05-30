@@ -1,28 +1,32 @@
-设备：
+## 返回值
+
+### 设备
 
 ```
-co 氢气压缩机
+co 氢气压缩机（前端没写明氢气，应该改成氢气压缩机）
 fc 燃料电池
 el 电解槽
 hst 储氢罐
-ht 储热水箱
-ct 储冷水箱
-pv 光伏板
+ht 热水罐
+ct 冷水罐
+bat 蓄电池
+steam_storage 蒸汽储罐
+pv 光伏
 sc 太阳能集热器
-wd 风机
+wd 风电机组
 eb 电锅炉
-ac 空调
+abc 吸收式制冷机
+ac 水冷机组
 hp 空气源热泵
 ghp 浅层地源热泵
 ghp_deep 中深层地源热泵
-gtw 浅层地埋井
-gtw2500 ?
+gtw 200米浅层地热井
+gtw2500 2500米地热井
 hp120 高温热泵
-co180 高温蒸汽压缩机
-whp 余热热泵
-bat 电池 ?
-bio_storage ?
-steam_storage ?
+co180 蒸汽压缩机，这个前端文字对应改为蒸汽压缩机吧
+whp 水源热泵
+custom_device_storage  自定义储能设备
+custom_device_exchange  自定义能量转换设备
 ```
 
 
@@ -220,73 +224,137 @@ opex  # 运行成本
 
 
 
+### 参数指标
+
+#### old
+
+| 键                                  | 值                         | 是否已添加 |
+| ----------------------------------- | -------------------------- | ---------- |
+| all_revenue                         | revenue                    | 1          |
+| fixed_revenue                       | fixed_revenue              | 1          |
+| p_revenue                           | (卖电量+电负荷)*买电价     | ？         |
+| p_sol_revenue                       | 卖电量 * 卖电价            | 1          |
+| revenue_ele                         | revenue_ele                | 1          |
+| revenue_heat                        | revenue_heat               | 1          |
+| revenue_cold                        | revenue_cold               | 1          |
+| revenue_steam120                    | revenue_steam120           | 1          |
+| revenue_steam180                    | revenue_steam180           | 1          |
+| revenue_sol_ele                     | 卖电量 * 卖电价            | 1          |
+| revenue_sol_heat                    | g_sol * 卖电价             | 1          |
+| revenue_sol_steam120                | steam120_sol * 卖蒸汽价    | 1          |
+| revenue_sol_steam180                | steam180_sol * 卖蒸汽价    | 1          |
+| receive_year                        | receive_year               | 1          |
+| all_op_cost                         | op_sum_pure                | 1          |
+| p_pur_cost                          | 买电总价                   | 1          |
+| h_pur_cost                          | 买氢总价                   | 1          |
+| net_revenue                         | revenue - op_sum           | 1          |
+| sum_p_pur                           | 买电量                     | 1          |
+| sum_p_sol                           | 卖电量                     | 1          |
+| operation_cost_per_month_per_square | 单位面积月均运行成本       | 1          |
+| cost_save_rate                      | (纯电方案-op_sum)/纯电方案 | ？         |
+| co2                                 | ce_h                       | 1          |
+| cer_rate                            | 与电系统相比的碳减排率     | ？         |
+| cer_perm2                           | 电系统每平米的碳减排量/t   | ？         |
+| cer                                 | 电系统每平米的碳减排量/t   | ？         |
+| all_cap                             | all_cap                    | 1          |
+| year_cap                            | all_crf                    | 1          |
+| year_operation                      | op_sum_pure                | 1          |
+| cost_year                           | cost_year                  | 1          |
+| cost_per_energy                     | cost_per_energy            | 1          |
+| ele_all_cap                         | ele_cap                    | 1          |
+| ele_year_cap                        | ele_cap / 10               | 1          |
+| ele_year_operation                  | ele_op                     | 1          |
+| ele_cost_year                       | ele_cost_year              | 1          |
+| ele_cost_per_energy                 | ele_cost_per_energy        | 1          |
+| ele_co2                             | ele_co2                    | 1          |
+| gas_all_cap                         | gas_cap                    | 1          |
+| gas_year_cap                        | gas_cap / 10               | 1          |
+| gas_year_operation                  | gas_op                     | 1          |
+| gas_cost_year                       | gas_cost_year              | 1          |
+| gas_cost_per_energy                 | gas_cost_per_energy        | 1          |
+| gas_co2                             | gas_co2                    | 1          |
+| co2_reduce_ele                      | ele_co2 - ce_h             | 1          |
+| co2_reduce_gas                      | gas_co2 - ce_h             | 1          |
+| co2_reduce_ele_rate                 | (比例)                     | 1          |
+| co2_reduce_gas_rate                 | (比例)                     | 1          |
+| flag_isloate                        | ？                         | ？         |
+| cap_sum                             | capex_sum                  | 1          |
+| opex                                | op_sum                     | 1          |
+| h_cost                              | 买氢总价                   | 1          |
+| p_cost                              | 买电总价                   | 1          |
+| p_sol_earn                          | 卖电量 * 卖电价            | 1          |
+| hyd_pur_cost                        | p_hyd * hyd_cost           | ？         |
+| gas_cost                            | gas_price * 买气量         | 1          |
+| y_cost_j                            |                            | ？         |
+
+
+
+#### new
+
+| 键                           | 旧名称                              | 值                                                      |
+| ---------------------------- | ----------------------------------- | ------------------------------------------------------- |
+| **CAPEX**                    |                                     |                                                         |
+| capex_sum                    | cap_sum                             | capex_sum                                               |
+| capex_all                    | all_cap                             | capex_sum * (1 + other_investment)                      |
+| capex_crf                    |                                     | capex_crf                                               |
+| capex_all_crf                | year_cap                            | all_crf = capex_crf + capex_sum * other_investment / 20 |
+| **OPEX**                     |                                     |                                                         |
+| opex_sum                     | opex                                | op_sum                                                  |
+| opex_pure                    | all_op_cost, year_operation         | op_sum_pure                                             |
+| opex_per_month_per_square    | operation_cost_per_month_per_square | 单位面积月均运行成本                                    |
+| **系统支出与收入**           |                                     |                                                         |
+| cost_annual                  | cost_year                           | all_crf + op_sum_pure                                   |
+| cost_annual_per_energy       | cost_per_energy                     | cost_year / whole_energy                                |
+| cost_ele_buy                 | p_pur_cost                          | 买电总价                                                |
+| cost_hydrogen_buy            | h_pur_cost                          | 买氢总价                                                |
+| cost_gas_buy                 | gas_cost                            | gas_price * 买气量                                      |
+| income_ele_sell              | revenue_sol_ele, p_sol_revenue      | 卖电量 * 卖电价                                         |
+| income_heat_sell             | revenue_sol_heat                    | g_sol * 卖电价                                          |
+| income_steam120_sell         | revenue_sol_steam120                | steam120_sol * 卖蒸汽价                                 |
+| income_steam180_sell         | revenue_sol_steam180                | steam180_sol * 卖蒸汽价                                 |
+| **系统收益**                 |                                     |                                                         |
+| revenue_sum                  | all_revenue                         | revenue                                                 |
+| revenue_net                  | net_revenue                         | revenue - op_sum                                        |
+| revenue_fixed                | fixed_revenue                       | 传入值                                                  |
+| revenue_ele                  | revenue_ele                         | revenue_ele                                             |
+| revenue_heat                 | revenue_heat                        | revenue_heat                                            |
+| revenue_cool                 | revenue_cold                        | revenue_cold                                            |
+| revenue_steam120             | revenue_steam120                    | revenue_steam120                                        |
+| revenue_steam180             | revenue_steam180                    | revenue_steam180                                        |
+| **投资回收期**               |                                     |                                                         |
+| payback_period               | receive_year                        | all_cap / (revenue - op_sum)                            |
+| **电交易量**                 |                                     |                                                         |
+| ele_buy_sum                  | sum_p_pur                           | 买电量                                                  |
+| ele_sell_sum                 | sum_p_sol                           | 卖电量                                                  |
+| **碳排放指标**               |                                     |                                                         |
+| co2                          | ce_h                                | ce_h                                                    |
+| cer                          | cer                                 | co2_ele_only - ce_h                                     |
+| cer_rate                     | cer_rate                            | (co2_ele_only - ce_h) / co2_ele_only                    |
+| cer_per_area                 | cer_perm2                           | (co2_ele_only - ce_h) / area                            |
+| **纯电系统**                 |                                     |                                                         |
+| esys_capex                   | ele_all_cap                         | ele_cap                                                 |
+| esys_capex_annual            | ele_year_cap                        | ele_cap / 10                                            |
+| esys_opex                    | ele_year_operation                  | ele_op                                                  |
+| esys_cost_annual             | ele_cost_year                       | ele_cost_year                                           |
+| esys_cost_annual_per_energy  | ele_cost_per_energy                 | ele_cost_per_energy                                     |
+| esys_co2                     | ele_co2                             | ele_co2                                                 |
+| cer_esys                     | co2_reduce_ele                      | ele_co2 - ce_h                                          |
+| cer_rate_esys                | co2_reduce_ele_rate                 | (ele_co2 - ce_h) / ele_co2                              |
+| **电气系统**                 |                                     |                                                         |
+| egsys_capex                  | gas_all_cap                         | gas_cap                                                 |
+| egsys_capex_annual           | gas_year_cap                        | gas_cap / 10                                            |
+| egsys_opex                   | gas_year_operation                  | gas_op                                                  |
+| egsys_cost_annual            | gas_cost_year                       | gas_cost_year                                           |
+| egsys_cost_annual_per_energy | gas_cost_per_energy                 | gas_cost_per_energy                                     |
+| egsys_co2                    | gas_co2                             | gas_co2                                                 |
+| cer_egsys                    | co2_reduce_gas                      | gas_co2 - ce_h                                          |
+| cer_rate_egsys               | co2_reduce_gas_rate                 | (gas_co2 - ce_h) / gas_co2                              |
+
+
+
+
+
 ## 问题
-
-| 键                                  | 值                         | 现名称 | 是否已添加 |
-| ----------------------------------- | -------------------------- | ------ | ---------- |
-| all_revenue                         | revenue                    |        |            |
-| fixed_revenue                       | fixed_revenue              |        |            |
-| p_revenue                           | 卖电+电负荷                |        |            |
-| p_sol_revenue                       | 卖电                       |        |            |
-| revenue_ele                         | revenue_ele                |        |            |
-| revenue_heat                        | revenue_heat               |        |            |
-| revenue_cold                        | revenue_cold               |        |            |
-| revenue_steam120                    |                            |        |            |
-| revenue_steam180                    |                            |        |            |
-| revenue_sol_ele                     |                            |        |            |
-| revenue_sol_heat                    |                            |        |            |
-| revenue_sol_steam120                |                            |        |            |
-| revenue_sol_steam180                |                            |        |            |
-| receive_year                        |                            |        |            |
-| all_op_cost                         | op_sum_pure                |        |            |
-| p_pur_cost                          | 买电                       |        |            |
-| h_pur_cost                          | 买氢                       |        |            |
-| net_revenue                         | revenue-op_sum             |        |            |
-| operation_cost_per_month_per_square | 单位面积月均运行成本       |        |            |
-| cost_save_rate                      | (折合为电-op_sum)/折合为电 |        |            |
-| co2                                 | ce_h                       |        |            |
-| cer_rate                            |                            |        |            |
-| cer_perm2                           |                            |        |            |
-| cer                                 |                            |        |            |
-| all_cap                             |                            |        |            |
-| year_cap                            |                            |        |            |
-| year_operation                      |                            |        |            |
-| cost_year                           |                            |        |            |
-| cost_per_energy                     |                            |        |            |
-| ele_all_cap                         |                            |        |            |
-| ele_year_cap                        |                            |        |            |
-| ele_year_operation                  |                            |        |            |
-| ele_cost_year                       |                            |        |            |
-| ele_cost_per_energy                 |                            |        |            |
-| ele_co2                             |                            |        |            |
-| gas_all_cap                         |                            |        |            |
-| gas_year_cap                        |                            |        |            |
-| gas_year_operation                  |                            |        |            |
-| gas_cost_year                       |                            |        |            |
-| gas_cost_per_energy                 |                            |        |            |
-| gas_co2                             |                            |        |            |
-| co2_reduce_ele                      |                            |        |            |
-| co2_reduce_gas                      |                            |        |            |
-| co2_reduce_ele_rate                 |                            |        |            |
-| co2_reduce_gas_rate                 |                            |        |            |
-| flag_isloate                        |                            |        |            |
-|                                     |                            |        |            |
-| h_cost                              |                            |        |            |
-| p_cost                              |                            |        |            |
-| p_sol_earn                          |                            |        |            |
-| hyd_pur_cost                        | p_hyd * hyd_cost           |        |            |
-| gas_cost                            |                            |        |            |
-| y_cost_j                            |                            |        |            |
-|                                     |                            |        |            |
-|                                     |                            |        |            |
-
-
-
-```
-output_json_dict
-```
-
-
 
 ```
 custom_?
@@ -294,5 +362,17 @@ custom_?
 whp
 battery
 steam_storage
+
+flag_isloate: ?
+
+all_cap: 目前算了其他投资的比例（other_investment）
+revenue_sol_heat: 这是什么？
+p_revenue: 这是什么？
+hyd_pur_cost: 删除了买水电部分
+cost_save_rate: 这是什么？如果是和纯电方案的对比，那电气方案的是什么呢？
+
+cer_rate: 和什么比？与纯电有区别吗？
+cer_perm2: 和什么比？与纯电有区别吗？
+cer: 和什么比？与纯电有区别吗？
 ```
 
