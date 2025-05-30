@@ -3,6 +3,7 @@
         "economic_analysis": {
             "capex_all": 2123.0,
             "capex_all_crf": 212.3,
+            "capex_other": 100.0,
             "opex_sum": 34.2,
             "cost_annual": 246.5,
             "cost_annual_per_energy": 0.123,
