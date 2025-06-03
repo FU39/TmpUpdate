@@ -56,6 +56,7 @@ class ISService:
             elif inputBody.objective_load[i].type == "hotwater":
                 hotwater_demand = inputBody.objective_load[i].load8760
 
+        g_demand +=hotwater_demand                  # 合并热需求
         r_solar = inputBody.device.pv.pv_data8760  # 光照强度
         wind_power = inputBody.device.wd.wd_data8760  # 风电数据
 
@@ -383,7 +384,8 @@ class ISService:
         m.addCons(m_ct <= inputBody.device.ct.water_max)
         m.addCons(m_ct >= inputBody.device.ct.water_min)
         # ----bat----#
-
+        m.addCons(p_bat_max <= inputBody.device.bat.power_max)
+        m.addCons(p_bat_max >= inputBody.device.bat.power_min)
         # ----steam_storage----#
 
         #----pv----#
@@ -471,21 +473,21 @@ class ISService:
             # 电总线约束
             m.addCons(
                 p_whp[i] + p_co180[i] + p_hp120[i] + p_el[i] + p_sol[i] + p_hp[i] + p_hpc[i] + p_ghp[i] + p_ghp_deep[i] +
-                p_ghpc[i] + p_eb[i] + p_ac[i] + p_co[i] + ele_load[i]
+                p_ghpc[i] + p_eb[i] + p_ac[i] + p_co[i] + ele_load[i] + p_bat_in[i]
                 + (quicksum([x_j_in[0][device_index][i] for device_index in range(custom_device_num)]))
                 + (quicksum(
                     [s_i_ele_in[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[0])]))
-                == p_hyd[i] + p_pur[i] + p_fc[i] + p_pv[i] + p_wd[i]
+                == p_pur[i] + p_fc[i] + p_pv[i] + p_wd[i] + p_bat_out[i]
                 + (quicksum([x_j_out[0][device_index][i] for device_index in range(custom_device_num)]))
                 + (quicksum(
                     [s_i_ele_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[0])])))
             # 热总线约束
-            m.addCons(g_tubeTosteam120[i] + g_tube[i]
+            m.addCons(g_tubeTosteam120[i] + g_tube[i] + g_ht_in[i] + g_ghp_gr[i]
                     + (quicksum([x_j_in[1][device_index][i] for device_index in range(custom_device_num)]))
                     + (quicksum(
                 [s_i_hot_in[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[1])]))
-                    == g_fc[i] + g_whp[i] + g_ghp_deep[i] + g_eb[i] + g_sc[i] - g_ghp_gr[i] - g_ht_in[i] + g_ht_out[i] -
-                    g_xb[i] + g_hp[i] + g_ghp[i]
+                    == g_fc[i] + g_whp[i] + g_ghp_deep[i] + g_eb[i] + g_sc[i] + g_ht_out[i]
+                    + g_hp[i] + g_ghp[i]
                     + (quicksum([x_j_out[1][device_index][i] for device_index in range(custom_device_num)]))
                     + (quicksum(
                 [s_i_hot_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[1])])))
