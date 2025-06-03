@@ -552,7 +552,7 @@ class ISService:
         # 初始状态和末状态平衡
 
         #-----------------------------设备约束-----------------------------#
-        if crf(inputBody.device.ghp.balance_flag) == 1:  #如果需要考虑全年热平衡
+        if inputBody.device.ghp.balance_flag == 1:  #如果需要考虑全年热平衡
             m.addCons(quicksum([g_ghp[i] - p_ghp[i] - q_ghp[i] - p_ghpc[i] - g_ghp_gr[i] for i in range(period)]) == 0)
         for i in range(period):
             # 买能约束      g_sol和gas_pur的未定义以及对120度蒸汽和180度蒸汽的定义未区分
@@ -747,8 +747,8 @@ class ISService:
                     sum(ele_load) + sum(g_demand) / k_eb + sum(q_demand) / k_ghp_q))  # 碳减排约束，买电量不能超过碳排放,即1-碳减排
         m.addCons(ce_h == quicksum(p_pur) * alpha_e)
         #-----------------------------规划设备花费约束-----------------------------#
-        m.addCons(capex_sum == (+ p_pv_max * cost_pv + s_sc * cost_sc + num_wd * cost_wd
-                                + p_hp120_max * cost_hp120 + p_co180_max * cost_co180
+        m.addCons(capex_sum == (p_pv_max * cost_pv + s_sc * cost_sc + num_wd * cost_wd
+                                + p_hp120_max * cost_hp120 + p_co180_max * cost_co180 + cost_bat * p_bat_max + cost_steam_storage * (m_steam120_sto_max + m_steam180_sto_max)
                                 + p_ghp_max * cost_ghp + p_ghp_deep_max * cost_ghp_deep + cost_gtw * num_gtw + cost_gtw2500 * num_gtw2500
                                 + cost_ht * m_ht + cost_ct * m_ct + cost_hst * hst + cost_eb * p_eb_max + cost_ac * p_ac_max + cost_hp * p_hp_max + cost_fc * p_fc_max + cost_el * p_el_max + cost_co * p_co_max + p_whp_max * cost_whp) * (1 + input_json["price"]["PSE"])  # 基本设备库设备的规划成本
                 + quicksum([cost_x[i] * x_plan[i] for i in range(custom_device_num)]) * (
@@ -771,7 +771,7 @@ class ISService:
         m.addCons(capex_sum <= input_json['price']['capex_max'][1 - isloate[0]])  # 总规划成本上限（在允许买电和不允许买电模式下的运行费用上限不同）
 
         m.addCons(capex_crf == crf_pv * p_pv_max * cost_pv + crf_wd * num_wd * cost_wd + crf_sc * s_sc * cost_sc + crf_hst * hst * cost_hst + crf_ht * cost_ht * (
-                    m_ht) + crf_ct * cost_ct * (m_ct) + crf_hp * cost_hp * p_hp_max
+                    m_ht) + crf_ct * cost_ct * (m_ct) + crf_hp * cost_hp * p_hp_max + crf_bat * cost_bat * p_bat_max + crf_steam_storage * cost_steam_storage * (m_steam120_sto_max + m_steam180_sto_max)
                 + crf_gtw * cost_gtw * num_gtw + crf_gtw2500 * cost_gtw2500 * num_gtw2500
                 + crf_hp120 * p_hp120_max * cost_hp120 + crf_co180 * p_co180_max * cost_co180 + crf_ghp * cost_ghp * p_ghp_max + crf_ghp_deep * cost_ghp_deep * p_ghp_deep_max + crf_eb * cost_eb * p_eb_max + crf_ac * cost_ac * p_ac_max + crf_fc * p_fc_max * cost_fc + crf_el * p_el_max * cost_el + crf_co * p_co_max * cost_co + crf_xb * cost_xb * g_xb_max + crf_whp * p_whp_max * cost_whp
                 + quicksum([cost_x[i] * x_plan[i] for i in range(custom_device_num)]) * (
