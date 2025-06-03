@@ -273,6 +273,8 @@ class ISService:
         m_steam120_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
         m_steam180_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto_in{t}") for t in range(period)]
         m_steam180_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
+        m_steam120_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto{t}") for t in range(period)]
+        m_steam180_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto{t}") for t in range(period)]
         # ----pv----#
         s_pv = m.addVar(vtype="C", lb=0, name=f"s_pv")  # 光伏板投资面积
         p_pv_max = m.addVar(vtype="C", lb=0, name=f"p_pv_max")  # 光伏板投资面积
@@ -387,7 +389,10 @@ class ISService:
         m.addCons(p_bat_max <= inputBody.device.bat.power_max)
         m.addCons(p_bat_max >= inputBody.device.bat.power_min)
         # ----steam_storage----#
-
+        m.addCons(m_steam120_sto_max <= inputBody.device.steam_storage.steam_storage_max_per_unit)
+        m.addCons(m_steam120_sto_max >= inputBody.device.steam_storage.steam_storage_min_per_unit)
+        m.addCons(m_steam180_sto_max <= inputBody.device.steam_storage.steam_storage_max_per_unit)
+        m.addCons(m_steam180_sto_max >= inputBody.device.steam_storage.steam_storage_min_per_unit)
         #----pv----#
         m.addCons(p_pv_max <= inputBody.device.pv.power_max)
         m.addCons(p_pv_max >= inputBody.device.pv.power_min)
@@ -511,7 +516,7 @@ class ISService:
                 [s_i_gas_out[storage_device_index][i] for storage_device_index in range(custom_storge_device_num[4])])))
 
             # 高温120度蒸气约束
-            m.addCons(steam120_demand[i] == m_hp120[i] + steam120_pur[i] - steam120_sol[i] - m_steam120Tosteam180[i])
+            m.addCons(steam120_demand[i] + steam120_sol[i] + m_steam120Tosteam180[i] + m_steam120_sto_in[i] == m_hp120[i] + steam120_pur[i] + m_steam120_sto_out[i])
 
             # 高温120度热泵hp120约束
             m.addCons(750 * m_hp120[i] == g_hp120[i])
@@ -520,7 +525,7 @@ class ISService:
             m.addCons(p_hp120[i] <= p_hp120_max)
 
             # 高温180度蒸气约束
-            m.addCons(steam180_demand[i] == m_steam120Tosteam180[i] + steam180_pur[i] - steam180_sol[i])
+            m.addCons(steam180_demand[i] + steam180_sol[i] + m_steam180_sto_in[i] == m_steam120Tosteam180[i] + steam180_pur[i] + m_steam180_sto_out[i])
 
             # co180约束
             m.addCons(200 * m_steam120Tosteam180[i] == p_co180[i])
@@ -612,6 +617,10 @@ class ISService:
             m.addCons(p_bat_sto[i+1] - p_bat_sto[i] == p_bat_in[i] - q_ct_out[i] + 0.001 * p_bat_sto[i])  # 电池存储动态变化
         m.addCons(p_bat_sto[0] - p_bat_sto[-1] == p_bat_in[-1] - q_ct_out[-1] + 0.001 * p_bat_sto[-1])
         # ----steam_storage----#
+        for i in range(period):
+            m.addCons(m_)
+
+
 
         for i in range(period):
         # ---pv----#
