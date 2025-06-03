@@ -518,19 +518,8 @@ class ISService:
             # 高温120度蒸气约束
             m.addCons(steam120_demand[i] + steam120_sol[i] + m_steam120Tosteam180[i] + m_steam120_sto_in[i] == m_hp120[i] + steam120_pur[i] + m_steam120_sto_out[i])
 
-            # 高温120度热泵hp120约束
-            m.addCons(750 * m_hp120[i] == g_hp120[i])
-            m.addCons(cop_hp120 * p_hp120[i] == g_hp120[i])
-            m.addCons((cop_hp120 - 1) * g_tubeTosteam120[i] + p_hp120[i] == g_hp120[i])
-            m.addCons(p_hp120[i] <= p_hp120_max)
-
             # 高温180度蒸气约束
             m.addCons(steam180_demand[i] + steam180_sol[i] + m_steam180_sto_in[i] == m_steam120Tosteam180[i] + steam180_pur[i] + m_steam180_sto_out[i])
-
-            # co180约束
-            m.addCons(200 * m_steam120Tosteam180[i] == p_co180[i])
-            m.addCons(m_hp120[i] >= m_steam120Tosteam180[i])
-            m.addCons(p_co180[i] <= p_co180_max)
 
             # 其他能量流的系统约束
             for j in range(custom_energy_num):
@@ -618,9 +607,10 @@ class ISService:
         m.addCons(p_bat_sto[0] - p_bat_sto[-1] == p_bat_in[-1] - q_ct_out[-1] + 0.001 * p_bat_sto[-1])
         # ----steam_storage----#
         for i in range(period):
-            m.addCons(m_)
-
-
+            m.addCons(m_steam120_sto[i+1] - m_steam120_sto[i] == m_steam120_sto_in[i] - m_steam120_sto_out[i])
+            m.addCons(m_steam180_sto[i+1] - m_steam180_sto[i] == m_steam180_sto_in[i] - m_steam180_sto_out[i])
+        m.addCons(m_steam120_sto[0] - m_steam120_sto[-1] == m_steam120_sto_in[-1] - m_steam120_sto_out[-1])
+        m.addCons(m_steam180_sto[0] - m_steam180_sto[-1] == m_steam180_sto_in[-1] - m_steam180_sto_out[-1])
 
         for i in range(period):
         # ---pv----#
