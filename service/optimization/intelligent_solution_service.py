@@ -605,7 +605,12 @@ class ISService:
             m.addCons(q_ct[i] - q_ct[i + 1] == q_ct_in[i] - q_ct_out[i] + 0.001 * q_ct[i])  # 储冷罐存储动态变化
         m.addCons(q_ct[-1] - q_ct[0] == q_ct_in[-1] - q_ct_out[-1] + 0.001 * q_ct[-1])
         # ----bat----#
-
+        for i in range(period):
+            m.addCons(p_bat_sto[i] <= p_bat_max)  # 电池上限
+            m.addCons(q_ct[i] >= inputBody.device.bat.power_min)  # 电池下限
+        for i in range(period - 1):
+            m.addCons(p_bat_sto[i+1] - p_bat_sto[i] == p_bat_in[i] - q_ct_out[i] + 0.001 * p_bat_sto[i])  # 电池存储动态变化
+        m.addCons(p_bat_sto[0] - p_bat_sto[-1] == p_bat_in[-1] - q_ct_out[-1] + 0.001 * p_bat_sto[-1])
         # ----steam_storage----#
 
         for i in range(period):
@@ -638,9 +643,14 @@ class ISService:
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  #井和热泵有关联，制冷量+电功率=灌热量
             m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i]) # 存疑
         # ---hp120----#
-
+            m.addCons(750 * m_hp120[i] == g_hp120[i])
+            m.addCons(cop_hp120 * p_hp120[i] == g_hp120[i])
+            m.addCons((cop_hp120 - 1) * g_tubeTosteam120[i] + p_hp120[i] == g_hp120[i])
+            m.addCons(p_hp120[i] <= p_hp120_max)
         # ---co180----#
-
+            m.addCons(200 * m_steam120Tosteam180[i] == p_co180[i])
+            m.addCons(m_hp120[i] >= m_steam120Tosteam180[i])
+            m.addCons(p_co180[i] <= p_co180_max)
         # ---whp----#               找不到heat_resourceg和heat_resourceq的对应
             m.addCons(p_whpg[i] * k_whp == g_whp[i])
             m.addCons(g_whp[i] - p_whpg[i] <= input_json['device']['whp']['heat_resourceg'])
