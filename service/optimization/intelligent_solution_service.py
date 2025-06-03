@@ -258,8 +258,20 @@ class ISService:
         q_ct = [m.addVar(vtype="C", lb=0, name=f"q_ct{t}") for t in range(period)]  # 存储的冷量
         # ----bat----#
         p_bat_max = m.addvar(vtype="C", lb=0, ub= inputBody.device.bat.power_max, name=f"p_bat_max")
+        p_bat_in = [m.addVar(vtype="C", lb=0, name=f"p_bat_in{t}") for t in range(period)]
+        p_bat_out = [m.addVar(vtype="C", lb=0, name=f"p_bat_out{t}") for t in range(period)]
+        p_bat_sto = [m.addVar(vtype="C", lb=0, name=f"p_bat_sto{t}") for t in range(period)]
         # ----steam_storage----#
-
+        m_steam120_sto_max = m.addvar(vtype="C", lb=0,
+                                      ub= inputBody.device.steam_storage.steam_storage_max_per_unit,
+                                      name=f"m_steam120_sto_max")
+        m_steam180_sto_max = m.addvar(vtype="C", lb=0,
+                                      ub= inputBody.device.steam_storage.steam_storage_max_per_unit,
+                                      name=f"m_steam180_sto_max")
+        m_steam120_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_in{t}") for t in range(period)]
+        m_steam120_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
+        m_steam180_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto_in{t}") for t in range(period)]
+        m_steam180_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
         # ----pv----#
         s_pv = m.addVar(vtype="C", lb=0, name=f"s_pv")  # 光伏板投资面积
         p_pv_max = m.addVar(vtype="C", lb=0, name=f"p_pv_max")  # 光伏板投资面积
