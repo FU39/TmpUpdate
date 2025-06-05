@@ -177,6 +177,8 @@ class ISService:
         k_whp = input_json['device']['whp']['beta_whp']  #电转热，以及热转冷的效率
 
         # ---------------------------用户自定义设备---------------------------#
+        num_custom_exchange_device = len(param_input["device"]["custom_device_exchange"])       # 用户自定义能量交换设备
+        num_custom_storage_device = len(param_input["device"]["custom_device_storage"])         # 用户自定义储能设备
         # ---------------第i个自定义设备的年化收益率数据---------------#
 
         # --------------第i个自定义设备的单位投资成本--------------#
@@ -214,59 +216,57 @@ class ISService:
         steam120_sol = [m.addVar(vtype="C", lb=0, name=f"steam120_sol{t}") for t in range(period)]  # 卖steam120
         steam180_pur = [m.addVar(vtype="C", lb=0, name=f"steam180_pur{t}") for t in range(period)]  # 买steam180
         steam180_sol = [m.addVar(vtype="C", lb=0, name=f"steam180_sol{t}") for t in range(period)]  # 卖steam180
-        y_pur = [[m.addVar(vtype="C", lb=0, name=f"y_pur{i}{t}") for t in range(period)] for i in
-                     range(custom_energy_num)]  # 买天然气  # 涉及自定义能量流
 
         # 基本设备库中设备变量
         # ----co----#
-        p_co_max = m.addVar(vtype="C", lb=0,
-                            ub=inputBody.device.co.power_max,
+        p_co_max = m.addVar(vtype="C", lb=param_input["device"]["co"]["power_min"],
+                            ub=param_input["device"]["co"]["power_max"],
                             name=f"p_co_max")  # 氢气压缩机投资容量（最大功率）
         p_co = [m.addVar(vtype="C", lb=0, name=f"p_co{t}") for t in range(period)]  # 氢气压缩机工作功率
         # ----fc----#
         z_fc = [m.addVar(lb=0, ub=1, vtype="B", name=f"z_fc{t}") for t in range(period)]
-        p_fc_max = m.addVar(vtype="C", lb=0, ub = inputBody.device.fc.power_max,
+        p_fc_max = m.addVar(vtype="C", lb=param_input["device"]["fc"]["power_min"], ub = param_input["device"]["fc"]["power_max"],
                             name=f"p_fc_max")  # fc的投资容量（最大功率）
         g_fc = [m.addVar(vtype="C", lb=0, name=f"g_fc{t}") for t in range(period)]  # 燃料电池产热量
         p_fc = [m.addVar(vtype="C", lb=0, name=f"p_fc{t}") for t in range(period)]  # 燃料电池产电量
         h_fc = [m.addVar(vtype="C", lb=0, name=f"h_fc{t}") for t in range(period)]  # 燃料电池用氢量
         # ----el----#
-        p_el_max = m.addVar(vtype="C", lb=0,
-                            ub= inputBody.device.el.nm3_max,
+        p_el_max = m.addVar(vtype="C", lb=param_input["device"]["el"]["nm3_min"],
+                            ub=param_input["device"]["el"]["nm3_max"],
                             name="p_el_max")  # el的投资容量（最大功率）
         h_el = [m.addVar(vtype="C", lb=0, name=f"h_el{t}") for t in range(period)]  # 电解槽产氢量
         p_el = [m.addVar(vtype="C", lb=0, name=f"p_el{t}") for t in range(period)]  # 电解槽功率
         # ----hst----#
-        hst = m.addVar(vtype="C", lb=0,
-                       ub= inputBody.device.hst.sto_max,
+        hst = m.addVar(vtype="C", lb=param_input["device"]["hst"]["sto_min"],
+                       ub= param_input["device"]["hst"]["sto_max"],
                        name=f"hst")  # 储氢罐规划容量
         h_sto = [m.addVar(vtype="C", lb=0, name=f"h_sto{t}") for t in range(period)]  # 储氢罐t时刻储氢量
         # ----ht----#
-        m_ht = m.addVar(vtype="C", lb=0,
-                        ub= inputBody.device.ht.water_max,
+        m_ht = m.addVar(vtype="C", lb=param_input["device"]["ht"]["water_min"],
+                        ub=param_input["device"]["ht"]["water_max"],
                         name=f"m_ht")  # 储热罐的规划容量
         g_ht_in = [m.addVar(vtype="C", lb=0, name=f"g_ht_in{t}") for t in range(period)]
         g_ht_out = [m.addVar(vtype="C", lb=0, name=f"g_ht_out{t}") for t in range(period)]
         g_ht = [m.addVar(vtype="C", lb=0, name=f"g_ht{t}") for t in range(period)]  # 存储的热量
         # 写完约束之后再看看有没有需要创建的变量
         # ----ct----#
-        m_ct = m.addVar(vtype="C", lb=0,
-                        ub= inputBody.device.ct.water_max *,
+        m_ct = m.addVar(vtype="C", lb=param_input["device"]["ct"]["water_max"],
+                        ub=param_input["device"]["ct"]["water_max"],
                         name=f"m_ct")  # 储冷罐的规划容量
         q_ct_in = [m.addVar(vtype="C", lb=0, name=f"q_ct_in{t}") for t in range(period)]
         q_ct_out = [m.addVar(vtype="C", lb=0, name=f"q_ct_out{t}") for t in range(period)]  # 写完约束之后再看看有没有需要创建的变量
         q_ct = [m.addVar(vtype="C", lb=0, name=f"q_ct{t}") for t in range(period)]  # 存储的冷量
         # ----bat----#
-        p_bat_max = m.addvar(vtype="C", lb=0, ub= inputBody.device.bat.power_max, name=f"p_bat_max")
+        p_bat_max = m.addvar(vtype="C", lb=param_input["device"]["bat"]["power_min"], ub=param_input["device"]["bat"]["power_max"], name=f"p_bat_max")
         p_bat_in = [m.addVar(vtype="C", lb=0, name=f"p_bat_in{t}") for t in range(period)]
         p_bat_out = [m.addVar(vtype="C", lb=0, name=f"p_bat_out{t}") for t in range(period)]
         p_bat_sto = [m.addVar(vtype="C", lb=0, name=f"p_bat_sto{t}") for t in range(period)]
         # ----steam_storage----#
-        m_steam120_sto_max = m.addvar(vtype="C", lb=0,
-                                      ub= inputBody.device.steam_storage.steam_storage_max_per_unit,
+        m_steam120_sto_max = m.addvar(vtype="C", lb=param_input["device"]["steam_storage"]["water_min"],
+                                      ub=param_input["device"]["steam_storage"]["water_max"],
                                       name=f"m_steam120_sto_max")
-        m_steam180_sto_max = m.addvar(vtype="C", lb=0,
-                                      ub= inputBody.device.steam_storage.steam_storage_max_per_unit,
+        m_steam180_sto_max = m.addvar(vtype="C", lb=param_input["device"]["steam_storage"]["water_min"],
+                                      ub=param_input["device"]["steam_storage"]["water_max"],
                                       name=f"m_steam180_sto_max")
         m_steam120_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_in{t}") for t in range(period)]
         m_steam120_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
@@ -276,42 +276,47 @@ class ISService:
         m_steam180_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto{t}") for t in range(period)]
         # ----pv----#
         s_pv = m.addVar(vtype="C", lb=0, name=f"s_pv")  # 光伏板投资面积
-        p_pv_max = m.addVar(vtype="C", lb=0, name=f"p_pv_max")  # 光伏板投资面积
-        p_pv = [m.addVar(vtype="C", lb=0, ub= inputBody.device.pv.power_max,
-                     name=f"p_pv{t}") for t in range(period)]  # 光伏板发电功率
+        p_pv_max = m.addVar(vtype="C", lb=param_input["device"]["pv"]["power_min"], ub=param_input["device"]["pv"]["power_max"], name=f"p_pv_max")  # 光伏板投资面积
+        p_pv = [m.addVar(vtype="C", lb=0,name=f"p_pv{t}") for t in range(period)]  # 光伏板发电功率
         # ----sc----#
-        s_sc = m.addVar(vtype="C", lb=0,
-                        ub=inputBody.device.sc.area_max,
+        s_sc = m.addVar(vtype="C", lb=param_input["device"]["sc"]["area_min"],
+                        ub=param_input["device"]["sc"]["area_max"],
                         name=f"s_sc")  # 太阳能集热器投资面积
         g_sc = [m.addVar(vtype="C", lb=0, name=f"g_sc{t}") for t in range(period)]  # 太阳能集热器收集的热量
         # ----wd----#
-        num_wd = m.addVar(vtype="INTEGER", lb=0,
-                          ub= inputBody.device.wd.number_max,
+        num_wd = m.addVar(vtype="INTEGER", lb=param_input["device"]["wd"]["number_min"],
+                          ub=param_input["device"]["wd"]["number_max"],
                           name=f"num_wd")  # 风电投资数量
         p_wd = [m.addVar(vtype="C", lb=0, name=f"p_wd{t}") for t in range(period)]  # 风电发电功率
         # ----eb----#
-        p_eb_max = m.addVar(vtype="C", lb=0,
-                            ub= inputBody.device.eb.power_max,
+        p_eb_max = m.addVar(vtype="C", lb=param_input["device"]["eb"]["power_min"],
+                            ub=param_input["device"]["eb"]["power_max"],
                             name=f"p_eb_max")  # 电锅炉投资容量（最大功率）
         g_eb = [m.addVar(vtype="C", lb=0, name=f"g_eb{t}") for t in range(period)]  # 电锅炉产热
         p_eb = [m.addVar(vtype="C", lb=0, name=f"p_eb{t}") for t in range(period)]  # 电锅炉耗电
+        # ----abc----#
+        p_abc_max = m.addVar(vtype="C", lb=param_input["device"]["abc"]["power_min"],
+                            ub=param_input["device"]["abc"]["power_max"],
+                            name=f"p_abc_max")  # 投资容量（最大功率）
+        g_abc = [m.addVar(vtype="C", lb=0, name=f"g_abc{t}") for t in range(period)]  # 耗热
+        q_abc = [m.addVar(vtype="C", lb=0, name=f"q_abc{t}") for t in range(period)]  # 产冷
         # ----ac----#
-        p_ac_max = m.addVar(vtype="C", lb=0,
-                            ub= inputBody.device.ac.power_max,
+        p_ac_max = m.addVar(vtype="C", lb=param_input["device"]["ac"]["power_min"],
+                            ub=param_input["device"]["ac"]["power_max"],
                             name=f"p_ac_max")  # 空调投资容量（最大功率）
         p_ac = [m.addVar(vtype="C", lb=0, name=f"p_ac{t}") for t in range(period)]  # 电锅炉产热
         q_ac = [m.addVar(vtype="C", lb=0, name=f"q_ac{t}") for t in range(period)]  # 电锅炉耗电
         # ----hp----#
         p_hp_max = m.addVar(vtype="C", lb=0,
-                            ub= inputBody.device.hp.power_max,
+                            ub=param_input["device"]["hp"]["power_max"],
                             name=f"p_hp_max")  # 空气源热泵投资容量（最大功率）
         p_hp = [m.addVar(vtype="C", lb=0, name=f"p_hp{t}") for t in range(period)]  # 热泵产热耗电
         p_hpc = [m.addVar(vtype="C", lb=0, name=f"p_hpc{t}") for t in range(period)]  # 热泵产冷的耗电
         q_hp = [m.addVar(vtype="C", lb=0, name=f"q_hp{t}") for t in range(period)]  # 热泵产冷
         g_hp = [m.addVar(vtype="C", lb=0, name=f"g_hp{t}") for t in range(period)]  # 热泵产热
         # ----ghp----#
-        p_ghp_max = m.addVar(vtype="C", lb=0,
-                             ub= inputBody.device.ghp.power_max,
+        p_ghp_max = m.addVar(vtype="C", lb=param_input["device"]["ghp"]["power_min"],
+                             ub=param_input["device"]["ghp"]["power_max"],
                              name=f"p_ghp_max")  # 地源热泵投资容量（最大功率）
         p_ghp = [m.addVar(vtype="C", lb=0, name=f"p_ghp{t}") for t in range(period)]  # 热泵产热耗电
         p_ghpc = [m.addVar(vtype="C", lb=0, name=f"p_ghpc{t}") for t in range(period)]  # 热泵产冷的耗电
@@ -319,35 +324,35 @@ class ISService:
         q_ghp = [m.addVar(vtype="C", lb=0, name=f"q_ghp{t}") for t in range(period)]  # 热泵产冷
         g_ghp_gr = [m.addVar(vtype="C", lb=0, name=f"g_ghp_gr{t}") for t in range(period)]  # 热泵灌热
         # ----ghp_deep----#
-        p_ghp_deep_max = m.addVar(vtype="C", lb=0,
-                                  ub= inputBody.device.ghp_deep.power_max,
+        p_ghp_deep_max = m.addVar(vtype="C", lb=param_input["device"]["ghp_deep"]["power_min"],
+                                  ub=param_input["device"]["ghp_deep"]["power_max"],
                                   name=f"p_ghp_deep_max")  # 地源热泵投资容量（最大功率）
         p_ghp_deep = [m.addVar(vtype="C", lb=0, name=f"p_ghp_deep{t}") for t in range(period)]  # 热泵产热耗电
         g_ghp_deep = [m.addVar(vtype="C", lb=0, name=f"g_ghp_deep{t}") for t in range(period)]  # 热泵产热
         # ----gtw----#
-        num_gtw = m.addVar(vtype="INTEGER", lb=0,
-                           ub= inputBody.device.gtw.number_max,
+        num_gtw = m.addVar(vtype="INTEGER", lb=param_input["device"]["gtw"]["number_min"],
+                           ub=param_input["device"]["gtw"]["number_max"],
                            name='num_gtw')  # 地热井投资数量
         # ----gtw2500----#
-        num_gtw2500 = m.addVar(vtype="INTEGER", lb=0,
-                           ub=inputBody.device.gtw2500.number_max,
+        num_gtw2500 = m.addVar(vtype="INTEGER", lb=param_input["device"]["gtw2500"]["number_min"],
+                           ub=param_input["device"]["gtw2500"]["number_max"],
                            name='num_gtw2')  # 2500深度地热井投资数量
         # ----hp120----#
-        p_hp120_max = m.addVar(vtype="C", lb=0,
-                               ub=inputBody.device.hp120.power_max,
+        p_hp120_max = m.addVar(vtype="C", lb=param_input["device"]["hp120"]["power_min"],
+                               ub=param_input["device"]["hp120"]["power_max"],
                                name=f"p_hp120_max")  # 余热热泵投资容量（最大功率）
         p_hp120 = [m.addVar(vtype="C", lb=0, name=f"p_hp120{t}") for t in range(period)]  # 高温热泵耗电量
         m_hp120 = [m.addVar(vtype="C", lb=0, name=f"m_hp120{t}") for t in range(period)]
         g_hp120 = [m.addVar(vtype="C", lb=0, name=f"g_hp120{t}") for t in range(period)]
         # ----co180----#
-        p_co180_max = m.addVar(vtype="C", lb=0,
-                               ub=inputBody.device.co180.power_max,
+        p_co180_max = m.addVar(vtype="C", lb=param_input["device"]["co180"]["power_min"],
+                               ub=param_input["device"]["co180"]["power_max"],
                                name=f"p_co180_max")  # 余热热泵投资容量（最大功率）
         p_co180 = [m.addVar(vtype="C", lb=0, name=f"p_co180{t}") for t in range(period)]  # 高温压缩机耗电量
         m_co180 = [m.addVar(vtype="C", lb=0, name=f"m_co180{t}") for t in range(period)]
         # ----whp----#
-        p_whp_max = m.addVar(vtype="C", lb=0,
-                             ub=inputBody.device.whp.power_max,
+        p_whp_max = m.addVar(vtype="C", lb=param_input["device"]["whp"]["power_min"],
+                             ub=param_input["device"]["whp"]["power_max"],
                              name=f"p_whp_max")  # 余热热泵投资容量（最大功率）
         p_whp = [m.addVar(vtype="C", lb=0, name=f"p_whp{t}") for t in range(period)]  # 余热热泵功率
         p_whpg = [m.addVar(vtype="C", lb=0, name=f"p_whpg{t}") for t in range(period)]  # 余热热泵产热耗电量
@@ -355,10 +360,16 @@ class ISService:
         g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
         q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
         # 用户自定义库中设备变量
-        # 能量流顺序 0：电   1：热   2：冷   3：氢   4：气   5：自定义能量流1   6：自定义能量流2 ......
+        # 自定义能量交换设备
+        CED_op_var = [[m.addVar(vtype="C", lb=0, name=f"CED_op_var{i}{t}") for t in range(period)] for i in range(num_custom_exchange_device)]   # 设备运行中间变量
 
+        CED_ennergy_in = [[[m.addVar(vtype="C", lb=0, name=f"CED_ennergy_in{i}{j}{t}") for t in range(period)] for j in 6] for i in range(num_custom_exchange_device)]  # 设备i 的能量种类j 在t时刻的输入
+        CED_ennergy_out = [[[m.addVar(vtype="C", lb=0, name=f"CED_ennergy_out{i}{j}{t}") for t in range(period)] for j in 6] for i in range(num_custom_exchange_device)]     # 设备i 的能量种类j 在t时刻的输出
         # 自定义储能设备的设备变量
+        CSD_sto = [[m.addVar(vtype="C", lb=0, name=f"CSD_sto{i}{t}") for t in range(period)] for i in range(num_custom_storage_device)]
 
+        CSD_ennergy_in = [[[m.addVar(vtype="C", lb=0, name=f"CSD_ennergy_in{i}{j}{t}") for t in range(period)] for j in 6] for i in range(num_custom_storage_device)]
+        CSD_ennergy_out = [[[m.addVar(vtype="C", lb=0, name=f"CSD_ennergy_out{i}{j}{t}") for t in range(period)] for j in 6] for i in range(num_custom_storage_device)]
         #---------------创建约束条件--------------#
         #----------------------------------------------------------#
         # 规划容量上下限约束
