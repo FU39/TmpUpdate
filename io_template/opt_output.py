@@ -13,6 +13,7 @@ result = {
             "cost_annual_per_energy": 0.123,  # 单位能源成本 (元/kWh)
             "payback_period": 5.0,  # 投资回收期 (年)
             "co2": 1234.5,  # 年碳排放量 (吨)
+            "cer": 765.5,  # 年碳减排量 (吨)
             # 对比方案: 纯电 (电锅炉供暖) 方案
             "capex_all_eb": 1000.0,  # 初始投资成本 (万元)
             "capex_all_crf_eb": 100.0,  # 年化投资成本 (万元)
@@ -22,6 +23,8 @@ result = {
             "payback_period_eb": 6.0,  # 投资回收期 (年)
             "payback_period_diff_eb": 1.0,  # 投资差额回收期 (年)
             "co2_eb": 2000.0,  # 年碳排放量 (吨)
+            "cer_eb": 500.0,  # 年碳减排量 (吨)
+            "cer_rate_eb": 0.4,  # 碳减排率
             # 对比方案: 纯电 (热泵供暖) 方案
             "capex_all_hp": 1500.0,  # 初始投资成本 (万元)
             "capex_all_crf_hp": 150.0,  # 年化投资成本 (万元)
@@ -31,6 +34,8 @@ result = {
             "payback_period_hp": 7.0,  # 投资回收期 (年)
             "payback_period_diff_hp": 2.0,  # 投资差额回收期 (年)
             "co2_hp": 1800.0,  # 年碳排放量 (吨)
+            "cer_hp": 434.5,  # 年碳减排量 (吨)
+            "cer_rate_hp": 0.35,  # 碳减排率
             # 对比方案: 燃气方案
             "capex_all_gas": 1800.0,  # 初始投资成本 (万元)
             "capex_all_crf_gas": 180.0,  # 年化投资成本 (万元)
@@ -40,6 +45,8 @@ result = {
             "payback_period_gas": 8.0,  # 投资回收期 (年)
             "payback_period_diff_gas": 3.0,  # 投资差额回收期 (年)
             "co2_gas": 2500.0,  # 年碳排放量 (吨)
+            "cer_gas": 300.0,  # 年碳减排量 (吨)
+            "cer_rate_gas": 0.25,  # 碳减排率
         },
         # 收益明细
         "revenue_analysis": {
