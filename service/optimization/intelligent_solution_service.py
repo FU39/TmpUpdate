@@ -25,17 +25,16 @@ def crf(year):
     return crf
 
 
-def support_device(d_cost, d_se):
-    """计算配套设备价格函数
-    """
-    return d_cost * d_se
-
-
 class ISService:
     def __init__(self):
         pass
 
     def exec(self, inputBody: OptimizationBody):
+
+        param_input = inputBody.model_dump()
+        # TODO: 将输入参数转换为字典
+
+        # 开始计时
         t0 = time.time()
         #------------导入自定义数据------------#
 
@@ -56,7 +55,7 @@ class ISService:
             elif inputBody.objective_load[i].type == "hotwater":
                 hotwater_demand = inputBody.objective_load[i].load8760
 
-        g_demand +=hotwater_demand                  # 合并热需求
+        g_demand += hotwater_demand  # 合并热需求
         r_solar = inputBody.device.pv.pv_data8760  # 光照强度
         wind_power = inputBody.device.wd.wd_data8760  # 风电数据
 
