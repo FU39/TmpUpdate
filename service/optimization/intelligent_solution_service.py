@@ -51,14 +51,25 @@ class ISService:
         ele_load = param_input["sys_load"]["electricity_load"]
         heatload_num = len(param_input["sys_load"]["heat_load"])
         coolload_num = len(param_input["sys_load"]["cool_load"])
-
+        steamload_num = len(param_input["sys_load"]["steam_load"])
+        hotwater_num = len(param_input["sys_load"]["hotwater_load"])
         g_demand = [0] * 8760
         q_demand = [0] * 8760
+        h_demand = param_input["sys_load"]["hydrogen_load"]
+        steam120_demand = [0] * 8760
+        steam180_demand = [0] * 8760
+        hotwater_demand = [0] * 8760
         for i in range(heatload_num):
-            g_demand += param_input["sys_load"]["heat_load"]['heat'+str(i)]
+            g_demand += param_input["sys_load"]["heat_load"]['heat'+str(i)]["load"]
         for i in range(coolload_num):
-            q_demand = param_input["sys_load"]["cool_load"]['heat'+str(i)]
-
+            q_demand = param_input["sys_load"]["cool_load"]['heat'+str(i)]["load"]
+        for i in range(steamload_num):
+            if param_input["sys_load"]["steam_load"]['steam'+str(i)]["tem"] == 120:
+                steam120_demand += param_input["sys_load"]["steam_load"]['steam'+str(i)]["load"]
+            elif param_input["sys_load"]["steam_load"]['steam'+str(i)]["tem"] == 180:
+                steam180_demand += param_input["sys_load"]["steam_load"]['steam' + str(i)]["load"]
+        for i in range(hotwater_num):
+            hotwater_demand += param_input["sys_load"]["hotwater_load"]['hotwater'+str(i)]["load"]
         g_demand += hotwater_demand  # 合并热需求
 
         pv_data = param_input["device"]["pv"]["pv_data8760"]
@@ -69,16 +80,15 @@ class ISService:
         alpha_e = 0.5839  # 电网排放因子kg/kWh
         gas_price = 1.2  # 天然气价钱
         lambda_ele_in = param_input["trading"]["power_buy_8760_price"]           # 每个小时的电价
-        lambda_ele_out = inputBody.trading.power_sell_price              # 卖电价格
-        lambda_g_out = inputBody.trading.heat_sell_price                 # 卖热价格
-        lambda_h_out = inputBody.trading.hydrogen_sell_price             # 卖氢价格
-        lambda_h = inputBody.trading.hydrogen_buy_price                  # 买氢价格
-        cer = inputBody.base.cer                                         # 碳减排率
-        lambda_steam120_in = inputBody.trading.steam_buy[1].price        # 120蒸汽购入价格
-        lambda_steam120_out = inputBody.trading.steam_sell[1].price      # 120蒸汽出售价格
-        lambda_steam180_in = inputBody.trading.steam_buy[0].price        # 180蒸汽购入价格
-        lambda_steam180_out = inputBody.trading.steam_sell[0].price      # 180蒸汽出售价格
-        c = 4.2 / 3600                                                   # 水的比热容
+        lambda_ele_out = param_input["trading"]["power_sell_24_price"]              # 卖电价格
+        lambda_g_out = param_input["trading"]["heat_sell_price"]                 # 卖热价格
+        lambda_h_out = param_input["trading"]["hydrogen_sell_price"]             # 卖氢价格
+        lambda_h = param_input["trading"]["hydrogen_buy_price"]                  # 买氢价格
+        cer = param_input["base"]["cer"]                                          # 碳减排率
+        lambda_steam120_in = param_input["trading"]["steam_buy"][1]["price"]        # 120蒸汽购入价格
+        lambda_steam120_out = param_input["trading"]["steam_sell"][1]["price"]      # 120蒸汽出售价格
+        lambda_steam180_in = param_input["trading"]["steam_buy"][0]["price"]        # 180蒸汽购入价格
+        lambda_steam180_out = param_input["trading"]["steam_sell"][0]["price"]      # 180蒸汽出售价格
         #---------------------------基本设备库中的设备---------------------------#
         """
         基本设备库中设备符号解释:
@@ -503,16 +513,16 @@ class ISService:
             m.addCons(quicksum([g_ghp[i] - p_ghp[i] - q_ghp[i] - p_ghpc[i] - g_ghp_gr[i] for i in range(period)]) == 0)
         for i in range(period):
             # 买能约束      g_sol和gas_pur的未定义以及对120度蒸汽和180度蒸汽的定义未区分
-            m.addCons(p_pur[i] <= 1000000000 * inputBody.trading.power_buy_enable)  # 是否允许电网买电
-            m.addCons(p_sol[i] <= 1000000000 * inputBody.trading.power_sell_enable)  # 是否允许电网卖电
-            m.addCons(h_pur[i] <= 1000000000 * inputBody.trading.h2_buy_enable)  # 是否允许购买氢气
+            m.addCons(p_pur[i] <= 1000000000 * param_input["trading"]["power_buy_enable"])  # 是否允许电网买电
+            m.addCons(p_sol[i] <= 1000000000 * param_input["trading"]["power_sell_enable"])  # 是否允许电网卖电
+            m.addCons(h_pur[i] <= 1000000000 * param_input["trading"]["h2_buy_enable"])  # 是否允许购买氢气
             m.addCons(g_sol[i] <= 1000000000 * input_json['calc_mode']['grid']['g_sol'])  # 是否允许出售天然气
-            m.addCons(h_sol[i] <= 1000000000 * inputBody.trading.h2_sell_enable)  # 是否允许出售氢气
+            m.addCons(h_sol[i] <= 1000000000 * param_input["trading"]["h2_sell_enable"])  # 是否允许出售氢气
             m.addCons(gas_pur[i] <= 1000000000 * input_json['calc_mode']['grid']['gas_pur'])  # 是否允许购买天然气
-            m.addCons(steam120_pur[i] <= 1000000000 * inputBody.trading.steam_buy[1].enable)  # 是否允许买120度蒸汽
-            m.addCons(steam120_sol[i] <= 1000000000 * inputBody.trading.steam_sol[1].enable)  # 是否允许卖120度蒸汽
-            m.addCons(steam180_pur[i] <= 1000000000 * inputBody.trading.steam_buy[0].enable)  # 是否允许买180度蒸汽
-            m.addCons(steam180_sol[i] <= 1000000000 * inputBody.trading.steam_sol[0].enable)  # 是否允许卖180度蒸汽
+            m.addCons(steam120_pur[i] <= 1000000000 * param_input["trading"]["steam_buy"][1]["enable"])  # 是否允许买120度蒸汽
+            m.addCons(steam120_sol[i] <= 1000000000 * param_input["trading"]["steam_sell"][1]["enable"])  # 是否允许卖120度蒸汽
+            m.addCons(steam180_pur[i] <= 1000000000 * param_input["trading"]["steam_buy"][0]["enable"])  # 是否允许买180度蒸汽
+            m.addCons(steam180_sol[i] <= 1000000000 * param_input["trading"]["steam_sell"][0]["enable"])  # 是否允许卖180度蒸汽
         #-----------------------------基础设备库的设备约束-----------------------------#
         for i in range(period):
         #-----co----#
@@ -669,85 +679,56 @@ class ISService:
         m.addCons(k_s_wd * num_wd <= s_outside)
         #-----------------------------运行费用约束-----------------------------#
         m.addCons(op_sum == quicksum([p_pur[i] * lambda_ele_in[i] for i in range(period)])  # 买电花费
-                + lambda_h * quicksum([h_pur[i] for i in range(period)])  # 买氢气花费
-                + gas_price * quicksum([gas_pur[i] for i in range(period)])  # 买天然气花费
-                + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])  # 买120steam花费
-                + lambda_steam180_in * quicksum([steam180_pur[i] for i in range(period)])  # 买180steam花费
-                + quicksum([cost_custom_energy[j] * y_pur[j][i] for i in range(period) for j in range(custom_energy_num)])
-                - quicksum(p_sol[i] * lambda_ele_out for i in range(period))
-                - quicksum(g_sol[i] * lambda_g_out for i in range(period))
-                - quicksum(h_sol[i] * lambda_h_out for i in range(period))
-                - quicksum(steam120_sol[i] * lambda_steam120_out for i in range(period))
-                - quicksum(steam180_sol[i] * lambda_steam180_out for i in range(period))
-                )  # 买自定义能量流花费
+                  + lambda_h * quicksum([h_pur[i] for i in range(period)])  # 买氢气花费
+                  + gas_price * quicksum([gas_pur[i] for i in range(period)])  # 买天然气花费
+                  + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])  # 买120steam花费
+                  + lambda_steam180_in * quicksum([steam180_pur[i] for i in range(period)])  # 买180steam花费
+                  - quicksum(p_sol[i] * lambda_ele_out for i in range(period))
+                  - quicksum(g_sol[i] * lambda_g_out for i in range(period))
+                  - quicksum(h_sol[i] * lambda_h_out for i in range(period))
+                  - quicksum(steam120_sol[i] * lambda_steam120_out for i in range(period))
+                  - quicksum(steam180_sol[i] * lambda_steam180_out for i in range(period))
+                  )
         m.addCons(op_sum_pure == quicksum([p_pur[i] * lambda_ele_in[i] for i in range(period)])  # 买电花费
-                + lambda_h * quicksum([h_pur[i] for i in range(period)])  # 买氢气花费
-                + gas_price * quicksum([gas_pur[i] for i in range(period)])  # 买天然气花费
-                + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])  # 买天然气花费
-                + lambda_steam180_in * quicksum([steam180_pur[i] for i in range(period)])  # 买天然气花费
-                + quicksum([cost_custom_energy[j] * y_pur[j][i] for i in range(period) for j in range(custom_energy_num)])
-                )  # 买自定义能量流花费
+                  + lambda_h * quicksum([h_pur[i] for i in range(period)])  # 买氢气花费
+                  + gas_price * quicksum([gas_pur[i] for i in range(period)])  # 买天然气花费
+                  + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])  # 买天然气花费
+                  + lambda_steam180_in * quicksum([steam180_pur[i] for i in range(period)])  # 买天然气花费
+                  )  # 买自定义能量流花费
 
         m.addCons(op_sum <= input_json['price']['op_max'][1 - isloate[1]])  #运行费用上限（在允许卖电和不允许卖电模式下的运行费用上限不同）
-        #price 未定义
-        # m.addCons(cost_c_ele == sum([ele_load[i]*lambda_ele_in[i] for i in range(period)]))
-        # m.addCons(cost_c_heat == sum([g_demand[i]/0.95*lambda_ele_in[i] for i in range(period)]))#/(3.41))
-        # m.addCons(cost_c_cool == sum([q_demand[i]/4*lambda_ele_in[i] for i in range(period)]))#/3.8)
-        # m.addCons(cost_c == cost_c_cool+cost_c_heat+cost_c_ele)
-
         #-----------------------------碳减排的约束-----------------------------#
         m.addCons(quicksum(p_pur) <= (1 - cer) * (
                     sum(ele_load) + sum(g_demand) / k_eb + sum(q_demand) / k_ghp_q))  # 碳减排约束，买电量不能超过碳排放,即1-碳减排
         m.addCons(ce_h == quicksum(p_pur) * alpha_e)
         #-----------------------------规划设备花费约束-----------------------------#
         m.addCons(capex_sum == (p_pv_max * cost_pv + s_sc * cost_sc + num_wd * cost_wd
-                                + p_hp120_max * cost_hp120 + p_co180_max * cost_co180 + cost_bat * p_bat_max + cost_steam_storage * (m_steam120_sto_max + m_steam180_sto_max)
-                                + p_ghp_max * cost_ghp + p_ghp_deep_max * cost_ghp_deep + cost_gtw * num_gtw + cost_gtw2500 * num_gtw2500
-                                + cost_ht * m_ht + cost_ct * m_ct + cost_hst * hst + cost_eb * p_eb_max + cost_ac * p_ac_max + cost_hp * p_hp_max + cost_fc * p_fc_max + cost_el * p_el_max + cost_co * p_co_max + p_whp_max * cost_whp) * (1 + input_json["price"]["PSE"])  # 基本设备库设备的规划成本
-                + quicksum([cost_x[i] * x_plan[i] for i in range(custom_device_num)]) * (
-                            1 + input_json["price"]["PSE"])  # 自定义设备规划成本
-                + quicksum([cost_storage_ele[i] * s_i_ele_plan[i] for i in range(custom_storge_device_num[0])]) * (
-                            1 + input_json["price"]["PSE"])
-                + quicksum([cost_storage_hot[i] * s_i_hot_plan[i] for i in range(custom_storge_device_num[1])]) * (
-                            1 + input_json["price"]["PSE"])
-                + quicksum([cost_storage_cold[i] * s_i_cold_plan[i] for i in range(custom_storge_device_num[2])]) * (
-                            1 + input_json["price"]["PSE"])
-                + quicksum([cost_storage_hydr[i] * s_i_hydr_plan[i] for i in range(custom_storge_device_num[3])]) * (
-                            1 + input_json["price"]["PSE"])
-                + quicksum([cost_storage_gas[i] * s_i_gas_plan[i] for i in range(custom_storge_device_num[4])]) * (
-                            1 + input_json["price"]["PSE"])
-                + quicksum(
-            [quicksum([cost_storage_x[i][j] * s_i_xj_plan[i][j] for j in range(custom_storge_device_num[5 + i])]) for i in
-            range(custom_energy_num)]) * (1 + input_json["price"]["PSE"])
+                                + p_hp120_max * cost_hp120 + p_co180_max * cost_co180 + cost_bat * p_bat_max
+                                + cost_steam_storage * (m_steam120_sto_max + m_steam180_sto_max)
+                                + p_ghp_max * cost_ghp + p_ghp_deep_max * cost_ghp_deep + cost_gtw * num_gtw
+                                + cost_gtw2500 * num_gtw2500 + cost_eb * p_eb_max + cost_abc * g_abc_max
+                                + cost_ht * m_ht + cost_ct * m_ct + cost_hst * hst + cost_ac * p_ac_max
+                                + cost_hp * p_hp_max + cost_fc * p_fc_max + cost_el * p_el_max + cost_co * p_co_max
+                                + p_whp_max * cost_whp) * (1 + input_json["price"]["PSE"])  # 基本设备库设备的规划成本
+                                + quicksum([cost_ced[i] * ced_install[i] for i in range(num_custom_exchange_device)]) * (1 + input_json["price"]["PSE"])
+                                + quicksum([cost_csd[i] * csd_install[i] for i in range(num_custom_storage_device)]) * (1 + input_json["price"]["PSE"])
                 )  # 自定义设备规划成本
 
         m.addCons(capex_sum <= input_json['price']['capex_max'][1 - isloate[0]])  # 总规划成本上限（在允许买电和不允许买电模式下的运行费用上限不同）
 
-        m.addCons(capex_crf == crf_pv * p_pv_max * cost_pv + crf_wd * num_wd * cost_wd + crf_sc * s_sc * cost_sc + crf_hst * hst * cost_hst + crf_ht * cost_ht * (
-                    m_ht) + crf_ct * cost_ct * (m_ct) + crf_hp * cost_hp * p_hp_max + crf_bat * cost_bat * p_bat_max + crf_steam_storage * cost_steam_storage * (m_steam120_sto_max + m_steam180_sto_max)
-                + crf_gtw * cost_gtw * num_gtw + crf_gtw2500 * cost_gtw2500 * num_gtw2500
-                + crf_hp120 * p_hp120_max * cost_hp120 + crf_co180 * p_co180_max * cost_co180 + crf_ghp * cost_ghp * p_ghp_max + crf_ghp_deep * cost_ghp_deep * p_ghp_deep_max + crf_eb * cost_eb * p_eb_max + crf_ac * cost_ac * p_ac_max + crf_fc * p_fc_max * cost_fc + crf_el * p_el_max * cost_el + crf_co * p_co_max * cost_co + crf_xb * cost_xb * g_xb_max + crf_whp * p_whp_max * cost_whp
-                + quicksum([cost_x[i] * x_plan[i] for i in range(custom_device_num)]) * (
-                            1 + input_json["price"]["PSE"])  # 自定义设备规划成本
-                + quicksum(
-            [cost_storage_ele[i] * s_i_ele_plan[i] * crf(input_json['custom_device']['storage_device_ele' + str(i)]['crf'])
-            for i in range(custom_storge_device_num[0])])
-                + quicksum(
-            [cost_storage_hot[i] * s_i_hot_plan[i] * crf(input_json['custom_device']['storage_device_hot' + str(i)]['crf'])
-            for i in range(custom_storge_device_num[1])])
-                + quicksum([cost_storage_cold[i] * s_i_cold_plan[i] * crf(
-            input_json['custom_device']['storage_device_cold' + str(i)]['crf']) for i in
-                            range(custom_storge_device_num[2])])
-                + quicksum([cost_storage_hydr[i] * s_i_hydr_plan[i] * crf(
-            input_json['custom_device']['storage_device_hydr' + str(i)]['crf']) for i in
-                            range(custom_storge_device_num[3])])
-                + quicksum(
-            [cost_storage_gas[i] * s_i_gas_plan[i] * crf(input_json['custom_device']['storage_device_gas' + str(i)]['crf'])
-            for i in range(custom_storge_device_num[4])])
-                + quicksum([quicksum([cost_storage_x[i][j] * s_i_xj_plan[i][j] * crf(
-            input_json['custom_device']['storage_device_x' + str(i) + str(j)]['crf']) for j in
-                                        range(custom_storge_device_num[5 + i])]) for i in range(custom_energy_num)]))
-
+        m.addCons(capex_crf == crf_pv * p_pv_max * cost_pv + crf_wd * num_wd * cost_wd + crf_sc * s_sc * cost_sc
+                                + crf_hst * hst * cost_hst + crf_ht * cost_ht * m_ht + crf_ct * cost_ct * m_ct
+                                + crf_hp * cost_hp * p_hp_max + crf_bat * cost_bat * p_bat_max
+                                + crf_steam_storage * cost_steam_storage * (m_steam120_sto_max + m_steam180_sto_max)
+                                + crf_gtw * cost_gtw * num_gtw + crf_gtw2500 * cost_gtw2500 * num_gtw2500
+                                + crf_hp120 * p_hp120_max * cost_hp120 + crf_co180 * p_co180_max * cost_co180
+                                + crf_ghp * cost_ghp * p_ghp_max + crf_ghp_deep * cost_ghp_deep * p_ghp_deep_max
+                                + crf_eb * cost_eb * p_eb_max + crf_ac * cost_ac * p_ac_max + crf_fc * p_fc_max * cost_fc
+                                + crf_el * p_el_max * cost_el + crf_co * p_co_max * cost_co + crf_abc * g_abc_max * cost_abc
+                                + crf_whp * p_whp_max * cost_whp
+                                + quicksum([cost_ced[i] * ced_install[i] * crf_ced[i] for i in range(num_custom_exchange_device)])
+                                + quicksum([cost_csd[i] * csd_install[i] * crf_csd[i] for i in range(num_custom_storage_device)])
+                  )
         #-----------------------------目标函数-----------------------------#
         m.setObjective(input_json['calc_mode']['obj']['capex_sum'] * capex_sum
                     + input_json['calc_mode']['obj']['capex_crf'] * capex_crf
