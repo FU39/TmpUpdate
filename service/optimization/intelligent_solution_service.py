@@ -176,13 +176,13 @@ class ISService:
         loss_steam_sto = param_input["device"]["steam_storage"]["loss_rate"]  # 能量损失系数
         # ----pv----#
         eta_pv = param_input["device"]["pv"]["beta_pv"]  # 单位面积下光转电效率
-
+        k_s_pv= param_input["device"]["pv"]["s_pv_per_unit"]
         # ----sc----#
         k_sc = param_input["device"]["sc"]["beta_sc"]
         sc_theta_ex = param_input["device"]["sc"]["theta_ex"]
-
+        k_s_sc = param_input["device"]["sc"]["s_sc_per_unit"]
         # ----wd----#
-
+        k_s_wd = param_input["device"]["wd"]["s_wd_per_unit"]
         # ----eb----#
         k_eb = param_input["device"]["eb"]["beta_eb"]
         #----abc---#
@@ -322,7 +322,6 @@ class ISService:
         m_steam120_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto{t}") for t in range(period)]
         m_steam180_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto{t}") for t in range(period)]
         # ----pv----#
-        s_pv = m.addVar(vtype="C", lb=0, name=f"s_pv")  # 光伏板投资面积
         p_pv_max = m.addVar(vtype="C", lb=param_input["device"]["pv"]["power_min"], ub=param_input["device"]["pv"]["power_max"], name=f"p_pv_max")  # 光伏板投资面积
         p_pv = [m.addVar(vtype="C", lb=0,name=f"p_pv{t}") for t in range(period)]  # 光伏板发电功率
         # ----sc----#
@@ -627,7 +626,7 @@ class ISService:
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  # 井和热泵有关联，制冷量+电功率=灌热量
             m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i]) # 存疑
         # ---hp120----#
-            m.addCons(cop_hp120 * p_hp120[i] == m_hp120[i] * 750) # 750应该是热量和蒸汽量换算系数，具体数值暂不清楚
+            m.addCons(cop_hp120 * p_hp120[i] == m_hp120[i] * 750) # 750是热量和蒸汽量换算系数
             m.addCons((cop_hp120 - 1) * p_hp120[i] == g_tubeTosteam120[i])
             m.addCons(p_hp120[i] <= (p_hp120_max + param_input["device"]["hp120"]["power_already"]))
         # ---co180----#
@@ -640,61 +639,35 @@ class ISService:
             m.addCons(p_whp[i] <= (p_whp_max + param_input["device"]["whp"]["power_already"]))
             m.addCons(p_whp[i] == p_whpg[i] + p_whpq[i])
         #-----------------------------用户自定义的设备约束-----------------------------#
-        for i in range(period):
-            for device_index in range(custom_device_num):
-                for energy_output_index in range(5 + custom_energy_num):
-                    m.addCons(quicksum(x_j_in[energy_input_index][device_index][i]
-                                    * k_custom_device[device_index][energy_input_index][energy_output_index] for
-                                    energy_input_index in range(5 + custom_energy_num))
-                            == x_j_out[energy_output_index][device_index][i])
-        # 第device_index个设备的 第energy_output_index条能量流(多输入单输出)的 由所有能量流乘以一个转化系数构成 第i时段的 约束 
-
-        for device_index in range(custom_device_num):
-            standard_energy = input_json['custom_device']['x' + str(device_index)]['standard_energy']
-            for i in range(period):
-                m.addCons(x_j_in[standard_energy][device_index][i] <= x_plan[device_index])  #输入与规划量的上界关系
-                for j in range(5 + custom_energy_num):
-                    m.addCons(x_j_in[standard_energy][device_index][i] *
-                            input_json['custom_device']['x' + str(device_index)]['input_energy'][j] ==
-                            x_j_in[j][device_index][i])  #输入的各条能量流固定输入的比例
-
-        # TODO 是否存在点问题？
-
-        # 自定义储能设备的约束 j+1状态 - j状态 = j输入 - j输出
-        for j in range(period - 1):
-            for i in range(custom_storge_device_num[0]):
-                m.addCons(s_i_ele_state[i][j + 1] - 0.98 * s_i_ele_state[i][j] == s_i_ele_in[i][j] - s_i_ele_out[i][j])
-            for i in range(custom_storge_device_num[1]):
-                m.addCons(s_i_hot_state[i][j + 1] - s_i_hot_state[i][j] == s_i_hot_in[i][j] - s_i_hot_out[i][j])
-            for i in range(custom_storge_device_num[2]):
-                m.addCons(s_i_cold_state[i][j + 1] - s_i_cold_state[i][j] == s_i_cold_in[i][j] - s_i_cold_out[i][j])
-            for i in range(custom_storge_device_num[3]):
-                m.addCons(s_i_hydr_state[i][j + 1] - s_i_hydr_state[i][j] == s_i_hydr_in[i][j] - s_i_hydr_out[i][j])
-            for i in range(custom_storge_device_num[4]):
-                m.addCons(s_i_gas_state[i][j + 1] - s_i_gas_state[i][j] == s_i_gas_in[i][j] - s_i_gas_out[i][j])
-            for l in range(custom_energy_num):
-                for i in range(custom_storge_device_num[5 + l]):
-                    m.addCons(s_i_xj_state[l][i][j + 1] - s_i_xj_state[l][i][j] == s_i_xj_in[l][i][j] - s_i_xj_out[l][i][j])
-        for i in range(custom_storge_device_num[0]):
-            m.addCons(s_i_ele_state[i][0] - 0.98 * s_i_ele_state[i][-1] == s_i_ele_in[i][-1] - s_i_ele_out[i][-1])
-        for i in range(custom_storge_device_num[1]):
-            m.addCons(s_i_hot_state[i][0] - s_i_hot_state[i][-1] == s_i_hot_in[i][-1] - s_i_hot_out[i][-1])
-        for i in range(custom_storge_device_num[2]):
-            m.addCons(s_i_cold_state[i][0] - s_i_cold_state[i][-1] == s_i_cold_in[i][-1] - s_i_cold_out[i][-1])
-        for i in range(custom_storge_device_num[3]):
-            m.addCons(s_i_hydr_state[i][0] - s_i_hydr_state[i][-1] == s_i_hydr_in[i][-1] - s_i_hydr_out[i][-1])
-        for i in range(custom_storge_device_num[4]):
-            m.addCons(s_i_gas_state[i][0] - s_i_gas_state[i][-1] == s_i_gas_in[i][-1] - s_i_gas_out[i][-1])
-        for l in range(custom_energy_num):
-            for i in range(custom_storge_device_num[5 + l]):
-                m.addCons(s_i_xj_state[l][i][0] - s_i_xj_state[l][i][-1] == s_i_xj_in[l][i][-1] - s_i_xj_out[l][i][-1])
-
-        #-----------------------------安装面积等约束-----------------------------#  未定义
-        s_sum = input_json['renewable_energy']['s_renewable_energy_max']
-        m.addCons(s_pv * input_json['device']['pv']['beta_pv'] == p_pv_max)
-        m.addCons(s_pv + s_sc <= s_sum)
-
-        #-----------------------------运行费用约束-----------------------------# hyb未定义
+        #---自定义能量交换设备---#
+        for t in range(period):
+            for i in range(num_custom_exchange_device):
+                for j in 7:
+                    m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][j][t])
+                    m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][j][t])
+            m.addCons(standard_ced[i][t] <= ced_install[i] + param_input["device"]["custom_device_exchange"][i]["device_already"])
+        #---自定义储能设备的约束--#       # t+1状态 - t状态 = 输入 - 输出
+        for i in range(num_custom_storage_device):
+            for j in 7:
+                for t in range(period - 1):
+                    m.addCons(csd_sto[i][j][t+1] - csd_sto[i][j][t] == csd_energy_in[i][j][t] - ced_energy_out[i][j][t])
+                    m.addCons(
+                        csd_sto[i][j][t] <= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                             * k_install2sto_max_csd)
+                    m.addCons(
+                        csd_sto[i][j][t] >= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                             * k_install2sto_min_csd)
+                    m.addCons(ced_energy_in[i][j][t] <= csd_sto[i][j][t] * k_sto2io_max_csd)
+                    m.addCons(ced_energy_out[i][j][t] <= csd_sto[i][j][t] * k_sto2io_max_csd)
+                    m.addCons(ced_energy_in[i][j][t] >= csd_sto[i][j][t] * k_sto2io_min_csd)
+                    m.addCons(ced_energy_out[i][j][t] >= csd_sto[i][j][t] * k_sto2io_min_csd)
+                m.addCons(csd_sto[i][j][0] - csd_sto[i][j][-1] == csd_energy_in[i][j][-1] - ced_energy_out[i][j][-1])
+        #-----------------------------安装面积等约束-----------------------------#
+        s_outside = param_input["base"]["area_outside"]
+        s_roof = param_input["base"]["power_pv_house_top"]
+        m.addCons(k_s_pv * p_pv_max + k_s_sc * s_sc + k_s_wd * num_wd <= s_outside + s_roof)
+        m.addCons(k_s_wd * num_wd <= s_outside)
+        #-----------------------------运行费用约束-----------------------------#
         m.addCons(op_sum == quicksum([p_pur[i] * lambda_ele_in[i] for i in range(period)])  # 买电花费
                 + lambda_h * quicksum([h_pur[i] for i in range(period)])  # 买氢气花费
                 + gas_price * quicksum([gas_pur[i] for i in range(period)])  # 买天然气花费
