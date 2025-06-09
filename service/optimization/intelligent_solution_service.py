@@ -698,7 +698,6 @@ class ISService:
             m.addCons(p_ghp_deep[i] * k_ghp_deep_g == g_ghp_deep[i])  # 地源热泵电转热约束
             m.addCons(p_ghp_deep[i] <= (p_ghp_deep_max + param_input["device"]["ghp_deep"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
         #----gtw----#
-        # TODO: 我觉得没问题，存疑点在哪儿？
             m.addCons(num_gtw * p_gtw >= g_ghp[i] - p_ghp[i])  # 井和热泵有关联，制热量-电功率=取热量
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  # 井和热泵有关联，制冷量+电功率=灌热量
             m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i])
