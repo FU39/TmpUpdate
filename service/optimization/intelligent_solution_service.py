@@ -622,8 +622,8 @@ class ISService:
             m.addCons(q_ct_out[i] <= q_ct[i] * k_ct_power_max)
             m.addCons(q_ct_out[i] >= q_ct[i] * k_ct_power_min)
         for i in range(period - 1):
-            m.addCons(q_ct[i] - q_ct[i + 1] == q_ct_in[i] - q_ct_out[i] - loss_ct * q_ct[i])  # 储冷罐存储动态变化
-        m.addCons(q_ct[-1] - q_ct[0] == q_ct_in[-1] - q_ct_out[-1] - loss_ct * q_ct[-1])
+            m.addCons(q_ct[i+1] - q_ct[i] == q_ct_in[i] - q_ct_out[i] - loss_ct * q_ct[i])  # 储冷罐存储动态变化
+        m.addCons(q_ct[0] - q_ct[-1] == q_ct_in[-1] - q_ct_out[-1] - loss_ct * q_ct[-1])
         # ----bat----#
         for i in range(period):
             m.addCons(p_bat_sto[i] <= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_sto_max)  # 电池上限
@@ -688,6 +688,7 @@ class ISService:
             m.addCons(p_hp[i] <= (p_hp_max + param_input["device"]["hp"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
             m.addCons(p_hpc[i] * k_hp_q == q_hp[i])  # 电转冷约束
             m.addCons(p_hpc[i] <= (p_hp_max + param_input["device"]["hp"]["power_already"]))  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
+            m.addCons(p_hp[i] + p_hpc[i] <= (p_hp_max + param_input["device"]["hp"]["power_already"]))
         # ---ghp----#
             m.addCons(p_ghp[i] * k_ghp_g == g_ghp[i])  # 地源热泵电转热约束
             m.addCons(p_ghp[i] <= (p_ghp_max + param_input["device"]["ghp"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
@@ -699,7 +700,7 @@ class ISService:
         # TODO: 我觉得没问题，存疑点在哪儿？
             m.addCons(num_gtw * p_gtw >= g_ghp[i] - p_ghp[i])  # 井和热泵有关联，制热量-电功率=取热量
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  # 井和热泵有关联，制冷量+电功率=灌热量
-            m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i]) # 存疑
+            m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i])
         # ---hp120----#
             m.addCons(cop_hp120 * p_hp120[i] == m_hp120[i] * 750) # 750是热量和蒸汽量换算系数
             m.addCons((cop_hp120 - 1) * p_hp120[i] == g_hp120_in[i])
