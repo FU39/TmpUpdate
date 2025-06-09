@@ -71,21 +71,15 @@ input_data = {
 
     # 能源交易配置
     "trading": {
-        # 买电许可
-        "power_buy_enable": True,
-        # 卖电许可
-        "power_sell_enable": False,
-        # 买电电价类型
-        "power_buy_price_type": "str",
-        # 买氢许可
-        "h2_buy_enable": True,
-        # 卖氢许可
-        "h2_sell_enable": False,
-        # 买热许可
-        "heating_buy_enable": False,
-        # 卖热许可
-        "heating_sell_enable": False,
-
+        "power_buy_enable": True,  # 买电许可
+        "power_sell_enable": False,  # 卖电许可
+        "power_buy_price_type": "str",  # 买电电价类型
+        "heat_buy_enable": False,  # 买热许可
+        "heat_sell_enable": False,  # 卖热许可
+        "cool_buy_enable": False,  # 买冷许可
+        "cool_sell_enable": False,  # 卖冷许可
+        "h2_buy_enable": True,  # 买氢许可
+        "h2_sell_enable": False,  # 卖氢许可
         # 买蒸汽许可
         "steam_buy": [
             {
@@ -103,7 +97,6 @@ input_data = {
                 "enable": True
             }
         ],
-
         # 卖蒸汽许可
         "steam_sell": [
             {
@@ -121,31 +114,26 @@ input_data = {
                 "enable": True
             }
         ],
+        "hotwater_buy_enable": False,  # 买生活热水许可
+        "hotwater_sell_enable": False,  # 卖生活热水许可
 
         # 分时电价
         "power_buy_24_price": [0.42] * 24,
-
         # 逐时电价（上传电价文件的数据）
         "power_buy_8760_price": [0.42] * 8760,
-
         # 容量电价
         "power_buy_capacity_price": 0.2,  # 无容量电价输入则默认为0
-
-        # 逐时卖电电价(元/kWh)
+        # 逐时卖电电价
         "power_sell_24_price": [0.42] * 24,
+        "heat_buy_price": 29,  # 买热价格
+        "heat_sell_price": 1.515,  # 卖热价格
+        "cool_buy_price": 40,  # 买冷价格
+        "cool_sell_price": 1.515,  # 卖冷价格
+        "hydrogen_buy_price": 25,  # 买氢价格
+        "hydrogen_sell_price": 35,  # 卖氢价格
+        "hotwater_buy_price": 0,  # 买生活热水价格
+        "hotwater_sell_price": 0,  # 卖生活热水价格
 
-        # 卖热价格(元/GJ)
-        "heat_sell_price": 1.515,
-        # 卖冷价格(元/GJ)
-        "cool_sell_price": 1.515,
-        # 卖热价格(元/kg)
-        "hydrogen_sell_price": 1.515,
-        # 买热价格(元/GJ)
-        "heat_buy_price": 29,
-        # 买冷价格(元/GJ)
-        "cool_buy_price": 40,
-        # 买氢价格(元/kg)
-        "hydrogen_buy_price": 25,
         # 买天然气价格
         "gas_buy_price": 2.5,
 
@@ -218,8 +206,8 @@ input_data = {
             "nm3_min": 0,  # 新增装机下限
             "cost": 2240,
             "crf": 7,
-            "eta_el_h": 15,  # 电转氢系数
-            "eta_ex_g": 17,  # 电转热系数
+            "eta_el_h": 0.02,  # 电转氢系数
+            "eta_ex_g": 0.9,  # 电转热系数
             "theta_ex": 0.95  # 热回收效率
         },
 
@@ -480,27 +468,28 @@ input_data = {
     "custom_device_exchange": [
         {
             "device_name": "str",  # 设备名称
-            "energy_in_type": "str",  # 单位装机满负荷运行时的能源输入类型
-            "energy_out_type": "str",  # 单位装机满负荷运行时的能源输出类型
+            # 单位装机满负荷运行时的能源输入类型，对应 index 为 0：电，1：热，2：冷，3：氢，4：120蒸汽，5：180蒸汽，6：生活热水
+            "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
+            "energy_out_type": [0, 0, 1, 0, 0, 0, 0],  # 单位装机满负荷运行时的能源输出类型，对应 index 意义同上
             "device_already": 100,  # 已有装机
             "device_max": 2000000,  # 新增装机上限
             "device_min": 0,  # 新增装机下限
             "cost": 0.5,
             "crf": 20,
-            "energy_in_standard_per_unit": 90,  # 单位装机满负荷运行时的能源输入量
-            "energy_out_standard_per_unit": 45  # 单位装机满负荷运行时的能源输出量
+            "energy_in_standard_per_unit": [0, 90, 0, 0, 0, 0, 0],  # 单位装机满负荷运行时的能源输入量，对应 index 意义同上
+            "energy_out_standard_per_unit": [0, 0, 45, 0, 0, 0, 0]  # 单位装机满负荷运行时的能源输出量，对应 index 意义同上
         },
         {
             "device_name": "str",
-            "energy_in_type": "str",
-            "energy_out_type": "str",
+            "energy_in_type": [1, 1, 0, 0, 0, 0, 0],
+            "energy_out_type": [0, 1, 1, 0, 0, 0, 0],
             "device_already": 100,
             "device_max": 2000000,
             "device_min": 0,
             "cost": 0.5,
             "crf": 20,
-            "energy_in_standard_per_unit": 90,
-            "energy_out_standard_per_unit": 45
+            "energy_in_standard_per_unit": [85, 80, 0, 0, 0, 0, 0],
+            "energy_out_standard_per_unit": [0, 60, 40, 0, 0, 0, 0]
         }
     ]
 }

@@ -80,24 +80,24 @@ result = {
             "p_fc_installed": 100.0,  # 燃料电池装机容量 (kW)
             "p_el_installed": 5.0,  # 电解槽装机容量 (kW)
             "h_hst_installed": 5.0,  # 储氢罐装机容量 (kg)
-            "m_ht_installed": 5.0,  # 储热水箱装机容量 (kg)
-            "m_ct_installed": 5.0,  # 储冷水箱装机容量 (kg)
-            "p_bat_installed": 10.0,  # 电池装机容量 (kWh)
-            "steam_storage_installed": 5.0,  # 蒸汽储能装机容量 (t)
-            "p_pv_installed": 100.0,  # 光伏板装机容量 (kW)
+            "m_ht_installed": 5.0,  # 热水罐装机容量 (kg)
+            "m_ct_installed": 5.0,  # 冷水罐装机容量 (kg)
+            "p_bat_installed": 10.0,  # 蓄电池装机容量 (kWh)
+            "steam_storage_installed": 5.0,  # 蒸汽储罐装机容量 (t)
+            "p_pv_installed": 100.0,  # 光伏装机容量 (kW)
             "s_sc_installed": 10.0,  # 太阳能集热器装机面积 (m2)
-            "num_wd_installed": 5,  # 风机装机数量
+            "num_wd_installed": 5,  # 风电机组装机数量
             "p_eb_installed": 10.0,  # 电锅炉装机容量 (kW)
             "g_abc_installed": 10.0,  # 吸收式制冷机装机容量 (kW)
             "p_ac_installed": 10.0,  # 水冷机组装机容量 (kW)
             "p_hp_installed": 10.0,  # 空气源热泵装机容量 (kW)
             "p_ghp_installed": 10.0,  # 浅层地源热泵装机容量 (kW)
             "p_ghp_deep_installed": 10.0,  # 中深层地源热泵装机容量 (kW)
-            "num_gtw_installed": 5,  # 浅层地埋井装机数量
-            "num_gtw2500_installed": 5,  # 中深层地埋井装机数量
+            "num_gtw_installed": 5,  # 200米浅层地热井装机数量
+            "num_gtw2500_installed": 5,  # 2500米地热井装机数量
             "p_hp120_installed": 10.0,  # 高温热泵装机容量 (kW)
-            "p_co180_installed": 10.0,  # 高温蒸汽压缩机装机容量 (kW)
-            "p_whp_installed": 10.0,  # 余热热泵装机容量 (kW)
+            "p_co180_installed": 10.0,  # 蒸汽压缩机装机容量 (kW)
+            "p_whp_installed": 10.0,  # 水源热泵装机容量 (kW)
             "custom_storage_installed": [
                 {
                     "device_name": "CustomStorage",
@@ -131,24 +131,24 @@ result = {
             "fc_capex": 200.0,  # 燃料电池投资成本 (万元)
             "el_capex": 50.0,  # 电解槽投资成本 (万元)
             "hst_capex": 30.0,  # 储氢罐投资成本 (万元)
-            "ht_capex": 20.0,  # 储热水箱投资成本 (万元)
-            "ct_capex": 15.0,  # 储冷水箱投资成本 (万元)
-            "bat_capex": 80.0,  # 电池投资成本 (万元)
-            "steam_storage_capex": 40.0,  # 蒸汽储能投资成本 (万元)
-            "pv_capex": 300.0,  # 光伏板投资成本 (万元)
+            "ht_capex": 20.0,  # 热水罐投资成本 (万元)
+            "ct_capex": 15.0,  # 冷水罐投资成本 (万元)
+            "bat_capex": 80.0,  # 蓄电池投资成本 (万元)
+            "steam_storage_capex": 40.0,  # 蒸汽储罐投资成本 (万元)
+            "pv_capex": 300.0,  # 光伏投资成本 (万元)
             "sc_capex": 60.0,  # 太阳能集热器投资成本 (万元)
-            "wd_capex": 25.0,  # 风机投资成本 (万元)
+            "wd_capex": 25.0,  # 风电机组投资成本 (万元)
             "eb_capex": 70.0,  # 电锅炉投资成本 (万元)
             "abc_capex": 80.0,  # 吸收式制冷机投资成本 (万元)
             "ac_capex": 90.0,  # 水冷机组投资成本 (万元)
             "hp_capex": 110.0,  # 空气源热泵投资成本 (万元)
             "ghp_capex": 120.0,  # 浅层地源热泵投资成本 (万元)
             "ghp_deep_capex": 130.0,  # 中深层地源热泵投资成本 (万元)
-            "gtw_capex": 45.0,  # 浅层地埋井投资成本 (万元)
-            "gtw2500_capex": 55.0,  # 中深层地埋井投资成本 (万元)
+            "gtw_capex": 45.0,  # 200米浅层地热井投资成本 (万元)
+            "gtw2500_capex": 55.0,  # 2500米地热井投资成本 (万元)
             "hp120_capex": 140.0,  # 高温热泵投资成本 (万元)
-            "co180_capex": 150.0,  # 高温蒸汽压缩机投资成本 (万元)
-            "whp_capex": 160.0,  # 余热热泵投资成本 (万元)
+            "co180_capex": 150.0,  # 蒸汽压缩机投资成本 (万元)
+            "whp_capex": 160.0,  # 水源热泵投资成本 (万元)
             "custom_storage_capex": [
                 {
                     "device_name": "CustomStorage",
@@ -202,22 +202,23 @@ result = {
         "h_fc": [8760],
         # 电解槽
         "p_el": [8760],
+        "g_el": [8760],
         "h_el": [8760],
         # 储氢罐
         "h_sto": [8760],
-        # 储热水箱
+        # 热水罐
         "g_ht": [8760],
         "g_ht_in": [8760],
         "g_ht_out": [8760],
-        # 储冷水箱
+        # 冷水罐
         "q_ct": [8760],
         "q_ct_in": [8760],
         "q_ct_out": [8760],
-        # 电池
+        # 蓄电池
         "p_bat": [8760],
         "p_bat_ch": [8760],
         "p_bat_dis": [8760],
-        # 蒸汽储能
+        # 蒸汽储罐
         "m_steam_storage": [8760],
         "m_steam_storage_in": [8760],
         "m_steam_storage_out": [8760],
@@ -226,7 +227,7 @@ result = {
         "p_pv": [8760],
         # 太阳能集热器
         "g_sc": [8760],
-        # 风机
+        # 风电机组
         "p_wd": [8760],
         # 电锅炉
         "p_eb": [8760],
@@ -255,8 +256,12 @@ result = {
         "p_hp120": [8760],
         "m_hp120": [8760],
         "g_hp120": [8760],
-        # 高温蒸汽压缩机
+        # 蒸汽压缩机
         "p_co180": [8760],
+        "m_co120": [8760],
+        "m_co180": [8760],
+        # 水源热泵
+
         # 自定义储能设备
         "custom_storage": [
             {
@@ -278,17 +283,17 @@ result = {
         "custom_exchange": [
             {
                 "device_name": "CustomExchange",
-                "energy_in_type": "ele",
-                "energy_out_type": "heat",
-                "energy_in": [8760],
-                "energy_out": [8760],
+                "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
+                "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
+                "energy_in": [[8760], [8760], [8760], [8760], [8760], [8760], [8760]],
+                "energy_out": [[8760], [8760], [8760], [8760], [8760], [8760], [8760]],
             },
             {
                 "device_name": "CustomExchange2",
-                "energy_in_type": "ele",
-                "energy_out_type": "heat",
-                "energy_in": [8760],
-                "energy_out": [8760],
+                "energy_in_type": [1, 1, 0, 0, 0, 0, 0],
+                "energy_out_type": [0, 1, 1, 0, 0, 0, 0],
+                "energy_in": [[8760], [8760], [8760], [8760], [8760], [8760], [8760]],
+                "energy_out": [[8760], [8760], [8760], [8760], [8760], [8760], [8760]],
             }
         ],
         # 总线

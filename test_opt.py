@@ -1,88 +1,11 @@
+import time
+import json
 import pyscipopt
 from pyscipopt import Model, quicksum, multidict
-import numpy as np
-import xlwt
-import xlrd
-import json
-import pandas as pd
-import random
-import time
-
-from schema.schema_optimization import OptimizationBody
+from service.optimization.intelligent_solution_service import crf
 
 
-def generate_annual_load(start_date, end_date, typical_daily_load):
-    """
-    生成全年热负荷数据，采暖季期间使用典型日负荷数据
-
-    参数:
-    start_date (str): 采暖季起始日期，格式 "月-日" (e.g., "10-01")
-    end_date (str): 采暖季结束日期，格式 "月-日" (e.g., "03-01")
-    typical_daily_load (list): 典型日24小时负荷数据，长度24
-
-    返回:
-    np.array: 全年8760小时负荷数据
-    """
-    # 创建全年时间索引 (2023年，非闰年)
-    dates = pd.date_range('2023-01-01', '2023-12-31 23:00:00', freq='H')
-
-    # 初始化全年负荷数据
-    annual_load = np.zeros(len(dates))
-
-    # 解析起始和结束日期
-    start_month, start_day = map(int, start_date.split('-'))
-    end_month, end_day = map(int, end_date.split('-'))
-
-    # 处理跨年采暖季（分两段填充）
-    # 第一段：起始日期 -> 年末 (10-01 到 12-31)
-    start_mask = (dates.month == start_month) & (dates.day >= start_day)
-    end_of_year_mask = dates.month > start_month
-    first_period_mask = start_mask | end_of_year_mask
-
-    # 第二段：年初 -> 结束日期 (01-01 到 03-01)
-    start_of_year_mask = dates.month < end_month
-    end_mask = (dates.month == end_month) & (dates.day <= end_day)
-    second_period_mask = start_of_year_mask | end_mask
-
-    # 组合两段得到完整的采暖季
-    heating_season_mask = first_period_mask | second_period_mask
-
-    # 获取采暖季内的所有日期（不重复）
-    heating_dates = dates[heating_season_mask].normalize().unique()
-
-    # 为采暖季的每一天填充典型日负荷
-    for date in heating_dates:
-        # 获取当天的24小时索引
-        day_mask = (dates >= date) & (dates < date + pd.Timedelta(days=1))
-        # 获取当天在全年中的位置索引
-        day_indices = np.where(day_mask)[0]
-        # 填充典型日负荷数据
-        annual_load[day_indices] = typical_daily_load
-
-    return annual_load
-
-
-def crf(year):
-    """将设备寿命转为资本回收率
-
-    Args:
-        year: 设备寿命年限
-
-    Returns:
-        crf: 资本回收率
-    """
-    i = 0.08
-    crf = ((1 + i) ** year) * i / ((1 + i) ** year - 1)
-    return crf
-
-
-class ISService:
-    def __init__(self):
-        pass
-
-    def exec(self, inputBody: OptimizationBody):
-
-        param_input = inputBody.model_dump()
+def exec(param_input):
         M = 1e9  # 大数M
 
         # 开始计时
@@ -116,15 +39,6 @@ class ISService:
         pv_data = param_input["device"]["pv"]["pv_data8760"]
         sc_data = param_input["device"]["sc"]["solar_data8760"]
         wd_data = param_input["device"]["wd"]["wd_data8760"]
-
-        if param_input["trading"]["heat_resource"]["flag"] == 0:
-            heat_resource = [0] * 8760  # 热源数据
-        else:
-            heat_resource = generate_annual_load(
-                start_date=param_input["trading"]["heat_resource"]["cycle"]["start"],
-                end_date=param_input["trading"]["heat_resource"]["cycle"]["end"],
-                typical_daily_load=param_input["trading"]["heat_resource"]["heat_resource_flow"]
-            ).tolist()
 
         #------------导入价格等数据------------#
         alpha_e = 0.5839  # 电网排放因子kg/kWh
@@ -206,16 +120,9 @@ class ISService:
         k_fc_g = param_input["device"]["fc"]["eta_fc_g"] # 氢转热系数kg——>kWh
         fc_theta_ex = param_input["device"]["fc"]["theta_ex"]  # 热回收效率
         # ----el----#
-        kg2nm3 = 11.2  # 1kg氢气体积为11.2标方
         k_el_h = param_input["device"]["el"]["eta_el_h"]  # 电转氢效率
         k_el_g = param_input["device"]["el"]["eta_el_g"]
         el_theta_ex = param_input["device"]["el"]["theta_ex"]
-        nm3_el_already = param_input["device"]["el"]["nm3_already"]
-        nm3_el_upper = param_input["device"]["el"]["nm3_max"]
-        nm3_el_lower = param_input["device"]["el"]["nm3_min"]
-        p_el_already = nm3_el_already / kg2nm3 / k_el_h
-        p_el_upper = nm3_el_upper / kg2nm3 / k_el_h
-        p_el_lower = nm3_el_lower / kg2nm3 / k_el_h
         # ---hst----#
         # ---ht----#
         k_ht_sto_max = param_input["device"]["ht"]["g_storage_max_per_unit"]  # 储量转热量上限
@@ -293,12 +200,11 @@ class ISService:
             cost_csd[i] = param_input["device"]["custom_device_storage"][i]["cost"]
         # -----------------------自定义设备的效率数据----------------------#
         # ------0：电   1：热   2：冷   3：氢   4：120蒸汽  5：180蒸汽  6：家用热水（仅自定义设备）------#
-        # TODO: 初始化时按照维数来，否则后面可能会出现问题
         energy_type_num = 7
-        cop_in2standerd_ced = [[0] * energy_type_num] * num_custom_exchange_device
-        cop_standerd2out_ced = [[0] * energy_type_num] * num_custom_exchange_device
-        k_install2sto_max_csd = [[0] * energy_type_num] * num_custom_storage_device
-        k_install2sto_min_csd = [[0] * energy_type_num] * num_custom_storage_device
+        cop_in2standerd_ced = [0] * num_custom_exchange_device
+        cop_standerd2out_ced = [0] * num_custom_exchange_device
+        k_install2sto_max_csd = [0] * num_custom_storage_device
+        k_install2sto_min_csd = [0] * num_custom_storage_device
         k_sto2io_max_csd = [0] * num_custom_storage_device
         k_sto2io_min_csd = [0] * num_custom_storage_device
         for i in range(num_custom_exchange_device):
@@ -350,6 +256,13 @@ class ISService:
         p_fc = [m.addVar(vtype="C", lb=0, name=f"p_fc{t}") for t in range(period)]  # 燃料电池产电量
         h_fc = [m.addVar(vtype="C", lb=0, name=f"h_fc{t}") for t in range(period)]  # 燃料电池用氢量
         # ----el----#
+        kg2nm3 = 11.2  # 1kg氢气体积为11.2标方
+        nm3_el_already = param_input["device"]["el"]["nm3_already"]
+        nm3_el_upper = param_input["device"]["el"]["nm3_max"]
+        nm3_el_lower = param_input["device"]["el"]["nm3_min"]
+        p_el_already = nm3_el_already / kg2nm3 / k_el_h
+        p_el_upper = nm3_el_upper / kg2nm3 / k_el_h
+        p_el_lower = nm3_el_lower / kg2nm3 / k_el_h
         p_el_max = m.addVar(vtype="C", lb=p_el_lower, ub=p_el_upper, name="p_el_max")  # el的投资容量（最大功率）
         h_el = [m.addVar(vtype="C", lb=0, name=f"h_el{t}") for t in range(period)]  # 电解槽产氢量
         p_el = [m.addVar(vtype="C", lb=0, name=f"p_el{t}") for t in range(period)]  # 电解槽功率
@@ -472,8 +385,9 @@ class ISService:
         p_whp_max = m.addVar(vtype="C", lb=param_input["device"]["whp"]["power_min"],
                              ub=param_input["device"]["whp"]["power_max"],
                              name=f"p_whp_max")  # 余热热泵投资容量（最大功率）
-        p_whp = [m.addVar(vtype="C", lb=0, name=f"p_whp{t}") for t in range(period)]  # 余热热泵产热耗电量
-        p_whpc = [m.addVar(vtype="C", lb=0, name=f"p_whpc{t}") for t in range(period)]  # 余热热泵产冷耗电量
+        p_whp = [m.addVar(vtype="C", lb=0, name=f"p_whp{t}") for t in range(period)]  # 余热热泵功率
+        p_whpg = [m.addVar(vtype="C", lb=0, name=f"p_whpg{t}") for t in range(period)]  # 余热热泵产热耗电量
+        p_whpq = [m.addVar(vtype="C", lb=0, name=f"p_whpq{t}") for t in range(period)]  # 余热热泵产冷耗电量
         g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
         q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
         # 用户自定义库中设备变量
@@ -595,9 +509,9 @@ class ISService:
             m.addCons(p_fc[i] == k_fc_p * h_fc[i])  # 氢转电约束
             m.addCons(p_fc[i] <= p_fc_max + param_input["device"]["fc"]["power_already"])  # 运行功率 <= 规划功率（运行最大功率）+ 已有装机
         #----el----#
-            m.addCons(h_el[i] <= el_theta_ex * k_el_h * p_el[i])  # 电转氢约束
-            m.addCons(g_el[i] <= k_el_g * p_el[i])
             m.addCons(p_el[i] <= p_el_max + p_el_already)  # 运行功率 <= 规划功率（运行最大功率）
+            m.addCons(h_el[i] <= k_el_h * p_el[i])  # 电转氢约束
+            m.addCons(g_el[i] <= k_el_g * p_el[i])
             m.addCons(h_el[i] <= hst + param_input["device"]["hst"]["sto_already"])  # 产生的氢气质量要小于储氢罐最大储氢容量
         #----hst----#
             m.addCons(h_sto[i] <= hst + param_input["device"]["hst"]["sto_already"])
@@ -663,9 +577,9 @@ class ISService:
             m.addCons(m_steam180_sto[i+1] - m_steam180_sto[i] == m_steam180_sto_in[i] - m_steam180_sto_out[i]
                       - loss_steam_sto * m_steam180_sto[i])
         m.addCons(m_steam120_sto[0] - m_steam120_sto[-1] == m_steam120_sto_in[-1] - m_steam120_sto_out[-1]
-                  - loss_steam_sto * m_steam120_sto[-1])
+                  - loss_steam_sto * m_steam120_sto[i])
         m.addCons(m_steam180_sto[0] - m_steam180_sto[-1] == m_steam180_sto_in[-1] - m_steam180_sto_out[-1]
-                  - loss_steam_sto * m_steam180_sto[-1])
+                  - loss_steam_sto * m_steam180_sto[i])
 
         for i in range(period):
         # ---pv----#
@@ -696,7 +610,6 @@ class ISService:
             m.addCons(p_ghp_deep[i] * k_ghp_deep_g == g_ghp_deep[i])  # 地源热泵电转热约束
             m.addCons(p_ghp_deep[i] <= (p_ghp_deep_max + param_input["device"]["ghp_deep"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
         #----gtw----#
-        # TODO: 我觉得没问题，存疑点在哪儿？
             m.addCons(num_gtw * p_gtw >= g_ghp[i] - p_ghp[i])  # 井和热泵有关联，制热量-电功率=取热量
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  # 井和热泵有关联，制冷量+电功率=灌热量
             m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i]) # 存疑
@@ -709,12 +622,10 @@ class ISService:
             m.addCons(m_co180_in[i] * k_co180 == p_co180[i])
             m.addCons(p_co180[i] <= (p_co180_max + param_input["device"]["co180"]["power_already"]))
         # ---whp----#
-        # TODO: 这个是真建模有问题，和艳玲师姐确认水源热泵（余热热泵）是否可以供冷，热源信息如何处理
-            m.addCons(p_whp[i] * cop_whpg == g_whp[i])
-            m.addCons(p_whpc[i] * cop_whpq == q_whp[i])
-            m.addCons(g_whp[i] - p_whp[i] <= heat_resource[i])
-            # TODO: 供冷处理
-            m.addCons(p_whp[i] + p_whpc[i]<= (p_whp_max + param_input["device"]["whp"]["power_already"]))
+            m.addCons(p_whpg[i] * cop_whpg == g_whp[i])
+            m.addCons(p_whpq[i] * cop_whpq == q_whp[i])
+            m.addCons(p_whp[i] <= (p_whp_max + param_input["device"]["whp"]["power_already"]))
+            m.addCons(p_whp[i] == p_whpg[i] + p_whpq[i])
         #-----------------------------用户自定义的设备约束-----------------------------#
         #---自定义能量交换设备---#
         for t in range(period):
@@ -1044,3 +955,11 @@ class ISService:
             },
         }
         return result
+
+
+with open("./io_template/opt_input.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+result = exec(data)
+for key, value in result.items():
+    print(f"{key} : {value}")
