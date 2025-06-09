@@ -84,6 +84,7 @@ class ISService:
 
         param_input = inputBody.model_dump()
         M = 1e9  # 大数M
+        c = 4.2 / 3600  # 水的比热容
 
         # 开始计时
         t0 = time.time()
@@ -710,11 +711,10 @@ class ISService:
             m.addCons(m_co180_in[i] * k_co180 == p_co180[i])
             m.addCons(p_co180[i] <= (p_co180_max + param_input["device"]["co180"]["power_already"]))
         # ---whp----#
-        # TODO: 这个是真建模有问题，和艳玲师姐确认水源热泵（余热热泵）是否可以供冷，热源信息如何处理
             m.addCons(p_whp[i] * cop_whpg == g_whp[i])
             m.addCons(p_whpc[i] * cop_whpq == q_whp[i])
-            m.addCons(g_whp[i] - p_whp[i] <= heat_resource[i])
-            # TODO: 供冷处理
+            m.addCons(g_whp[i] - p_whp[i] <= heat_resource[i] * c * param_input["trading"]["heat_resource"]["temperature_upper_limit"])
+            m.addCons(q_whp[i] + p_whpc[i] <= heat_resource[i] * c * param_input["trading"]["heat_resource"]["temperature_decrease_limit"])
             m.addCons(p_whp[i] + p_whpc[i]<= (p_whp_max + param_input["device"]["whp"]["power_already"]))
         #-----------------------------用户自定义的设备约束-----------------------------#
         #---自定义能量交换设备---#
