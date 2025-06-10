@@ -87668,10 +87668,12 @@
         "power_buy_enable": true,
         "power_sell_enable": false,
         "power_buy_price_type": "str",
+        "heat_buy_enable": false,
+        "heat_sell_enable": false,
+        "cool_buy_enable": false,
+        "cool_sell_enable": false,
         "h2_buy_enable": true,
         "h2_sell_enable": false,
-        "heating_buy_enable": false,
-        "heating_sell_enable": false,
         "steam_buy": [
             {
                 "id": 0,
@@ -87704,6 +87706,8 @@
                 "enable": true
             }
         ],
+        "hotwater_buy_enable": false,
+        "hotwater_sell_enable": false,
         "power_buy_24_price": [
             0.42,
             0.42,
@@ -96519,12 +96523,14 @@
             0.42,
             0.42
         ],
-        "heat_sell_price": 1.515,
-        "cool_sell_price": 1.515,
-        "hydrogen_sell_price": 1.515,
         "heat_buy_price": 29,
+        "heat_sell_price": 1.515,
         "cool_buy_price": 40,
+        "cool_sell_price": 1.515,
         "hydrogen_buy_price": 25,
+        "hydrogen_sell_price": 35,
+        "hotwater_buy_price": 0,
+        "hotwater_sell_price": 0,
         "gas_buy_price": 2.5,
         "heat_resource": {
             "flag": true,
@@ -96597,8 +96603,8 @@
             "nm3_min": 0,
             "cost": 2240,
             "crf": 7,
-            "eta_el_h": 15,
-            "eta_ex_g": 17,
+            "eta_el_h": 0.02,
+            "eta_ex_g": 0.9,
             "theta_ex": 0.95
         },
         "hst": {
@@ -96829,27 +96835,91 @@
     "custom_device_exchange": [
         {
             "device_name": "str",
-            "energy_in_type": "str",
-            "energy_out_type": "str",
+            "energy_in_type": [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "energy_out_type": [
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0
+            ],
             "device_already": 100,
             "device_max": 2000000,
             "device_min": 0,
             "cost": 0.5,
             "crf": 20,
-            "energy_in_standard_per_unit": 90,
-            "energy_out_standard_per_unit": 45
+            "energy_in_standard_per_unit": [
+                0,
+                90,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "energy_out_standard_per_unit": [
+                0,
+                0,
+                45,
+                0,
+                0,
+                0,
+                0
+            ]
         },
         {
             "device_name": "str",
-            "energy_in_type": "str",
-            "energy_out_type": "str",
+            "energy_in_type": [
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "energy_out_type": [
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0
+            ],
             "device_already": 100,
             "device_max": 2000000,
             "device_min": 0,
             "cost": 0.5,
             "crf": 20,
-            "energy_in_standard_per_unit": 90,
-            "energy_out_standard_per_unit": 45
+            "energy_in_standard_per_unit": [
+                85,
+                80,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "energy_out_standard_per_unit": [
+                0,
+                60,
+                40,
+                0,
+                0,
+                0,
+                0
+            ]
         }
     ]
 }

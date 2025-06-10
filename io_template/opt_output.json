@@ -9,6 +9,7 @@
             "cost_annual_per_energy": 0.123,
             "payback_period": 5.0,
             "co2": 1234.5,
+            "cer": 765.5,
             "capex_all_eb": 1000.0,
             "capex_all_crf_eb": 100.0,
             "opex_sum_eb": 20.0,
@@ -17,6 +18,8 @@
             "payback_period_eb": 6.0,
             "payback_period_diff_eb": 1.0,
             "co2_eb": 2000.0,
+            "cer_eb": 500.0,
+            "cer_rate_eb": 0.4,
             "capex_all_hp": 1500.0,
             "capex_all_crf_hp": 150.0,
             "opex_sum_hp": 25.0,
@@ -25,6 +28,8 @@
             "payback_period_hp": 7.0,
             "payback_period_diff_hp": 2.0,
             "co2_hp": 1800.0,
+            "cer_hp": 434.5,
+            "cer_rate_hp": 0.35,
             "capex_all_gas": 1800.0,
             "capex_all_crf_gas": 180.0,
             "opex_sum_gas": 30.0,
@@ -32,7 +37,9 @@
             "cost_annual_per_energy_gas": 0.15,
             "payback_period_gas": 8.0,
             "payback_period_diff_gas": 3.0,
-            "co2_gas": 2500.0
+            "co2_gas": 2500.0,
+            "cer_gas": 300.0,
+            "cer_rate_gas": 0.25
         },
         "revenue_analysis": {
             "revenue_ele": 10000.0,
@@ -218,6 +225,9 @@
         "p_el": [
             8760
         ],
+        "g_el": [
+            8760
+        ],
         "h_el": [
             8760
         ],
@@ -335,6 +345,24 @@
         "p_co180": [
             8760
         ],
+        "m_co180_in": [
+            8760
+        ],
+        "m_co180": [
+            8760
+        ],
+        "p_whp": [
+            8760
+        ],
+        "g_whp": [
+            8760
+        ],
+        "p_whp_c": [
+            8760
+        ],
+        "q_whp": [
+            8760
+        ],
         "custom_storage": [
             {
                 "device_name": "CustomStorage",
@@ -366,24 +394,136 @@
         "custom_exchange": [
             {
                 "device_name": "CustomExchange",
-                "energy_in_type": "ele",
-                "energy_out_type": "heat",
+                "energy_in_type": [
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "energy_out_type": [
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
                 "energy_in": [
-                    8760
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ]
                 ],
                 "energy_out": [
-                    8760
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ]
                 ]
             },
             {
                 "device_name": "CustomExchange2",
-                "energy_in_type": "ele",
-                "energy_out_type": "heat",
+                "energy_in_type": [
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "energy_out_type": [
+                    0,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
                 "energy_in": [
-                    8760
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ]
                 ],
                 "energy_out": [
-                    8760
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ],
+                    [
+                        8760
+                    ]
                 ]
             }
         ],
