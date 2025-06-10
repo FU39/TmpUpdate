@@ -294,7 +294,6 @@ class ISService:
             cost_csd[i] = param_input["device"]["custom_device_storage"][i]["cost"]
         # -----------------------自定义设备的效率数据----------------------#
         # ------0：电   1：热   2：冷   3：氢   4：120蒸汽  5：180蒸汽  6：家用热水（仅自定义设备）------#
-        # TODO: 初始化时按照维数来，否则后面可能会出现问题
         energy_type_num = 7
         cop_in2standerd_ced = [[0] * energy_type_num] * num_custom_exchange_device
         cop_standerd2out_ced = [[0] * energy_type_num] * num_custom_exchange_device
@@ -381,18 +380,13 @@ class ISService:
         p_bat_out = [m.addVar(vtype="C", lb=0, name=f"p_bat_out{t}") for t in range(period)]
         p_bat_sto = [m.addVar(vtype="C", lb=0, name=f"p_bat_sto{t}") for t in range(period)]
         # ----steam_storage----#
-        m_steam120_sto_max = m.addVar(vtype="C", lb=param_input["device"]["steam_storage"]["water_min"],
-                                      ub=param_input["device"]["steam_storage"]["water_max"],
-                                      name=f"m_steam120_sto_max")
-        m_steam180_sto_max = m.addVar(vtype="C", lb=param_input["device"]["steam_storage"]["water_min"],
-                                      ub=param_input["device"]["steam_storage"]["water_max"],
-                                      name=f"m_steam180_sto_max")
-        m_steam120_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_in{t}") for t in range(period)]
-        m_steam120_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
-        m_steam180_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto_in{t}") for t in range(period)]
-        m_steam180_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto_out{t}") for t in range(period)]
-        m_steam120_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam120_sto{t}") for t in range(period)]
-        m_steam180_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam180_sto{t}") for t in range(period)]
+        m_steam_sto_max = m.addVar(vtype="C",
+                                   lb=param_input["device"]["steam_storage"]["water_min"],
+                                   ub=param_input["device"]["steam_storage"]["water_max"],
+                                   name=f"m_steam_sto_max")
+        m_steam_sto_in = [m.addVar(vtype="C", lb=0, name=f"m_steam_sto_in{t}") for t in range(period)]
+        m_steam_sto_out = [m.addVar(vtype="C", lb=0, name=f"m_steam_sto_out{t}") for t in range(period)]
+        m_steam_sto = [m.addVar(vtype="C", lb=0, name=f"m_steam_sto{t}") for t in range(period)]
         # ----pv----#
         p_pv_max = m.addVar(vtype="C", lb=param_input["device"]["pv"]["power_min"], ub=param_input["device"]["pv"]["power_max"], name=f"p_pv_max")  # 光伏板投资面积
         p_pv = [m.addVar(vtype="C", lb=0,name=f"p_pv{t}") for t in range(period)]  # 光伏板发电功率
@@ -537,19 +531,19 @@ class ISService:
             )
             # 高温120度蒸气约束
             m.addCons(
-                steam120_sol[i] + steam120_demand[i] + m_co180_in[i] + m_steam120_sto_in[i]
+                steam120_sol[i] + steam120_demand[i] + m_co180_in[i]
                 + quicksum([ced_energy_in[device_index][4][i] for device_index in range(num_custom_exchange_device)])
                 + quicksum([csd_energy_in[device_index][4][i] for device_index in range(num_custom_storage_device)])
-                == steam120_pur[i] + m_hp120[i] + m_steam120_sto_out[i]
+                == steam120_pur[i] + m_hp120[i]
                 + quicksum([ced_energy_out[device_index][4][i] for device_index in range(num_custom_exchange_device)])
                 + quicksum([csd_energy_out[device_index][4][i] for device_index in range(num_custom_storage_device)])
             )
             # 高温180度蒸气约束
             m.addCons(
-                steam180_sol[i] + steam180_demand[i] + m_steam180_sto_in[i]
+                steam180_sol[i] + steam180_demand[i] + m_steam_sto_in[i]
                 + quicksum([ced_energy_in[device_index][5][i] for device_index in range(num_custom_exchange_device)])
                 + quicksum([csd_energy_in[device_index][5][i] for device_index in range(num_custom_storage_device)])
-                == steam180_pur[i] + m_co180_out[i] + m_steam180_sto_out[i]
+                == steam180_pur[i] + m_co180_out[i] + m_steam_sto_out[i]
                 + quicksum([ced_energy_out[device_index][5][i] for device_index in range(num_custom_exchange_device)])
                 + quicksum([csd_energy_out[device_index][5][i] for device_index in range(num_custom_storage_device)])
             )
@@ -586,7 +580,6 @@ class ISService:
             m.addCons(hotwater_pur[i] <= M * param_input["trading"]["hotwater_buy_enable"])  # 是否允许买热水
             m.addCons(hotwater_sol[i] <= M * param_input["trading"]["hotwater_sell_enable"])  # 是否允许卖热水
         #-----------------------------基础设备库的设备约束-----------------------------#
-        # TODO: 检查设备建模正确性
         for i in range(period):
         #-----co----#
             m.addCons(p_co[i] == k_co * h_el[i])  # 压缩氢耗电量约束
@@ -602,8 +595,6 @@ class ISService:
             m.addCons(h_el[i] <= hst + param_input["device"]["hst"]["sto_already"])  # 产生的氢气质量要小于储氢罐最大储氢容量
         #----hst----#
             m.addCons(h_sto[i] <= hst + param_input["device"]["hst"]["sto_already"])
-        # TODO: 重点检查储能设备，如下方更改是不是更符合艳玲师姐构建输入的意图，请与师姐确认
-        # PS: 通过查看 git 历史可以查看代码的变更记录
         #----ht----#
             m.addCons(g_ht[i] <= (m_ht + param_input["device"]["ht"]["water_already"]) * k_ht_sto_max)  # 储热罐存储热量上限
             m.addCons(g_ht[i] >= (m_ht + param_input["device"]["ht"]["water_already"]) * k_ht_sto_min)  # 储热罐存储热量下限
@@ -611,62 +602,38 @@ class ISService:
             m.addCons(g_ht_in[i] >= (m_ht + param_input["device"]["ht"]["water_already"]) * k_ht_power_min)
             m.addCons(g_ht_out[i] <= (m_ht + param_input["device"]["ht"]["water_already"]) * k_ht_power_max)
             m.addCons(g_ht_out[i] >= (m_ht + param_input["device"]["ht"]["water_already"]) * k_ht_power_min)
-        for i in range(period - 1):
-            m.addCons(g_ht[i + 1] - g_ht[i] == g_ht_in[i] - g_ht_out[i] - loss_ht * g_ht[i])  # 储热罐存储动态变化
-        m.addCons(g_ht[0] - g_ht[-1] == g_ht_in[-1] - g_ht_out[-1] - loss_ht * g_ht[-1])
         #----ct----#
-        for i in range(period):
             m.addCons(q_ct[i] <= (m_ct + param_input["device"]["ct"]["water_already"]) * k_ct_sto_max)  # 储冷罐存储冷量上限
             m.addCons(q_ct[i] >= (m_ct + param_input["device"]["ct"]["water_already"]) * k_ct_sto_min)  # 储冷罐存储冷量下限
-            m.addCons(q_ct_in[i] <= q_ct[i] * k_ct_power_max)
-            m.addCons(q_ct_in[i] >= q_ct[i] * k_ct_power_min)
-            m.addCons(q_ct_out[i] <= q_ct[i] * k_ct_power_max)
-            m.addCons(q_ct_out[i] >= q_ct[i] * k_ct_power_min)
-        for i in range(period - 1):
-            m.addCons(q_ct[i+1] - q_ct[i] == q_ct_in[i] - q_ct_out[i] - loss_ct * q_ct[i])  # 储冷罐存储动态变化
-        m.addCons(q_ct[0] - q_ct[-1] == q_ct_in[-1] - q_ct_out[-1] - loss_ct * q_ct[-1])
+            m.addCons(q_ct_in[i] <= (m_ct + param_input["device"]["ct"]["water_already"]) * k_ct_power_max)
+            m.addCons(q_ct_in[i] >= (m_ct + param_input["device"]["ct"]["water_already"]) * k_ct_power_min)
+            m.addCons(q_ct_out[i] <= (m_ct + param_input["device"]["ct"]["water_already"]) * k_ct_power_max)
+            m.addCons(q_ct_out[i] >= (m_ct + param_input["device"]["ct"]["water_already"]) * k_ct_power_min)
         # ----bat----#
-        for i in range(period):
             m.addCons(p_bat_sto[i] <= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_sto_max)  # 电池上限
             m.addCons(p_bat_sto[i] >= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_sto_min)  # 电池下限
-            m.addCons(p_bat_in[i] <= p_bat_sto[i] * k_bat_power_max)
-            m.addCons(p_bat_in[i] >= p_bat_sto[i] * k_bat_power_min)
-            m.addCons(p_bat_out[i] <= p_bat_sto[i] * k_bat_power_max)
-            m.addCons(p_bat_out[i] >= p_bat_sto[i] * k_bat_power_min)
-        for i in range(period - 1):
-            m.addCons(p_bat_sto[i+1] - p_bat_sto[i] == p_bat_in[i] - q_ct_out[i] - loss_bat * p_bat_sto[i])  # 电池存储动态变化
-        m.addCons(p_bat_sto[0] - p_bat_sto[-1] == p_bat_in[-1] - q_ct_out[-1] - loss_bat * p_bat_sto[-1])
+            m.addCons(p_bat_in[i] <= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_power_max)
+            m.addCons(p_bat_in[i] >= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_power_min)
+            m.addCons(p_bat_out[i] <= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_power_max)
+            m.addCons(p_bat_out[i] >= (p_bat_max + param_input["device"]["bat"]["power_already"]) * k_bat_power_min)
         # ----steam_storage----#
-        for i in range(period):
-            m.addCons(
-                m_steam120_sto[i] <= (m_steam120_sto_max + param_input["device"]["steam_storage"]["water_already"])
-                * k_steam_sto_max)
-            m.addCons(
-                m_steam120_sto[i] >= (m_steam120_sto_max + param_input["device"]["steam_storage"]["water_already"])
-                * k_steam_sto_min)
-            m.addCons(
-                m_steam180_sto[i] <= (m_steam180_sto_max + param_input["device"]["steam_storage"]["water_already"])
-                * k_steam_sto_max)
-            m.addCons(
-                m_steam180_sto[i] >= (m_steam180_sto_max + param_input["device"]["steam_storage"]["water_already"])
-                * k_steam_sto_min)
-            m.addCons(m_steam120_sto_in[i] <= m_steam120_sto[i] * k_steam_power_max)
-            m.addCons(m_steam120_sto_in[i] >= m_steam120_sto[i] * k_steam_power_min)
-            m.addCons(m_steam120_sto_out[i] <= m_steam120_sto[i] * k_steam_power_max)
-            m.addCons(m_steam120_sto_out[i] >= m_steam120_sto[i] * k_steam_power_min)
-            m.addCons(m_steam180_sto_in[i] <= m_steam180_sto[i] * k_steam_power_max)
-            m.addCons(m_steam180_sto_in[i] >= m_steam180_sto[i] * k_steam_power_min)
-            m.addCons(m_steam180_sto_out[i] <= m_steam180_sto[i] * k_steam_power_max)
-            m.addCons(m_steam180_sto_out[i] >= m_steam180_sto[i] * k_steam_power_min)
+            m.addCons(m_steam_sto[i] <= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_sto_max)
+            m.addCons(m_steam_sto[i] >= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_sto_min)
+            m.addCons(m_steam_sto_in[i] <= m_steam_sto[i] * k_steam_power_max)
+            m.addCons(m_steam_sto_in[i] >= m_steam_sto[i] * k_steam_power_min)
+            m.addCons(m_steam_sto_out[i] <= m_steam_sto[i] * k_steam_power_max)
+            m.addCons(m_steam_sto_out[i] >= m_steam_sto[i] * k_steam_power_min)
+
+        # 储能设备约束
         for i in range(period - 1):
-            m.addCons(m_steam120_sto[i+1] - m_steam120_sto[i] == m_steam120_sto_in[i] - m_steam120_sto_out[i]
-                      - loss_steam_sto * m_steam120_sto[i])
-            m.addCons(m_steam180_sto[i+1] - m_steam180_sto[i] == m_steam180_sto_in[i] - m_steam180_sto_out[i]
-                      - loss_steam_sto * m_steam180_sto[i])
-        m.addCons(m_steam120_sto[0] - m_steam120_sto[-1] == m_steam120_sto_in[-1] - m_steam120_sto_out[-1]
-                  - loss_steam_sto * m_steam120_sto[-1])
-        m.addCons(m_steam180_sto[0] - m_steam180_sto[-1] == m_steam180_sto_in[-1] - m_steam180_sto_out[-1]
-                  - loss_steam_sto * m_steam180_sto[-1])
+            m.addCons(g_ht[i+1] - g_ht[i] == g_ht_in[i] - g_ht_out[i] - loss_ht * g_ht[i])  # 储热罐存储动态变化
+            m.addCons(q_ct[i+1] - q_ct[i] == q_ct_in[i] - q_ct_out[i] - loss_ct * q_ct[i])  # 储冷罐存储动态变化
+            m.addCons(p_bat_sto[i+1] - p_bat_sto[i] == p_bat_in[i] - q_ct_out[i] - loss_bat * p_bat_sto[i])  # 电池存储动态变化
+            m.addCons(m_steam_sto[i+1] - m_steam_sto[i] == m_steam_sto_in[i] - m_steam_sto_out[i] - loss_steam_sto * m_steam_sto[i])
+        m.addCons(g_ht[0] - g_ht[-1] == g_ht_in[-1] - g_ht_out[-1] - loss_ht * g_ht[-1])
+        m.addCons(q_ct[0] - q_ct[-1] == q_ct_in[-1] - q_ct_out[-1] - loss_ct * q_ct[-1])
+        m.addCons(p_bat_sto[0] - p_bat_sto[-1] == p_bat_in[-1] - q_ct_out[-1] - loss_bat * p_bat_sto[-1])
+        m.addCons(m_steam_sto[0] - m_steam_sto[-1] == m_steam_sto_in[-1] - m_steam_sto_out[-1] - loss_steam_sto * m_steam_sto[-1])
 
         for i in range(period):
         # ---pv----#
@@ -686,19 +653,15 @@ class ISService:
             m.addCons(p_ac[i] <= (p_ac_max + param_input["device"]["ac"]["power_already"]))  # 运行功率 <= 规划功率（运行最大功率）
         # ---hp----#
             m.addCons(p_hp[i] * k_hp_g == g_hp[i])  # 电转热约束
-            m.addCons(p_hp[i] <= (p_hp_max + param_input["device"]["hp"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
             m.addCons(p_hpc[i] * k_hp_q == q_hp[i])  # 电转冷约束
-            m.addCons(p_hpc[i] <= (p_hp_max + param_input["device"]["hp"]["power_already"]))  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
             m.addCons(p_hp[i] + p_hpc[i] <= (p_hp_max + param_input["device"]["hp"]["power_already"]))
         # ---ghp----#
             m.addCons(p_ghp[i] * k_ghp_g == g_ghp[i])  # 地源热泵电转热约束
-            m.addCons(p_ghp[i] <= (p_ghp_max + param_input["device"]["ghp"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
             m.addCons(p_ghpc[i] * k_ghp_q == q_ghp[i])  # 地源热泵电转冷约束
-            m.addCons(p_ghpc[i] <= (p_ghp_max + param_input["device"]["ghp"]["power_already"]))  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
+            m.addCons(p_ghp[i] + p_ghpc[i] <= (p_ghp_max + param_input["device"]["ghp"]["power_already"]))  # 热泵供冷运行功率 <= 规划功率（运行最大功率）
             m.addCons(p_ghp_deep[i] * k_ghp_deep_g == g_ghp_deep[i])  # 地源热泵电转热约束
             m.addCons(p_ghp_deep[i] <= (p_ghp_deep_max + param_input["device"]["ghp_deep"]["power_already"]))  # 热泵供热运行功率 <= 规划功率（运行最大功率）
         #----gtw----#
-        # TODO: 我觉得没问题，存疑点在哪儿？
             m.addCons(num_gtw * p_gtw >= g_ghp[i] - p_ghp[i])  # 井和热泵有关联，制热量-电功率=取热量
             m.addCons(num_gtw * p_gtw >= q_ghp[i] + p_ghpc[i])  # 井和热泵有关联，制冷量+电功率=灌热量
             m.addCons(num_gtw2500 * p_gtw2500 >= g_ghp_deep[i] - p_ghp_deep[i])
@@ -718,23 +681,21 @@ class ISService:
             m.addCons(p_whp[i] + p_whpc[i]<= (p_whp_max + param_input["device"]["whp"]["power_already"]))
         #-----------------------------用户自定义的设备约束-----------------------------#
         #---自定义能量交换设备---#
+        # TODO: 仔细检查奥，这不太对的，两个 standard_ced 咋维数都不一样，我先改了，你看看对不对，我感觉有点怪怪的
         for t in range(period):
             for i in range(num_custom_exchange_device):
                 for j in range(energy_type_num):
-                    m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][j][t])
-                    m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][j][t])
-            m.addCons(standard_ced[i][t] <= ced_install[i] + param_input["device"]["custom_device_exchange"][i]["device_already"])
+                    m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
+                    m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
+                m.addCons(standard_ced[i][t] <= ced_install[i] + param_input["device"]["custom_device_exchange"][i]["device_already"])
         #---自定义储能设备的约束--#       # t+1状态 - t状态 = 输入 - 输出
+        # TODO: 仔细检查奥，这不太对的，首先 ced_energy_in 和 ced_energy_out 循环次数少了，其次也按照装机容量作为基准吧
         for i in range(num_custom_storage_device):
             for j in range(energy_type_num):
                 for t in range(period - 1):
                     m.addCons(csd_sto[i][j][t+1] - csd_sto[i][j][t] == csd_energy_in[i][j][t] - ced_energy_out[i][j][t])
-                    m.addCons(
-                        csd_sto[i][j][t] <= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"])
-                                             * k_install2sto_max_csd)
-                    m.addCons(
-                        csd_sto[i][j][t] >= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"])
-                                             * k_install2sto_min_csd)
+                    m.addCons(csd_sto[i][j][t] <= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"]) * k_install2sto_max_csd)
+                    m.addCons(csd_sto[i][j][t] >= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"]) * k_install2sto_min_csd)
                     m.addCons(ced_energy_in[i][j][t] <= csd_sto[i][j][t] * k_sto2io_max_csd)
                     m.addCons(ced_energy_out[i][j][t] <= csd_sto[i][j][t] * k_sto2io_max_csd)
                     m.addCons(ced_energy_in[i][j][t] >= csd_sto[i][j][t] * k_sto2io_min_csd)
