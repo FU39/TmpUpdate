@@ -694,13 +694,43 @@ class ISService:
             for j in range(energy_type_num):
                 for t in range(period - 1):
                     m.addCons(csd_sto[i][j][t+1] - csd_sto[i][j][t] == csd_energy_in[i][j][t] - ced_energy_out[i][j][t])
-                    m.addCons(csd_sto[i][j][t] <= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"]) * k_install2sto_max_csd)
-                    m.addCons(csd_sto[i][j][t] >= (ced_install[i] + param_input["device"]["custom_device_storage"][i]["device_already"]) * k_install2sto_min_csd)
-                    m.addCons(ced_energy_in[i][j][t] <= csd_sto[i][j][t] * k_sto2io_max_csd)
-                    m.addCons(ced_energy_out[i][j][t] <= csd_sto[i][j][t] * k_sto2io_max_csd)
-                    m.addCons(ced_energy_in[i][j][t] >= csd_sto[i][j][t] * k_sto2io_min_csd)
-                    m.addCons(ced_energy_out[i][j][t] >= csd_sto[i][j][t] * k_sto2io_min_csd)
+                    m.addCons(csd_sto[i][j][t] <= (ced_install[i]
+                                                    + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                    * k_install2sto_max_csd)
+                    m.addCons( csd_sto[i][j][t] >= (ced_install[i]
+                                                    + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                    * k_install2sto_min_csd)
+                    m.addCons(ced_energy_in[i][j][t] <= (ced_install[i]
+                                                         + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                         * k_sto2io_max_csd)
+                    m.addCons(ced_energy_out[i][j][t] <= (ced_install[i]
+                                                          + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                          * k_sto2io_max_csd)
+                    m.addCons(ced_energy_in[i][j][t] >= (ced_install[i]
+                                                         + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                         * k_sto2io_min_csd)
+                    m.addCons(ced_energy_out[i][j][t] >= (ced_install[i]
+                                                          + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                          * k_sto2io_min_csd)
                 m.addCons(csd_sto[i][j][0] - csd_sto[i][j][-1] == csd_energy_in[i][j][-1] - ced_energy_out[i][j][-1])
+                m.addCons(csd_sto[i][j][-1] <= (ced_install[-1]
+                                                + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                * k_install2sto_max_csd)
+                m.addCons(csd_sto[i][j][-1] >= (ced_install[-1]
+                                                + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                * k_install2sto_min_csd)
+                m.addCons(ced_energy_in[i][j][-1] <= (ced_install[i]
+                                                      + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                      * k_sto2io_max_csd)
+                m.addCons(ced_energy_out[i][j][-1] <= (ced_install[i]
+                                                       + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                       * k_sto2io_max_csd)
+                m.addCons(ced_energy_in[i][j][-1] >= (ced_install[i]
+                                                      + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                      * k_sto2io_min_csd)
+                m.addCons(ced_energy_out[i][j][-1] >= (ced_install[i]
+                                                       + param_input["device"]["custom_device_storage"][i]["device_already"])
+                                                       * k_sto2io_min_csd)
         #-----------------------------安装面积等约束-----------------------------#
         s_outside = param_input["base"]["area_outside"]
         s_roof = param_input["base"]["power_pv_house_top"]
