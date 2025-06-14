@@ -10,6 +10,7 @@
             "payback_period": 5.0,
             "co2": 1234.5,
             "cer": 765.5,
+            "cer_rate": 0.82,
             "capex_all_eb": 1000.0,
             "capex_all_crf_eb": 100.0,
             "opex_sum_eb": 20.0,
@@ -104,14 +105,46 @@
             "custom_exchange_installed": [
                 {
                     "device_name": "CustomExchange",
-                    "energy_in_type": "ele",
-                    "energy_out_type": "heat",
+                    "energy_in_type": [
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "energy_out_type": [
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
                     "installed_capacity": 20.0
                 },
                 {
                     "device_name": "CustomExchange2",
-                    "energy_in_type": "ele",
-                    "energy_out_type": "heat",
+                    "energy_in_type": [
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "energy_out_type": [
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
                     "installed_capacity": 15.0
                 }
             ]
@@ -528,12 +561,6 @@
             }
         ],
         "g_tube": [
-            8760
-        ],
-        "g_tube2steam120": [
-            8760
-        ],
-        "m_steam1202steam180": [
             8760
         ]
     }

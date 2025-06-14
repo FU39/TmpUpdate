@@ -14,6 +14,7 @@ result = {
             "payback_period": 5.0,  # 投资回收期 (年)
             "co2": 1234.5,  # 年碳排放量 (吨)
             "cer": 765.5,  # 年碳减排量 (吨)
+            "cer_rate": 0.82,  # 实际碳减排率
             # 对比方案: 纯电 (电锅炉供暖) 方案
             "capex_all_eb": 1000.0,  # 初始投资成本 (万元)
             "capex_all_crf_eb": 100.0,  # 年化投资成本 (万元)
@@ -63,7 +64,7 @@ result = {
             "hydrogen_sell": 300.0,  # 年售氢量 (kg)
             "steam120_sell": 150.0,  # 年售120℃蒸汽量 (t)
             "steam180_sell": 100.0,  # 年售180℃蒸汽量 (t)
-            "heat_water_sell": 250.0,  # 年售生活热水量 (m3)
+            "heat_water_sell": 250.0,  # 年售生活热水量 (kWh)
             "income_ele_sell": 123.4,  # 年售电收入
             "income_heat_sell": 456.7,  # 年售热收入
             "income_cooling_sell": 89.0,  # 年售冷收入
@@ -113,14 +114,14 @@ result = {
             "custom_exchange_installed": [
                 {
                     "device_name": "CustomExchange",
-                    "energy_in_type": "ele",
-                    "energy_out_type": "heat",
+                    "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
+                    "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
                     "installed_capacity": 20.0,  # 自定义能量交换设备装机容量 (kW)
                 },
                 {
                     "device_name": "CustomExchange2",
-                    "energy_in_type": "ele",
-                    "energy_out_type": "heat",
+                    "energy_in_type": [1, 1, 0, 0, 0, 0, 0],
+                    "energy_out_type": [0, 1, 1, 0, 0, 0, 0],
                     "installed_capacity": 15.0,  # 自定义能量交换设备装机容量 (kW)
                 },
             ],
@@ -302,8 +303,7 @@ result = {
         ],
         # 总线
         "g_tube": [8760],
-        "g_tube2steam120": [8760],
-        "m_steam1202steam180": [8760]
+        # TODO: (HSL, ZYL, 前端) 此部分输出有变更，删除了 2 个无意义的字段
     }
 }
 

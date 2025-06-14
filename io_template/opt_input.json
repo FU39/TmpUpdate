@@ -1,5 +1,8 @@
 {
     "sys_load": {
+        "load_area": 30000,
+        "g_load_area": 10000,
+        "q_load_area": 10000,
         "electricity_load": [
             0,
             0,
@@ -96570,7 +96573,7 @@
     },
     "income": {
         "power_type": "买电电价折扣/固定价格",
-        "power_price_discount": 0,
+        "power_price": 0,
         "heat_type": "供暖面积/热量",
         "heat_price": 0,
         "cool_type": "供冷面积/冷量",

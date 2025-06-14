@@ -3,6 +3,10 @@ import json
 input_data = {
     # 负荷数据列表
     "sys_load": {
+        # TODO: (ZYL, 前端) 将负荷中的面积数据拿过来
+        "load_area": 30000,  # 供能面积 (m2)
+        "g_load_area": 10000,  # 供热面积 (m2)
+        "q_load_area": 10000,  # 供冷面积 (m2)
         "electricity_load": [0] * 8760,  # 电力负荷数据，8760小时
         "heat_load": {
             "heat1": {
@@ -159,8 +163,9 @@ input_data = {
     "income": {
         # 供电收益计算方式
         "power_type": "买电电价折扣/固定价格",
-        # 供电折扣(元/kWh)
-        "power_price_discount": 0,
+        # TODO: (DZY, ZYL, 前端) 确认 power_price 意义，详细说明见 intelligent_solution_service.py planning_opt 函数中的 TODO 说明
+        # 供电折扣/固定价格
+        "power_price": 0,
         # 供热收益计算方式
         "heat_type": "供暖面积/热量",
         # heat_type选供暖面积为单位面积供暖季收费，选热量为单位热量供应收益
@@ -169,6 +174,7 @@ input_data = {
         "cool_type": "供冷面积/冷量",
         # cool_type选供冷面积为单位面积供l冷季收费，选热量为单位冷量供应收益
         "cool_price": 0,
+        # TODO: (ZYL) 明确下面两个值是否可以和买卖价格合并
         # 供生活热水价格
         "hot_water_price": 0,
         # 供蒸汽价格(元/吨)
@@ -468,16 +474,19 @@ input_data = {
     "custom_device_exchange": [
         {
             "device_name": "str",  # 设备名称
-            # 单位装机满负荷运行时的能源输入类型，对应 index 为 0：电，1：热，2：冷，3：氢，4：120蒸汽，5：180蒸汽，6：生活热水
+            # TODO: (DZY, ZYL, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输入类型，对应 index 为 0：电，1：热，2：冷，3：氢，4：120蒸汽，5：180蒸汽，6：生活热水
             "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
-            "energy_out_type": [0, 0, 1, 0, 0, 0, 0],  # 单位装机满负荷运行时的能源输出类型，对应 index 意义同上
+            # TODO: (DZY, ZYL, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输出类型，对应 index 为 0：电，1：热，2：冷，3：氢，4：120蒸汽，5：180蒸汽，6：生活热水
+            "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
             "device_already": 100,  # 已有装机
             "device_max": 2000000,  # 新增装机上限
             "device_min": 0,  # 新增装机下限
             "cost": 0.5,
             "crf": 20,
-            "energy_in_standard_per_unit": [0, 90, 0, 0, 0, 0, 0],  # 单位装机满负荷运行时的能源输入量，对应 index 意义同上
-            "energy_out_standard_per_unit": [0, 0, 45, 0, 0, 0, 0]  # 单位装机满负荷运行时的能源输出量，对应 index 意义同上
+            # TODO: (DZY, ZYL, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输入量，对应 index 意义同上
+            "energy_in_standard_per_unit": [0, 90, 0, 0, 0, 0, 0],
+            # TODO: (DZY, ZYL, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输出量，对应 index 意义同上
+            "energy_out_standard_per_unit": [0, 0, 45, 0, 0, 0, 0]
         },
         {
             "device_name": "str",
