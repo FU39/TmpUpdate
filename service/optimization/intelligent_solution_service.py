@@ -23,9 +23,9 @@ def generate_annual_data(start_date, end_date, typical_daily_data):
     返回:
     np.array: 全年8760小时数据
     """
-    # TODO: (DZY) 确认 end_date (结束日期) 是否需包含
+    # end_date 需要包含
     # 创建全年时间索引 (2023年，非闰年)
-    dates = pd.date_range('2023-01-01', '2023-12-31 23:00:00', freq='H')
+    dates = pd.date_range('2023-01-01', '2023-12-31 23:00:00', freq='h')
 
     # 初始化全年负荷数据
     annual_load = np.zeros(len(dates))
@@ -83,9 +83,6 @@ class ISService:
 
     def planning_opt(self, param_input: dict):
         # TODO: (DZY) 重要！请使用 test.py 测试当前方案测算代码
-        # TODO: (DZY, ZYL) 检查所有单位，先以 kWh 为基准，关注冷热负荷单位换算 & 蒸汽负荷单位，请 ZYL 师姐确认生活热水负荷单位 (m3 还是 kWh)
-        # TODO: (DZY) 以注释形式标注单位，与 ZYL 师姐确认后更新代码
-        # TODO: (DZY) 检查生活热水负荷是否与热负荷分开 (现在不在参数处将热负荷和生活热水负荷合并，而在能量中均视为热，便于后续指标计算)
 
         M = 1e12  # 大数M
         c = 4.2 / 3600  # 水的比热容
@@ -97,7 +94,6 @@ class ISService:
         period = 8760
 
         #------------导入负荷数据------------#
-        # TODO: (DZY) check 单位，检查同种能量形式负荷合并是否正确，之前的 += 是错误的写法 (请尝试测试一下)
         ele_load = param_input["sys_load"]["electricity_load"]  # 电负荷 (kW)
         heatload_num = len(param_input["sys_load"]["heat_load"])
         coolload_num = len(param_input["sys_load"]["cool_load"])
@@ -111,20 +107,20 @@ class ISService:
         hotwater_demand = [0] * 8760  # 生活热水负荷 (kW)
 
         for i in range(heatload_num):
-            g_demand = np.add(g_demand, param_input["sys_load"]["heat_load"]['heat' + str(i)]["load"]).tolist()
+            g_demand = np.add(g_demand, param_input["sys_load"]["heat_load"]["heat" + str(i+1)]["load"]).tolist()
         for i in range(coolload_num):
-            q_demand = np.add(q_demand, param_input["sys_load"]["cool_load"]['cool' + str(i)]["load"]).tolist()
+            q_demand = np.add(q_demand, param_input["sys_load"]["cool_load"]["cool" + str(i+1)]["load"]).tolist()
         for i in range(steamload_num):
-            if param_input["sys_load"]["steam_load"]['steam'+str(i)]["tem"] == 120:
-                steam120_demand = np.add(steam120_demand, param_input["sys_load"]["steam_load"]['steam' + str(i)]["load"]).tolist()
-            elif param_input["sys_load"]["steam_load"]['steam'+str(i)]["tem"] == 180:
-                steam180_demand = np.add(steam180_demand, param_input["sys_load"]["steam_load"]['steam' + str(i)]["load"]).tolist()
+            if param_input["sys_load"]["steam_load"]['steam'+str(i+1)]["tem"] == 120:
+                steam120_demand = np.add(steam120_demand, param_input["sys_load"]["steam_load"]["steam" + str(i+1)]["load"]).tolist()
+            elif param_input["sys_load"]["steam_load"]['steam'+str(i+1)]["tem"] == 180:
+                steam180_demand = np.add(steam180_demand, param_input["sys_load"]["steam_load"]["steam" + str(i+1)]["load"]).tolist()
         for i in range(hotwater_num):
-            hotwater_demand = np.add(hotwater_demand, param_input["sys_load"]["hotwater_load"]['hotwater' + str(i)]["load"]).tolist()
+            hotwater_demand = np.add(hotwater_demand, param_input["sys_load"]["hotwater_load"]["hotwater" + str(i+1)]["load"]).tolist()
         g_demand = np.multiply(g_demand, (1e6 / 3600)).tolist()  # GJ/h -> kW
         q_demand = np.multiply(q_demand, (1e6 / 3600)).tolist()  # GJ/h -> kW
 
-        # TODO: (DZY, ZYL) 明确光伏数据单位 (kW/1kW 还是 W/1kW)，此处认为为 kW/1kW
+        # 光伏出力 kw/kw
         pv_data = param_input["device"]["pv"]["pv_data8760"]
         sc_data = param_input["device"]["sc"]["solar_data8760"]
         wd_data = param_input["device"]["wd"]["wd_data8760"]
@@ -141,21 +137,18 @@ class ISService:
         #------------导入价格等数据------------#
         alpha_e = 0.5839  # 电网排放因子 (kgCO2/kWh)
         alpha_gas = 1.89  # 天然气排放因子 (kgCO2/m3)
-        alpha_h = 1.74  # 氢排放因子 (kgCO2/kg)
-        # TODO: (前端 & ZYL) 明确天然气价格单位是否为元/m3
+        alpha_h = 0  # 氢排放因子 (kgCO2/kg)
         gas_price = param_input["trading"]["gas_buy_price"]  # 天然气价格 (元/m3)
-        # TODO: (前端) 明确传入字段 power_buy_price_type 内容，以匹配4种选择
-        # TODO: (前端 & ZYL) 明确容量电价单位是元/(kW·月) 还是元/(kW·年)，并在前端传入参数时明确
-        if param_input["trading"]["power_buy_price_type"] == "24":
+        if param_input["trading"]["power_buy_price_type"] == "1":
             lambda_ele_in = param_input["trading"]["power_buy_24_price"] * 365
             lambda_ele_capacity = 0  # 容量电价 (元/(kW·月))
-        elif param_input["trading"]["power_buy_price_type"] == "8760":
+        elif param_input["trading"]["power_buy_price_type"] == "2":
             lambda_ele_in = param_input["trading"]["power_buy_8760_price"]
             lambda_ele_capacity = 0
-        elif param_input["trading"]["power_buy_price_type"] == "24+capacity":
+        elif param_input["trading"]["power_buy_price_type"] == "3":
             lambda_ele_in = param_input["trading"]["power_buy_24_price"] * 365
             lambda_ele_capacity = param_input["trading"]["power_buy_capacity_price"]
-        elif param_input["trading"]["power_buy_price_type"] == "8760+capacity":
+        elif param_input["trading"]["power_buy_price_type"] == "4":
             lambda_ele_in = param_input["trading"]["power_buy_8760_price"]
             lambda_ele_capacity = param_input["trading"]["power_buy_capacity_price"]
         else:
@@ -215,7 +208,7 @@ class ISService:
         cost_ht = param_input["device"]["ht"]["cost"]
         cost_ct = param_input["device"]["ct"]["cost"]
         cost_bat = param_input["device"]["bat"]["cost"]
-        cost_steam_storage = param_input["device"]["steam_sorage"]["cost"]
+        cost_steam_storage = param_input["device"]["steam_storage"]["cost"]
         cost_pv = param_input["device"]["pv"]["cost"]
         cost_sc = param_input["device"]["sc"]["cost"]
 
@@ -234,18 +227,17 @@ class ISService:
         cost_whp = param_input["device"]["whp"]["cost"]
 
         # ---------------效率数据，包括产热、制冷、发电、热转换等--------------#
-        # TODO: (DZY) 先以 kWh 为基准标注参数单位
         # ----co----#
-        k_co = param_input["device"]["co"]["beta_co"]
+        k_co = param_input["device"]["co"]["beta_co"]   # 耗电量系数 （kWh/kg）
         # ----fc----#
         k_fc_p = param_input["device"]["fc"]["eta_fc_p"]  # 氢转电系数 (kWh/kg)
-        k_fc_g = param_input["device"]["fc"]["eta_fc_g"]  # 氢转热系数 (kWh/kg)
+        k_fc_g = param_input["device"]["fc"]["eta_ex_g"]  # 氢转热系数 (kWh/kg)
         fc_theta_ex = param_input["device"]["fc"]["theta_ex"]  # 热回收效率
         # ----el----#
         kg2nm3 = 11.2  # 1kg 氢气体积为 11.2m3
         k_el_h = param_input["device"]["el"]["eta_el_h"]  # 电转氢效率 (kWh/kg)
-        k_el_g = param_input["device"]["el"]["eta_el_g"]  # 电转热效率 (kWh/kWh)
-        el_theta_ex = param_input["device"]["el"]["theta_ex"]
+        k_el_g = param_input["device"]["el"]["eta_ex_g"]  # 电转热效率 (kWh/kWh)
+        el_theta_ex = param_input["device"]["el"]["theta_ex"]   # 热回收效率
         nm3_el_already = param_input["device"]["el"]["nm3_already"]
         nm3_el_upper = param_input["device"]["el"]["nm3_max"]
         nm3_el_lower = param_input["device"]["el"]["nm3_min"]
@@ -254,16 +246,16 @@ class ISService:
         p_el_lower = nm3_el_lower / kg2nm3 / k_el_h
         # ---hst----#
         # ---ht----#
-        k_ht_sto_max = param_input["device"]["ht"]["g_storage_max_per_unit"]  # 储量转热量上限
-        k_ht_sto_min = param_input["device"]["ht"]["g_storage_min_per_unit"]  # 储量转热量下限
-        k_ht_power_max = param_input["device"]["ht"]["g_power_max_per_unit"]  # 储量转供量上限
-        k_ht_power_min = param_input["device"]["ht"]["g_power_min_per_unit"]  # 储量转供量上限
+        k_ht_sto_max = param_input["device"]["ht"]["g_storage_max_per_unit"]  # 储量转热量上限# kwh/kg
+        k_ht_sto_min = param_input["device"]["ht"]["g_storage_min_per_unit"]  # 储量转热量下限# kwh/kg
+        k_ht_power_max = param_input["device"]["ht"]["g_power_max_per_unit"]  # 储量转供量上限# kwh/kg
+        k_ht_power_min = param_input["device"]["ht"]["g_power_min_per_unit"]  # 储量转供量上限# kwh/kg
         loss_ht = param_input["device"]["ht"]["loss_rate"]                    # 能量损失系数
         # ---ct----#
-        k_ct_sto_max = param_input["device"]["ct"]["q_storage_max_per_unit"]  # 储量转热量上限
-        k_ct_sto_min = param_input["device"]["ct"]["q_storage_min_per_unit"]  # 储量转热量下限
-        k_ct_power_max = param_input["device"]["ct"]["q_power_max_per_unit"]  # 储量转供量上限
-        k_ct_power_min = param_input["device"]["ct"]["q_power_min_per_unit"]  # 储量转供量上限
+        k_ct_sto_max = param_input["device"]["ct"]["q_storage_max_per_unit"]  # 储量转热量上限# kwh/kg
+        k_ct_sto_min = param_input["device"]["ct"]["q_storage_min_per_unit"]  # 储量转热量下限# kwh/kg
+        k_ct_power_max = param_input["device"]["ct"]["q_power_max_per_unit"]  # 储量转供量上限# kwh/kg
+        k_ct_power_min = param_input["device"]["ct"]["q_power_min_per_unit"]  # 储量转供量上限# kwh/kg
         loss_ct = param_input["device"]["ct"]["loss_rate"]  # 能量损失系数
         # ---bat----#
         k_bat_sto_max = param_input["device"]["bat"]["ele_storage_max_per_unit"]  # 储量转热量上限
@@ -278,41 +270,41 @@ class ISService:
         k_steam_power_min = param_input["device"]["steam_storage"]["steam_power_min_per_unit"]  # 储量转供量上限
         loss_steam_sto = param_input["device"]["steam_storage"]["loss_rate"]  # 能量损失系数
         # ----pv----#
-        eta_pv = param_input["device"]["pv"]["beta_pv"]  # 设备效率
-        k_s_pv = param_input["device"]["pv"]["s_pv_per_unit"]
+        eta_pv = param_input["device"]["pv"]["beta_pv"]  # 剩余能量系数
+        k_s_pv = param_input["device"]["pv"]["s_pv_per_unit"]   # 功率需面积系数   kw/m2
         # ----sc----#
-        k_sc = param_input["device"]["sc"]["beta_sc"]
-        sc_theta_ex = param_input["device"]["sc"]["theta_ex"]
-        k_s_sc = param_input["device"]["sc"]["s_sc_per_unit"]
+        k_sc = param_input["device"]["sc"]["beta_sc"]       # 面积供热  GJ/m2
+        sc_theta_ex = param_input["device"]["sc"]["theta_ex"]   # 能量损失系数
+        k_s_sc = param_input["device"]["sc"]["s_sc_per_unit"]   # m2/m2
         # ----wd----#
-        k_s_wd = param_input["device"]["wd"]["s_wd_per_unit"]
+        k_s_wd = param_input["device"]["wd"]["s_wd_per_unit"]   # kWh/m2
         # ----eb----#
-        k_eb = param_input["device"]["eb"]["beta_eb"]
+        k_eb = param_input["device"]["eb"]["beta_eb"]           # %
         #----abc---#
-        k_abc = param_input["device"]["abc"]["beta_abc"]
+        k_abc = param_input["device"]["abc"]["beta_abc"]        # kWh/kWh
         # ----ac----#
-        k_ac = param_input["device"]["ac"]["beta_ac"]
+        k_ac = param_input["device"]["ac"]["beta_ac"]           # kwh/kwh
         # ----hp----#
-        k_hp_g = param_input["device"]["hp"]["beta_hpg"]
-        k_hp_q = param_input["device"]["hp"]["beta_hpq"]
+        k_hp_g = param_input["device"]["hp"]["beta_hpg"]        # kwh/kwh
+        k_hp_q = param_input["device"]["hp"]["beta_hpq"]        # kwh/kwh
         # ----ghp----#
-        k_ghp_g = param_input["device"]["ghp"]["beta_ghpg"]
-        k_ghp_q = param_input["device"]["ghp"]["beta_ghpq"]
-        k_ghp_deep_g = param_input["device"]["ghp_deep"]["beta_ghpg"]
+        k_ghp_g = param_input["device"]["ghp"]["beta_ghpg"]     # kwh/kwh
+        k_ghp_q = param_input["device"]["ghp"]["beta_ghpq"]     # kwh/kwh
+        k_ghp_deep_g = param_input["device"]["ghp_deep"]["beta_ghpg"]   # kwh/kwh
         # ----gtw----#
-        p_gtw = param_input["device"]["gtw"]["beta_gtw"]
+        p_gtw = param_input["device"]["gtw"]["beta_gtw"]        # kw/1
         # ----gtw2500----#
-        p_gtw2500 = param_input["device"]["gtw2500"]["beta_gtw"]
+        p_gtw2500 = param_input["device"]["gtw2500"]["beta_gtw"]    # kw/1
         # ----hp120----#
-        cop_hp120 = param_input["device"]["hp120"]["cop"]
+        cop_hp120 = param_input["device"]["hp120"]["cop"]           # kwh/kwh
         # ----co180----#
-        k_co180 = param_input["device"]["co180"]["k_e_m"]
+        k_co180 = param_input["device"]["co180"]["k_e_m"]           # kwh/t
         # ----whp----#
-        cop_whpg = param_input["device"]["whp"]["cop_heat"]
-        cop_whpq = param_input["device"]["whp"]["cop_cold"]
+        cop_whpg = param_input["device"]["whp"]["cop_heat"]         # kwh/kwh
+        cop_whpq = param_input["device"]["whp"]["cop_cold"]         # kwh/kwh
         # ---------------------------用户自定义设备---------------------------#
-        ced_data = param_input["device"]["custom_device_exchange"]
-        csd_data = param_input["device"]["custom_device_storage"]
+        ced_data = param_input["custom_device_exchange"]
+        csd_data = param_input["custom_device_storage"]
         num_custom_exchange_device = len(ced_data)  # 用户自定义能量交换设备
         num_custom_storage_device = len(csd_data)  # 用户自定义储能设备
         # ---------------第i个自定义设备的年化收益率数据---------------#
@@ -339,8 +331,8 @@ class ISService:
         cop_standerd2out_ced = [[0] * energy_type_num] * num_custom_exchange_device
         k_install2sto_max_csd = [[0] * energy_type_num] * num_custom_storage_device
         k_install2sto_min_csd = [[0] * energy_type_num] * num_custom_storage_device
-        k_sto2io_max_csd = [0] * num_custom_storage_device
-        k_sto2io_min_csd = [0] * num_custom_storage_device
+        k_sto2io_max_csd = [[0] * energy_type_num] * num_custom_storage_device
+        k_sto2io_min_csd = [[0] * energy_type_num] * num_custom_storage_device
         for i in range(num_custom_exchange_device):
             cop_in2standerd_ced[i] = ced_data[i]["energy_in_standard_per_unit"]
             cop_standerd2out_ced[i] = ced_data[i]["energy_out_standard_per_unit"]
@@ -352,14 +344,12 @@ class ISService:
             energy_type_index = energy_type_list.index(device["energy_type"])
             k_install2sto_max_csd[i][energy_type_index] = device["energy_storage_max_per_unit"]
             k_install2sto_min_csd[i][energy_type_index] = device["energy_storage_min_per_unit"]
-            k_sto2io_max_csd[i] = device["energy_power_max_per_unit"]
-            k_sto2io_min_csd[i] = device["energy_power_min_per_unit"]
+            k_sto2io_max_csd[i][energy_type_index] = device["energy_power_max_per_unit"]
+            k_sto2io_min_csd[i][energy_type_index] = device["energy_power_min_per_unit"]
 
         # --- 基准方案信息 --- #
-        # TODO: (DZY, ZYL) 确认电锅炉参数如何获取，是在设备库中添加 (device)传输 ，还是在输入中添加独立项传输，请 ZYL 师姐把关
-        # TODO: (ZYL) 确认基准方案如何供氢？基准方案是否对两种温度蒸汽进行区分？
         # TODO: (前端) 明确和统一当前传入值的名称
-        k_gas = 0.5  # 燃气锅炉热效率 (kWh/m3)，先随意设的
+        k_gas = 8.4  # 燃气锅炉热效率 (kWh/m3)，先随意设的
         crf_gas = 10  # 燃气锅炉使用年限，先随意设的
         cost_gas = 1000  # 燃气锅炉单价 (元/m3)，先随意设的
         eta_g_base_dict = {
@@ -374,7 +364,6 @@ class ISService:
             "电锅炉": k_eb / 750,  # 电 (kWh) -> 120蒸汽 (t)
             "燃气锅炉": k_gas / 750,  # 天然气 (m3) -> 120蒸汽 (t)
         }
-        # TODO: (ZYL) 是否合理？
         eta_steam180_base_dict = {
             "电锅炉": k_eb / 770,  # 电 (kWh) -> 180蒸汽 (t)
             "燃气锅炉": k_gas / 770,  # 天然气 (m3) -> 180蒸汽 (t)
@@ -398,6 +387,7 @@ class ISService:
         # 系统级变量
         g_tube = [m.addVar(vtype="C", lb=0, name=f"g_tube{t}") for t in range(period)]
         p_pur = [m.addVar(vtype="C", lb=0, name=f"p_pur{t}") for t in range(period)]  # 买电power purchase
+        p_pur_max = m.addVar(vtype="C", lb=0, name=f"p_pur_max")        # 容量电价计算opex使用
         p_sol = [m.addVar(vtype="C", lb=0, name=f"p_sol{t}") for t in range(period)]  # 卖电power sold
         g_pur = [m.addVar(vtype="C", lb=0, name=f"g_pur{t}") for t in range(period)]  # 买热
         g_sol = [m.addVar(vtype="C", lb=0, name=f"g_sol{t}") for t in range(period)]  # 卖热
@@ -546,8 +536,6 @@ class ISService:
         g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
         q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
         # 用户自定义库中设备变量
-        # TODO: (DZY) 再次检查自定义储能设备建模，目前建模与后方约束的维数都不一致
-        # TODO: (DZY) 思考当前示例修改是否正确，是否需要进一步修改
         # 自定义能量交换设备
         ced_install = [m.addVar(vtype="C", lb=ced_data[i]["device_min"], ub=ced_data[i]["device_max"],
                                 name=f"ced_install{i}") for i in range(num_custom_exchange_device)]    # 设备装机容量
@@ -567,7 +555,6 @@ class ISService:
         csd_energy_out = [[[m.addVar(vtype="C", lb=0,
                                      name=f"csd_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_storage_device)]
         #---------------创建约束条件--------------#
-        # TODO: (DZY, ZYL) 检查约束中各变量的单位与负荷单位是否一致，先以 kWh 为基准，考虑到自定义设备不清楚基准单位，需和 ZYL 确认
         #-----------------------------系统约束-----------------------------#
         # 能量流顺序 0：电   1：热   2：冷   3：氢   4：120蒸汽  5：180蒸汽  6：家用热水（仅自定义设备）
         for i in range(period):
@@ -758,66 +745,57 @@ class ISService:
         for t in range(period):
             for i in range(num_custom_exchange_device):
                 for j in range(energy_type_num):
-                    m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
-                    m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
+                    if param_input["custom_device_exchange"][i]["energy_in_type"][j] == 1:
+                        m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
+                    if param_input["custom_device_exchange"][i]["energy_out_type"][j] == 1:
+                        m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
                 m.addCons(standard_ced[i][t] <= ced_install[i] + ced_data[i]["device_already"])
         # ---自定义储能设备的约束--- #
-        # TODO: (DZY) 再次检查自定义储能设备建模，目前建模可以保证自定义储能设备对应上它的储能类型吗？
-        # TODO: (DZY) 思考当前示例修改是否符合自定义储能设备的建模公式，是否需要进一步修改
         for i in range(num_custom_storage_device):
             for j in range(energy_type_num):
                 for t in range(period - 1):
-                    m.addCons(csd_sto[i][j][t+1] - csd_sto[i][j][t] == csd_energy_in[i][j][t] - ced_energy_out[i][j][t])
-                    m.addCons(csd_sto[i][j][t] <= ((ced_install[i]
-                                                    + csd_data[i]["device_already"])
+                    m.addCons(csd_sto[i][j][t+1] - csd_sto[i][j][t] == csd_energy_in[i][j][t] - csd_energy_out[i][j][t])
+                    m.addCons(csd_sto[i][j][t] <= ((csd_install[i] + csd_data[i]["device_already"])
                                                    * k_install2sto_max_csd[i][j]))
-                    m.addCons( csd_sto[i][j][t] >= (ced_install[i]
-                                                    + csd_data[i]["device_already"])
-                                                    * k_install2sto_min_csd)
-                    m.addCons(ced_energy_in[i][j][t] <= (ced_install[i]
-                                                         + csd_data[i]["device_already"])
-                                                         * k_sto2io_max_csd[i])
-                    m.addCons(ced_energy_out[i][j][t] <= (ced_install[i]
-                                                          + csd_data[i]["device_already"])
-                                                          * k_sto2io_max_csd)
-                    m.addCons(ced_energy_in[i][j][t] >= (ced_install[i]
-                                                         + csd_data[i]["device_already"])
-                                                         * k_sto2io_min_csd)
-                    m.addCons(ced_energy_out[i][j][t] >= (ced_install[i]
-                                                          + csd_data[i]["device_already"])
-                                                          * k_sto2io_min_csd)
-                m.addCons(csd_sto[i][j][0] - csd_sto[i][j][-1] == csd_energy_in[i][j][-1] - ced_energy_out[i][j][-1])
-                m.addCons(csd_sto[i][j][-1] <= (ced_install[-1]
-                                                + csd_data[i]["device_already"])
-                                                * k_install2sto_max_csd)
-                m.addCons(csd_sto[i][j][-1] >= (ced_install[-1]
-                                                + csd_data[i]["device_already"])
-                                                * k_install2sto_min_csd)
-                m.addCons(ced_energy_in[i][j][-1] <= (ced_install[i]
-                                                      + csd_data[i]["device_already"])
-                                                      * k_sto2io_max_csd)
-                m.addCons(ced_energy_out[i][j][-1] <= (ced_install[i]
-                                                       + csd_data[i]["device_already"])
-                                                       * k_sto2io_max_csd)
-                m.addCons(ced_energy_in[i][j][-1] >= (ced_install[i]
-                                                      + csd_data[i]["device_already"])
-                                                      * k_sto2io_min_csd)
-                m.addCons(ced_energy_out[i][j][-1] >= (ced_install[i]
-                                                       + csd_data[i]["device_already"])
-                                                       * k_sto2io_min_csd)
+                    m.addCons(csd_sto[i][j][t] >= ((csd_install[i] + csd_data[i]["device_already"])
+                                                    * k_install2sto_min_csd[i][j]))
+                    m.addCons(csd_energy_in[i][j][t] <= (csd_install[i] + csd_data[i]["device_already"])
+                                                         * k_sto2io_max_csd[i][j])
+                    m.addCons(csd_energy_out[i][j][t] <= (csd_install[i] + csd_data[i]["device_already"])
+                                                          * k_sto2io_max_csd[i][j])
+                    m.addCons(csd_energy_in[i][j][t] >= (csd_install[i] + csd_data[i]["device_already"])
+                                                         * k_sto2io_min_csd[i][j])
+                    m.addCons(csd_energy_out[i][j][t] >= (csd_install[i] + csd_data[i]["device_already"])
+                                                          * k_sto2io_min_csd[i][j])
+                m.addCons(csd_sto[i][j][0] - csd_sto[i][j][-1] == csd_energy_in[i][j][-1] - csd_energy_out[i][j][-1])
+                m.addCons(csd_sto[i][j][-1] <= (csd_install[-1] + csd_data[i]["device_already"])
+                                                * k_install2sto_max_csd[i][j])
+                m.addCons(csd_sto[i][j][-1] >= (csd_install[-1] + csd_data[i]["device_already"])
+                                                * k_install2sto_min_csd[i][j])
+                m.addCons(csd_energy_in[i][j][-1] <= (csd_install[i] + csd_data[i]["device_already"])
+                                                      * k_sto2io_max_csd[i][j])
+                m.addCons(csd_energy_out[i][j][-1] <= (csd_install[i] + csd_data[i]["device_already"])
+                                                       * k_sto2io_max_csd[i][j])
+                m.addCons(csd_energy_in[i][j][-1] >= (csd_install[i] + csd_data[i]["device_already"])
+                                                      * k_sto2io_min_csd[i][j])
+                m.addCons(csd_energy_out[i][j][-1] >= (csd_install[i] + csd_data[i]["device_already"])
+                                                       * k_sto2io_min_csd[i][j])
         #-----------------------------安装面积等约束-----------------------------#
         s_outside = param_input["base"]["area_outside"]
         s_roof = param_input["base"]["power_pv_house_top"]
         m.addCons(k_s_pv * p_pv_max + k_s_sc * s_sc + k_s_wd * num_wd <= s_outside + s_roof)
         m.addCons(k_s_wd * num_wd <= s_outside)
         #-----------------------------运行费用约束-----------------------------#
-        m.addCons(opex_sum_pure == (quicksum([lambda_ele_in[i] * p_pur[i] for i in range(period)]) + lambda_ele_capacity * max(p_pur) * 12
+        #？？？max
+        m.addCons(opex_sum_pure == (quicksum([lambda_ele_in[i] * p_pur[i] for i in range(period)]) + lambda_ele_capacity * p_pur_max * 12
                                     + lambda_g_in * quicksum([g_pur[i] for i in range(period)])
                                     + lambda_q_in * quicksum([q_pur[i] for i in range(period)])
                                     + lambda_h_in * quicksum([h_pur[i] for i in range(period)])
                                     + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])
                                     + lambda_steam180_in * quicksum([steam180_pur[i] for i in range(period)])
                                     + lambda_hotwater_in * quicksum([hotwater_pur[i] for i in range(period)])))
+        for i in range(period):
+            m.addCons(p_pur[i] <= p_pur_max)
         m.addCons(opex_sum == (opex_sum_pure
                                - quicksum([lambda_ele_out[i] * p_sol[i] for i in range(period)])
                                - lambda_g_out * quicksum([g_sol[i] for i in range(period)])
@@ -828,14 +806,14 @@ class ISService:
                                - lambda_hotwater_out * quicksum([hotwater_sol[i] for i in range(period)])))
         m.addCons(opex_sum <= M)
         #-----------------------------碳减排的约束-----------------------------#
-        # TODO: (ZYL) 如何计算负荷的碳排放量 (如集中供热)，以及如何根据输入的碳减排率来限制系统能量交易
         load2ele_sum = sum(ele_load)
         load2gas_sum = 0
         load2h_sum = 0
+        load2co_heat = 0
+        load2co_steam = 0
         # 基准方案供热模式
         if param_input["base"]["base_method_heating"] == "集中供热":
-            # TODO: (DZY, ZYL) 确认后填充该部分
-            pass
+            load2co_heat = sum(g_demand) * 319.5 / 1000             # 使用燃煤锅炉供热 供热1000kwh 碳排319.5kg
         elif param_input["base"]["base_method_heating"] == "电锅炉":
             load2ele_sum += sum(g_demand) / eta_g_base_dict["电锅炉"]
         elif param_input["base"]["base_method_heating"] == "空气源热泵":
@@ -846,20 +824,18 @@ class ISService:
             raise ValueError("非法 base_method_heating 值！")
         # 基准方案供冷模式
         if param_input["base"]["base_method_cooling"] == "集中供冷":
-            # TODO: (DZY, ZYL) 确认后填充该部分
-            pass
+            load2ele_sum += sum(q_demand) / k_ac # 用电制冷
         elif param_input["base"]["base_method_cooling"] == "水冷机组":
             load2ele_sum += sum(q_demand) / eta_q_base_dict["水冷机组"]
         else:
             raise ValueError("非法 base_method_cooling 值！")
         # 基准方案供氢模式
-        # TODO: (DZY, ZYL) 确认该如何计算买氢的碳排放
         load2h_sum += sum(h_demand)
         # 基准方案供蒸汽模式（测试时先统一为 base_method_steam）
-        # TODO: (DZY, ZYL) 确认输入后再决定启用哪一块
+        # 按燃煤系数计算
         if param_input["base"]["base_method_steam"] == "购买蒸汽":
-            # TODO: (DZY, ZYL) 确认后填充该部分
-            pass
+            load2co_steam += sum(steam120_demand) * 750 * 319.5 / 1000
+            load2co_steam += sum(steam180_demand) * 770 * 319.5 / 1000
         elif param_input["base"]["base_method_steam"] == "电锅炉":
             load2ele_sum += sum(steam120_demand) / eta_steam120_base_dict["电锅炉"]
             load2ele_sum += sum(steam180_demand) / eta_steam180_base_dict["电锅炉"]
@@ -868,24 +844,6 @@ class ISService:
             load2gas_sum += sum(steam180_demand) / eta_steam180_base_dict["燃气锅炉"]
         else:
             raise ValueError("非法 base_method_steam 值！")
-        # if param_input["base"]["base_method_steam120"] == "购买蒸汽":
-        #     # TODO: (DZY, ZYL) 确认后填充该部分
-        #     pass
-        # elif param_input["base"]["base_method_steam120"] == "电锅炉":
-        #     load2ele_sum += sum(steam120_demand) / eta_steam120_base_dict["电锅炉"]
-        # elif param_input["base"]["base_method_steam120"] == "燃气锅炉":
-        #     load2gas_sum += sum(steam120_demand) / eta_steam120_base_dict["燃气锅炉"]
-        # else:
-        #     raise ValueError("非法 base_method_steam120 值！")
-        # if param_input["base"]["base_method_steam180"] == "购买蒸汽":
-        #     # TODO: (DZY, ZYL) 确认后填充该部分
-        #     pass
-        # elif param_input["base"]["base_method_steam180"] == "电锅炉":
-        #     load2ele_sum += sum(steam180_demand) / eta_steam180_base_dict["电锅炉"]
-        # elif param_input["base"]["base_method_steam180"] == "燃气锅炉":
-        #     load2gas_sum += sum(steam180_demand) / eta_steam180_base_dict["燃气锅炉"]
-        # else:
-        #     raise ValueError("非法 base_method_steam180 值！")
         # 基准方案供热水模式
         if param_input["base"]["base_method_hotwater"] == "电锅炉":
             load2ele_sum += sum(hotwater_demand) / eta_hotwater_base_dict["电锅炉"]
@@ -896,11 +854,10 @@ class ISService:
         else:
             raise ValueError("非法 base_method_hotwater 值！")
 
-        ce_base = load2ele_sum * alpha_e + load2gas_sum * alpha_gas + load2h_sum * alpha_h
+        ce_base = load2ele_sum * alpha_e + load2gas_sum * alpha_gas + load2h_sum * alpha_h + load2co_heat
         if param_input["base"]["cer_enable"] is True:
             cerr = param_input["base"]["cer"]  # 碳减排率
             m.addCons(ce_h <= (1 - cerr) * ce_base)
-        # TODO: (DZY, ZYL) 当前有多种买卖能量的方式，如何计算碳排放量？
         m.addCons(ce_h == quicksum(p_pur) * alpha_e)
         #-----------------------------规划设备花费约束-----------------------------#
         m.addCons(capex_sum == (p_co_max * cost_co + p_fc_max * cost_fc + p_el_max * cost_el
@@ -949,16 +906,16 @@ class ISService:
 
         #---------------------------计算投资回报等信息-----------------------------#
         sys_life = 20  # 系统设计年限
-        # TODO: (DZY) 检查 whole_energy 计算是否正确，重点确认氢气的转化计算，明确 37 的意义
         # whole_energy，包含负荷和出售能量，单位为 kWh
         whole_energy = (sum(ele_load)
                         + sum(g_demand) + sum(q_demand)
-                        + sum(h_demand) * 37
+                        + sum(h_demand) * 37                    # 37 为kg转kWh
                         + sum(steam120_demand) * 750 + sum(steam180_demand) * 770
                         + sum(hotwater_demand)
                         + sum(m.getVal(p_sol[i]) for i in range(period))
                         + sum(m.getVal(g_sol[i]) for i in range(period)) + sum(m.getVal(q_sol[i]) for i in range(period))
-                        + sum(m.getVal(steam120_sol[i]) for i in range(period)) + sum(m.getVal(steam180_sol[i]) for i in range(period)))
+                        + sum(m.getVal(steam120_sol[i]) for i in range(period)) * 750
+                        + sum(m.getVal(steam180_sol[i]) for i in range(period))) * 770
 
         capex_all = m.getVal(capex_sum) * (1 + param_input["base"]["other_investment"])
         capex_all_crf = m.getVal(capex_crf) + m.getVal(capex_sum) * param_input["base"]["other_investment"] / sys_life
@@ -981,7 +938,6 @@ class ISService:
                 revenue_heat = param_input["income"]["heat_price"] * sum(g_demand)
             else:
                 raise ValueError("非法 heat_type 值！")
-        # TODO: (ZYL) 确认该电价是不是使用 lambda_ele_revenue
         elif param_input["base"]["base_method_heating"] == "电锅炉":
             revenue_heat = sum(lambda_ele_revenue[i] * g_demand[i] / eta_g_base_dict["电锅炉"] for i in range(period))
         elif param_input["base"]["base_method_heating"] == "空气源热泵":
@@ -1002,9 +958,7 @@ class ISService:
         else:
             raise ValueError("非法 base_method_cooling 值！")
         revenue_h = lambda_h_in * sum([h_demand[i] for i in range(period)])
-        # TODO: (DZY, ZYL) 同上，确认 base_method_steam 是否区分两种蒸汽
         if param_input["base"]["base_method_steam"] == "购买蒸汽":
-            # TODO: (DZY, ZYL) 确认计价方式，是使用 income.steam_price 还是使用 lambda_steam_in
             revenue_steam120 = param_input["income"]["steam_price"] * sum(steam120_demand)
             revenue_steam180 = param_input["income"]["steam_price"] * sum(steam180_demand)
         elif param_input["base"]["base_method_steam"] == "电锅炉":
@@ -1015,24 +969,7 @@ class ISService:
             revenue_steam180 = sum(gas_price * steam180_demand[i] / eta_steam180_base_dict["燃气锅炉"] for i in range(period))
         else:
             raise ValueError("非法 base_method_steam 值！")
-        # if param_input["base"]["base_method_steam120"] == "购买蒸汽":
-        #     # TODO: (DZY, ZYL) 确认计价方式，是使用 income.steam_price 还是使用 lambda_steam_in
-        #     revenue_steam120 = param_input["income"]["steam_price"] * sum(steam120_demand)
-        # elif param_input["base"]["base_method_steam120"] == "电锅炉":
-        #     revenue_steam120 = sum(lambda_ele_revenue[i] * steam120_demand[i] / eta_steam120_base_dict["电锅炉"] for i in range(period))
-        # elif param_input["base"]["base_method_steam120"] == "燃气锅炉":
-        #     revenue_steam120 = sum(gas_price * steam120_demand[i] / eta_steam120_base_dict["燃气锅炉"] for i in range(period))
-        # else:
-        #     raise ValueError("非法 base_method_steam120 值！")
-        # if param_input["base"]["base_method_steam180"] == "购买蒸汽":
-        #     # TODO: (DZY, ZYL) 确认计价方式，是使用 income.steam_price 还是使用 lambda_steam_in
-        #     revenue_steam180 = param_input["income"]["steam_price"] * sum(steam180_demand)
-        # elif param_input["base"]["base_method_steam180"] == "电锅炉":
-        #     revenue_steam180 = sum(lambda_ele_revenue[i] * steam180_demand[i] / eta_steam180_base_dict["电锅炉"] for i in range(period))
-        # elif param_input["base"]["base_method_steam180"] == "燃气锅炉":
-        #     revenue_steam180 = sum(gas_price * steam180_demand[i] / eta_steam180_base_dict["燃气锅炉"] for i in range(period))
-        # else:
-        #     raise ValueError("非法 base_method_steam180 值！")
+
         if param_input["base"]["base_method_hotwater"] == "电锅炉":
             revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] / eta_hotwater_base_dict["电锅炉"] for i in range(period))
         elif param_input["base"]["base_method_hotwater"] == "空气源热泵":
@@ -1045,7 +982,8 @@ class ISService:
                    + revenue_steam120 + revenue_steam180 + revenue_hotwater)
         # 根据基准方案所得投资回收期
         payback_period = capex_all / (revenue - m.getVal(opex_sum) + 1e-7)
-
+        # 年化净收益
+        pure_revenue = revenue - m.getVal(opex_sum) + 1e-7
         carbon_emission = m.getVal(ce_h)
         cer = ce_base - carbon_emission
         cer_rate = cer / ce_base
@@ -1053,7 +991,7 @@ class ISService:
         # ---------------------------对比方案: 纯电 (电锅炉供暖) 方案-----------------------------#
         capex_ele_eb = 0
         capex_g_eb = max(g_demand) / k_eb * cost_eb
-        # TODO: (DZY, ZYL) 确认对比方案供冷方式，先使用水冷机组供冷
+        # TODO: (DZY, ZYL) 确认对比方案供冷方式，先使用水冷机组供冷 + 集中供冷
         capex_q_eb = max(q_demand) / k_ac * cost_ac
         capex_steam120_eb = max(steam120_demand) * 750 / k_eb * cost_eb
         capex_steam180_eb = max(steam180_demand) * 770 / k_eb * cost_eb
@@ -1061,73 +999,69 @@ class ISService:
         capex_all_eb = ((capex_ele_eb + capex_g_eb + capex_q_eb
                          + capex_steam120_eb + capex_steam180_eb + capex_hotwater_eb)
                         * (1 + param_input["base"]["other_investment"]))
-        # TODO: (DZY, ZYL) 确认年化投资成本如何计算，即电锅炉使用年限是按输入来还是以固定值，如10年？
+        # TODO: (DZY, ZYL) 确认年化投资成本如何计算，即电锅炉使用年限是按输入来
         capex_all_crf_eb = crf(10) * capex_all_eb + capex_all_eb * param_input["base"]["other_investment"] / 10
         p_pur_eb = [(ele_load[i] + g_demand[i] / k_eb + q_demand[i] / k_ac
                      + steam120_demand[i] * 750 / k_eb + steam180_demand[i] * 770 / k_eb
                      + hotwater_demand[i] / k_eb) for i in range(period)]
-        # TODO: (DZY, ZYL) 确认对比方案计算方式，基准方案的买电折扣和这个是否有关，还是直接用本项目方案的电价 lambda_ele_in
-        # TODO: (DZY, ZYL) 注意此处容量电费计算
         opex_sum_eb = (sum(lambda_ele_in[i] * p_pur_eb[i] for i in range(period))
                        + lambda_ele_capacity * max(p_pur_eb) * 12
                        + sum(lambda_h_in * h_demand[i] for i in range(period)))
         cost_annual_eb = capex_all_crf_eb + opex_sum_eb
-        # TODO: (DZY) 注意此处也有 37
+
         whole_energy_contrast = (sum(ele_load)
                                  + sum(g_demand) + sum(q_demand)
-                                 + sum(h_demand) * 37
+                                 + sum(h_demand) * 33.33
                                  + sum(steam120_demand) * 750 + sum(steam180_demand) * 770
                                  + sum(hotwater_demand))
         cost_annual_per_energy_eb = cost_annual_eb / whole_energy_contrast
-        # TODO: (DZY, ZYL) 确认 payback_period_eb 的计算方式，即 revenue_eb 该如何计算，目前视为与 revenue 等值
+
         revenue_eb = revenue
         payback_period_eb = capex_all_eb / (revenue_eb - opex_sum_eb + 1e-7)
         payback_period_diff_eb = ((capex_all - capex_all_eb)
                                   / ((revenue - m.getVal(opex_sum)) - (revenue_eb - opex_sum_eb) + 1e-7))
+        pure_revenue_eb = revenue_eb - opex_sum_eb + 1e-7
         carbon_emission_eb = sum(p_pur_eb) * alpha_e + sum(h_demand) * alpha_h
         cer_eb = ce_base - carbon_emission_eb
         cer_rate_eb = cer_eb / ce_base
 
         # --------------------------对比方案: 纯电 (热泵供暖) 方案-----------------------------#
         capex_ele_hp = 0
-        # TODO: (DZY, ZYL) 确认对比方案供冷计算方式，选择保守还是激进计算方式
         capex_g_hp = max(g_demand) / k_hp_g * cost_hp
         capex_q_hp = max(q_demand) / k_hp_q * cost_hp
         # capex_gq_hp = max(g_demand[i] / k_hp_g + q_demand[i] / k_hp_q for i in range(period)) * cost_hp
-        capex_steam120_hp = max(steam120_demand) * 750 / k_hp_g * cost_hp
-        capex_steam180_hp = max(steam180_demand) * 770 / k_hp_g * cost_hp
+        capex_steam120_hp = max(steam120_demand) * 750 / k_eb * cost_eb       # 蒸汽部分改成电锅炉
+        capex_steam180_hp = max(steam180_demand) * 770 / k_eb * cost_eb
         capex_hotwater_hp = max(hotwater_demand) / k_hp_g * cost_hp
         capex_all_hp = ((capex_ele_hp + capex_g_hp + capex_q_hp
                          + capex_steam120_hp + capex_steam180_hp + capex_hotwater_hp)
                         * (1 + param_input["base"]["other_investment"]))
-        # TODO: (DZY, ZYL) 确认年化投资成本如何计算，即电锅炉使用年限是按输入来还是以固定值，如15年？
+        # TODO: (DZY, ZYL) 确认年化投资成本如何计算，即热泵使用年限是按输入来
         capex_all_crf_hp = crf(15) * capex_all_hp + capex_all_hp * param_input["base"]["other_investment"] / 15
         p_pur_hp = [(ele_load[i] + g_demand[i] / k_hp_g + q_demand[i] / k_hp_q
                     + steam120_demand[i] * 750 / k_hp_g + steam180_demand[i] * 770 / k_hp_g
                     + hotwater_demand[i] / k_hp_g) for i in range(period)]
-        # TODO: (DZY, ZYL) 确认对比方案计算方式，基准方案的买电折扣和这个是否有关，还是直接用本项目方案的电价 lambda_ele_in
-        # TODO: (DZY, ZYL) 注意此处容量电费计算
+
         opex_sum_hp = (sum(lambda_ele_in[i] * p_pur_hp[i] for i in range(period))
                        + lambda_ele_capacity * max(p_pur_hp) * 12
                        + sum(lambda_h_in * h_demand[i] for i in range(period)))
         cost_annual_hp = capex_all_crf_hp + opex_sum_hp
         cost_annual_per_energy_hp = cost_annual_hp / whole_energy_contrast
-        # TODO: (DZY, ZYL) 确认 payback_period_hp 的计算方式，即 revenue_hp 该如何计算，目前视为与 revenue 等值
+
         revenue_hp = revenue
         payback_period_hp = capex_all_hp / (revenue_hp - opex_sum_hp + 1e-7)
         payback_period_diff_hp = ((capex_all - capex_all_hp)
                                   / ((revenue - m.getVal(opex_sum)) - (revenue_hp - opex_sum_hp) + 1e-7))
+        pure_revenue_hp = revenue_hp - opex_sum_hp + 1e-7
         carbon_emission_hp = sum(p_pur_hp) * alpha_e + sum(h_demand) * alpha_h
         cer_hp = ce_base - carbon_emission_hp
         cer_rate_hp = cer_hp / ce_base
 
         # --------------------------对比方案: 燃气方案-----------------------------#
-        # TODO: (DZY, ZYL) 确认过去计算方式中的 0.3525 是什么含义，是否意味着燃气锅炉供蒸汽效率需要另外增设
-        # TODO: (DZY, ZYL) 如果是，那么需要修改前述基准方案信息块内的各个燃气锅炉效率
-        # TODO: (DZY, ZYL) 在上方确认燃气方案的燃气锅炉信息，根据数据格式修改参数调用方式
+        # TODO: (DZY, ZYL) 确认过去计算方式中的 0.3525 是元/kwh 效率*元/方*方/kWh
         capex_ele_gas = 0
         capex_g_gas = max(g_demand) / k_gas * cost_gas
-        # TODO: (DZY, ZYL) 确认对比方案供冷方式，先使用水冷机组供冷
+        # TODO: (DZY, ZYL) 确认对比方案供冷方式，先使用水冷机组供冷+集中供冷
         capex_q_gas = max(q_demand) / k_ac * cost_ac
         capex_steam120_gas = max(steam120_demand) * 750 / k_gas * cost_gas
         capex_steam180_gas = max(steam180_demand) * 770 / k_gas * cost_gas
@@ -1140,39 +1074,36 @@ class ISService:
         gas_pur_gas = [(g_demand[i] / k_gas + q_demand[i] / k_ac
                         + steam120_demand[i] * 750 / k_gas + steam180_demand[i] * 770 / k_gas
                         + hotwater_demand[i] / k_gas) for i in range(period)]
-        # TODO: (DZY, ZYL) 确认对比方案计算方式，基准方案的买电折扣和这个是否有关，还是直接用本项目方案的电价 lambda_ele_in
-        # TODO: (DZY, ZYL) 注意此处容量电费计算
         opex_sum_gas = (sum(lambda_ele_in[i] * p_pur_gas[i] for i in range(period))
                         + lambda_ele_capacity * max(p_pur_gas) * 12
                         + sum(gas_price * gas_pur_gas[i] for i in range(period))
                         + sum(lambda_h_in * h_demand[i] for i in range(period)))
         cost_annual_gas = capex_all_crf_gas + opex_sum_gas
         cost_annual_per_energy_gas = cost_annual_gas / whole_energy_contrast
-        # TODO: (DZY, ZYL) 确认 payback_period_gas 的计算方式，即 revenue_gas 该如何计算，目前视为与 revenue 等值
         revenue_gas = revenue
         payback_period_gas = capex_all_gas / (revenue_gas - opex_sum_gas + 1e-7)
         payback_period_diff_gas = ((capex_all - capex_all_gas)
                                    / ((revenue - m.getVal(opex_sum)) - (revenue_gas - opex_sum_gas) + 1e-7))
+        pure_revenue_gas = revenue_gas - opex_sum_gas + 1e-7
         carbon_emission_gas = sum(p_pur_gas) * alpha_e + sum(gas_pur_gas) * alpha_gas + sum(h_demand) * alpha_h
         cer_gas = ce_base - carbon_emission_gas
         cer_rate_gas = cer_gas / ce_base
 
         # ---------------------------输出结果-----------------------------#
-        # TODO: (DZY) 检查单位
-        ele_sell = sum(m.getVal(p_sol[i]) for i in range(period))
+        ele_sell = sum(m.getVal(p_sol[i]) for i in range(period))   # kw
         heat_sell = sum(m.getVal(g_sol[i]) * 3600 / 1e6 for i in range(period))  # 年售热量 (GJ)
         cooling_sell = sum(m.getVal(q_sol[i]) * 3600 / 1e6 for i in range(period))  # 年售冷量 (GJ)
-        hydrogen_sell = sum(m.getVal(h_sol[i]) for i in range(period))
-        steam120_sell = sum(m.getVal(steam120_sol[i]) for i in range(period))
-        steam180_sell = sum(m.getVal(steam180_sol[i]) for i in range(period))
-        heat_water_sell = sum(m.getVal(hotwater_sol[i]) for i in range(period))
-        income_ele_sell = sum(lambda_ele_out[i] * m.getVal(p_sol[i]) for i in range(period))
-        income_heat_sell = lambda_g_out * sum(m.getVal(g_sol[i]) for i in range(period))
-        income_cooling_sell = lambda_q_out * sum(m.getVal(q_sol[i]) for i in range(period))
-        income_hydrogen_sell = lambda_h_out * sum(m.getVal(h_sol[i]) for i in range(period))
-        income_steam120_sell = lambda_steam120_out * sum(m.getVal(steam120_sol[i]) for i in range(period))
-        income_steam180_sell = lambda_steam180_out * sum(m.getVal(steam180_sol[i]) for i in range(period))
-        income_heat_water_sell = lambda_hotwater_out * sum(m.getVal(hotwater_sol[i]) for i in range(period))
+        hydrogen_sell = sum(m.getVal(h_sol[i]) for i in range(period))  # kg
+        steam120_sell = sum(m.getVal(steam120_sol[i]) for i in range(period))   # t
+        steam180_sell = sum(m.getVal(steam180_sol[i]) for i in range(period))   # t
+        heat_water_sell = sum(m.getVal(hotwater_sol[i]) for i in range(period)) # kwh
+        income_ele_sell = sum(lambda_ele_out[i] * m.getVal(p_sol[i]) for i in range(period))    # 元
+        income_heat_sell = lambda_g_out * sum(m.getVal(g_sol[i]) for i in range(period))    # 元
+        income_cooling_sell = lambda_q_out * sum(m.getVal(q_sol[i]) for i in range(period)) # 元
+        income_hydrogen_sell = lambda_h_out * sum(m.getVal(h_sol[i]) for i in range(period))    # 元
+        income_steam120_sell = lambda_steam120_out * sum(m.getVal(steam120_sol[i]) for i in range(period))  # 元
+        income_steam180_sell = lambda_steam180_out * sum(m.getVal(steam180_sol[i]) for i in range(period))  # 元
+        income_heat_water_sell = lambda_hotwater_out * sum(m.getVal(hotwater_sol[i]) for i in range(period))   # 元
 
         co_capex = m.getVal(p_co_max) * cost_co  # 氢气压缩机投资成本 (元)
         fc_capex = m.getVal(p_fc_max) * cost_fc  # 氢气燃料电池投资成本 (元)
@@ -1259,6 +1190,7 @@ class ISService:
                     "capex_other": format(capex_other / 1e4, ".2f"),  # 其他投资成本 (万元)
                     "opex_sum": format(m.getVal(opex_sum) / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual": format(cost_annual / 1e4, ".2f"),  # 年化总成本 (万元)
+                    "pure_revenue": format(pure_revenue, ".2f"),    # 年净收益
                     "cost_annual_per_energy": format(cost_annual_per_energy, ".4f"),  # 单位能源成本 (元/kWh)
                     "payback_period": format(payback_period, ".2f"),  # 投资回收期 (年)
                     "co2": format(carbon_emission / 1e3, ".2f"),  # 年碳排放量 (吨)
@@ -1269,6 +1201,7 @@ class ISService:
                     "capex_all_crf_eb": format(capex_all_crf_eb / 1e4, ".2f"),  # 年化投资成本 (万元)
                     "opex_sum_eb": format(opex_sum_eb / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual_eb": format(cost_annual_eb / 1e4, ".2f"),  # 年化总成本 (万元)
+                    "pure_revenue_eb": format(pure_revenue_eb, ".2f"),  # 年净收益
                     "cost_annual_per_energy_eb": format(cost_annual_per_energy_eb, ".4f"),  # 单位能源成本 (元/kWh)
                     "payback_period_eb": format(payback_period_eb, ".2f"),  # 投资回收期 (年)
                     "payback_period_diff_eb": format(payback_period_diff_eb, ".2f"),  # 投资差额回收期 (年)
@@ -1280,6 +1213,7 @@ class ISService:
                     "capex_all_crf_hp": format(capex_all_crf_hp / 1e4, ".2f"),  # 年化投资成本 (万元)
                     "opex_sum_hp": format(m.getVal(opex_sum_hp) / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual_hp": format(cost_annual_hp / 1e4, ".2f"),  # 年化总成本 (万元)
+                    "pure_revenue_hp": format(pure_revenue_hp, ".2f"),  # 年净收益
                     "cost_annual_per_energy_hp": format(cost_annual_per_energy_hp, ".4f"),  # 单位能源成本 (元/kWh)
                     "payback_period_hp": format(payback_period_hp, ".2f"),  # 投资回收期 (年)
                     "payback_period_diff_hp": format(payback_period_diff_hp, ".2f"),  # 投资差额回收期 (年)
@@ -1291,6 +1225,7 @@ class ISService:
                     "capex_all_crf_gas": format(capex_all_crf_gas / 1e4, ".2f"),  # 年化投资成本 (万元)
                     "opex_sum_gas": format(m.getVal(opex_sum_gas) / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual_gas": format(cost_annual_gas / 1e4, ".2f"),  # 年化总成本 (万元)
+                    "pure_revenue_gas": format(pure_revenue_gas, ".2f"),  # 年净收益
                     "cost_annual_per_energy_gas": format(cost_annual_per_energy_gas, ".4f"),  # 单位能源成本 (元/kWh)
                     "payback_period_gas": format(payback_period_gas, ".2f"),  # 投资回收期 (年)
                     "payback_period_diff_gas": format(payback_period_diff_gas, ".2f"),  # 投资差额回收期 (年)
@@ -1325,8 +1260,6 @@ class ISService:
             },
             "device_result": {
                 # 设备配置结果
-                # TODO: (ZYL) 明确输入参数中水箱的装机单位 (kg 还是 t 还是 m3)，此处认为是 kg
-                # TODO: (ZYL) 明确输入参数中吸收式制冷机的装机单位 (kW 还是 GJ 还是 t)， 此处认为是 kW
                 # TODO: (HSL, ZYL) 明确报告文档内的单位需求，确保输出与报告需求一致
                 "device_capacity": {
                     "p_co_installed": format(m.getVal(p_co_max), ".2f"),  # 氢气压缩机装机容量 (kW)

@@ -13,7 +13,7 @@ input_data = {
                 "tem": 50,  # 温度(°C)
                 "load": [0] * 8760  # 第1项热负荷数据，8760小时
             },
-            "heatn": {
+            "heat2": {
                 "tem": 60,  # 温度(°C)
                 "load": [0] * 8760  # 第n项热负荷数据，8760小时
             }
@@ -23,7 +23,7 @@ input_data = {
                 "tem": 7,  # 温度(°C)
                 "load": [0] * 8760  # 第1项冷负荷数据，8760小时
             },
-            "cooln": {
+            "cool2": {
                 "tem": 5,  # 温度(°C)
                 "load": [0] * 8760  # 第n项冷负荷数据，8760小时
             }
@@ -33,7 +33,7 @@ input_data = {
                 "tem": 180,  # 温度(°C)
                 "load": [0] * 8760  # 第1项蒸汽负荷数据，8760小时
             },
-            "steamn": {
+            "steam2": {
                 "tem": 120,  # 温度(°C)
                 "load": [0] * 8760  # 第n项蒸汽负荷数据，8760小时
             }
@@ -44,7 +44,7 @@ input_data = {
                 "tem": 60,  # 温度(°C)
                 "load": [0] * 8760  # 第1项生活热水负荷数据，8760小时
             },
-            "hotwatern": {
+            "hotwater2": {
                 "tem": 50,  # 温度(°C)
                 "load": [0] * 8760  # 第n项生活热水负荷数据，8760小时
             }
@@ -58,13 +58,13 @@ input_data = {
         # 屋顶可铺设光伏装机
         "power_pv_house_top": 1000,
         # 基准方案-供暖
-        "base_method_heating": "str",
+        "base_method_heating": "电锅炉",
         # 基准方案-供冷
-        "base_method_cooling": "str",
+        "base_method_cooling": "水冷机组",
         # 基准方案-供蒸汽
-        "base_method_steam": "str",
+        "base_method_steam": "购买蒸汽",
         # 基准方案-供生活热水
-        "base_method_hotwater": "str",
+        "base_method_hotwater": "空气源热泵",
         # 是否启用碳减排
         "cer_enable": True,
         # 碳减排率
@@ -77,7 +77,7 @@ input_data = {
     "trading": {
         "power_buy_enable": True,  # 买电许可
         "power_sell_enable": False,  # 卖电许可
-        "power_buy_price_type": "str",  # 买电电价类型
+        "power_buy_price_type": "1",  # 买电电价类型
         "heat_buy_enable": False,  # 买热许可
         "heat_sell_enable": False,  # 卖热许可
         "cool_buy_enable": False,  # 买冷许可
@@ -163,7 +163,6 @@ input_data = {
     "income": {
         # 供电收益计算方式
         "power_type": "买电电价折扣/固定价格",
-        # TODO: (DZY, ZYL, 前端) 确认 power_price 意义，详细说明见 intelligent_solution_service.py planning_opt 函数中的 TODO 说明
         # 供电折扣/固定价格
         "power_price": 0,
         # 供热收益计算方式
@@ -174,7 +173,6 @@ input_data = {
         "cool_type": "供冷面积/冷量",
         # cool_type选供冷面积为单位面积供l冷季收费，选热量为单位冷量供应收益
         "cool_price": 0,
-        # TODO: (ZYL) 明确下面两个值是否可以和买卖价格合并
         # 供生活热水价格
         "hot_water_price": 0,
         # 供蒸汽价格(元/吨)
@@ -290,7 +288,7 @@ input_data = {
             "cost": 3500,
             "crf": 20,
             "beta_pv": 0.95,  # 光伏转换效率
-            "pv_data8760": [1, 2, 3],  # 单位装机光伏出力，8760小时
+            "pv_data8760": [1] * 8760,  # 单位装机光伏出力，8760小时
             "s_pv_per_unit": 100  # 单位装机占地面积
         },
         
@@ -303,7 +301,7 @@ input_data = {
             "crf": 20,
             "beta_sc": 0.72,  # 光热转换效率
             "theta_ex": 0.9,  # 热回收效率
-            "solar_data8760": [1, 2, 3],  # 全年太阳辐射数据，8760小时
+            "solar_data8760": [2] * 8760,  # 全年太阳辐射数据，8760小时
             "s_sc_per_unit": 100  # 单位装机占地面积
         },
 
@@ -313,7 +311,7 @@ input_data = {
             "number_max": 20,  # 新增装机上限
             "number_min": 0,  # 新增装机下限
             "capacity_unit": 1000,  # 单台风机装机
-            "wd_data8760": [1, 2, 3],  # 单位装机风机出力，8760小时
+            "wd_data8760": [3] * 8760,  # 单位装机风机出力，8760小时
             "cost": 4500,
             "crf": 20,
             "s_wd_per_unit": 100  # 单位装机占地面积
@@ -442,21 +440,21 @@ input_data = {
     "custom_device_storage": [
         {
             "device_name": "str",  # 设备名称
-            "energy_type": "str",  # 能量存储介质
+            "energy_type": "电",  # 能量存储介质
             "device_already": 100,  # 已有容量
             "device_max": 2000000,  # 新增容量上限
             "device_min": 0,  # 新增容量下限
             "cost": 0.5,  # 单位存储介质投资成本
             "crf": 20,
-            "energy_storage_max_per_unit": 90,  # 单位容量储能量上限
-            "energy_storage_min_per_unit": 45,  # 单位容量储能量下限
-            "energy_power_max_per_unit": 90,  # 单位容量供取能量上限
-            "energy_power_min_per_unit": 45,  # 单位容量供取能量下限
+            "energy_storage_max_per_unit": [90, 0, 0, 0, 0, 0, 0],  # 单位容量储能量上限
+            "energy_storage_min_per_unit": [45, 0, 0, 0, 0, 0, 0],  # 单位容量储能量下限
+            "energy_power_max_per_unit": [90, 0, 0, 0, 0, 0, 0],  # 单位容量供取能量上限
+            "energy_power_min_per_unit": [45, 0, 0, 0, 0, 0, 0],  # 单位容量供取能量下限
             "energy_loss": 0.01  # 能量损失系数
         },
         {
             "device_name": "str",
-            "energy_type": "str",
+            "energy_type": "冷",
             "device_already": 100,
             "device_max": 2000000,
             "device_min": 0,
