@@ -1,4 +1,5 @@
 import json
+import pandas as pd
 from schema.schema_optimization import OptimizationBody
 from service.optimization.intelligent_solution_service import ISService
 
@@ -68,7 +69,38 @@ input_body = OptimizationBody.model_validate(param_input)
 
 service = ISService()
 # result = service.planning_opt(param_input=param_input)
-result = service.exec(input_body)
+# result = service.exec(input_body)
 
 opt_output_file = "./io_template/opt_output_demo.json"
-dump_json_with_compact_lists(result, opt_output_file, indent=4)
+# dump_json_with_compact_lists(result, opt_output_file, indent=4)
+
+energy_type_list = ["电", "热", "冷", "氢", "120蒸汽", "180蒸汽", "生活热水"]
+# scheduling_result = result.get("scheduling_result", {})
+with open(opt_output_file, 'r', encoding='utf-8') as f:
+    scheduling_result = json.load(f).get("scheduling_result", {})
+
+scheduling_data = {}
+for key, value in scheduling_result.items():
+    if key == "custom_storage":
+        for i in range(len(value)):
+            scheduling_data[f"custom_storage_{i}_storage_state"] = value[i]["storage_state"]
+            scheduling_data[f"custom_storage_{i}_storage_in"] = value[i]["storage_in"]
+            scheduling_data[f"custom_storage_{i}_storage_out"] = value[i]["storage_out"]
+    elif key == "custom_exchange":
+        for i in range(len(value)):
+            energy_in_type_indices = [index for index, value in enumerate(value[i]["energy_in_type"]) if value == 1]
+            energy_out_type_indices = [index for index, value in enumerate(value[i]["energy_out_type"]) if value == 1]
+            energy_in_type_indices.sort()
+            energy_out_type_indices.sort()
+            for j, index in enumerate(energy_in_type_indices):
+                energy_type = energy_type_list[index]
+                scheduling_data[f"custom_exchange_{i}_{energy_type}_in"] = value[i]["energy_in"][j]
+            for j, index in enumerate(energy_out_type_indices):
+                energy_type = energy_type_list[index]
+                scheduling_data[f"custom_exchange_{i}_{energy_type}_out"] = value[i]["energy_out"][j]
+    else:
+        scheduling_data[key] = value
+
+# 将 scheduling_data 字典 保存为 xlsx
+scheduling_df = pd.DataFrame(scheduling_data)
+scheduling_df.to_excel("./io_template/scheduling_result.xlsx", index=False)

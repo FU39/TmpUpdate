@@ -909,7 +909,6 @@ class ISService:
         # print("Irreducible inconsistent subsystem is written to file 'model.ilp'")
 
         #---------------------------计算投资回报等信息-----------------------------#
-        t_end = time.time()
         sys_life = 20  # 系统设计年限
         # whole_energy，包含负荷和出售能量，单位为 kWh
         whole_energy = (sum(ele_load)
@@ -1163,6 +1162,10 @@ class ISService:
             })
         for i in range(num_custom_exchange_device):
             device = ced_data[i]
+            energy_in_type_indices = [index for index, value in enumerate(device["energy_in_type"]) if value == 1]
+            energy_out_type_indices = [index for index, value in enumerate(device["energy_out_type"]) if value == 1]
+            energy_in_type_indices.sort()
+            energy_out_type_indices.sort()
             custom_exchange_installed.append({
                 "device_name": device["device_name"],
                 "energy_in_type": device["energy_in_type"],
@@ -1179,8 +1182,8 @@ class ISService:
                 "device_name": device["device_name"],
                 "energy_in_type": device["energy_in_type"],
                 "energy_out_type": device["energy_out_type"],
-                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in range(num_custom_exchange_device)],
-                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in range(num_custom_exchange_device)]
+                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in energy_in_type_indices],
+                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in energy_out_type_indices]
             })
 
         # TODO: (HSL, ZYL) 检查输出是否满足报告需求，包括字段的完整性和单位的一致性
