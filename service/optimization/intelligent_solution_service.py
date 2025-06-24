@@ -85,7 +85,7 @@ class ISService:
         # TODO: (DZY) 重要！请使用 test.py 测试当前方案测算代码
 
         M = 1e12  # 大数M
-        c = 4.2 / 3600  # 水的比热容
+        c = 4.2 / 3600  # 水的比热容 (kWh/(kg·℃))
 
         # ------ 开始计时 ------ #
         t0 = time.time()
@@ -94,29 +94,29 @@ class ISService:
         period = 8760
 
         #------------导入负荷数据------------#
-        ele_load = param_input["sys_load"]["electricity_load"]  # 电负荷 (kW)
-        heatload_num = len(param_input["sys_load"]["heat_load"])
-        coolload_num = len(param_input["sys_load"]["cool_load"])
-        steamload_num = len(param_input["sys_load"]["steam_load"])
-        hotwater_num = len(param_input["sys_load"]["hotwater_load"])
+        ele_load = param_input["objective_load"]["power_demand"]  # 电负荷 (kW)
+        heatload_num = len(param_input["objective_load"]["heating_demand"])
+        coolload_num = len(param_input["objective_load"]["cooling_demand"])
+        steamload_num = len(param_input["objective_load"]["steam_demand"])
+        hotwater_num = len(param_input["objective_load"]["hotwater"])
         g_demand = [0] * 8760  # 热负荷 (GJ/h)
         q_demand = [0] * 8760  # 冷负荷 (GJ/h)
-        h_demand = param_input["sys_load"]["hydrogen_load"]  # 氢负荷 (kg/h)
+        h_demand = param_input["objective_load"]["h2_demand"]  # 氢负荷 (kg/h)
         steam120_demand = [0] * 8760  # 120蒸汽负荷 (t/h)
         steam180_demand = [0] * 8760  # 180蒸汽负荷 (t/h)
         hotwater_demand = [0] * 8760  # 生活热水负荷 (kW)
 
         for i in range(heatload_num):
-            g_demand = np.add(g_demand, param_input["sys_load"]["heat_load"]["heat" + str(i+1)]["load"]).tolist()
+            g_demand = np.add(g_demand, param_input["objective_load"]["heating_demand"][i]["load"]).tolist()
         for i in range(coolload_num):
-            q_demand = np.add(q_demand, param_input["sys_load"]["cool_load"]["cool" + str(i+1)]["load"]).tolist()
+            q_demand = np.add(q_demand, param_input["objective_load"]["cooling_demand"][i]["load"]).tolist()
         for i in range(steamload_num):
-            if param_input["sys_load"]["steam_load"]['steam'+str(i+1)]["tem"] == 120:
-                steam120_demand = np.add(steam120_demand, param_input["sys_load"]["steam_load"]["steam" + str(i+1)]["load"]).tolist()
-            elif param_input["sys_load"]["steam_load"]['steam'+str(i+1)]["tem"] == 180:
-                steam180_demand = np.add(steam180_demand, param_input["sys_load"]["steam_load"]["steam" + str(i+1)]["load"]).tolist()
+            if param_input["objective_load"]["steam_demand"][i]["temperature"] == 120:
+                steam120_demand = np.add(steam120_demand, param_input["objective_load"]["steam_demand"][i]["load"]).tolist()
+            elif param_input["objective_load"]["steam_demand"][i]["temperature"] == 180:
+                steam180_demand = np.add(steam180_demand, param_input["objective_load"]["steam_demand"][i]["load"]).tolist()
         for i in range(hotwater_num):
-            hotwater_demand = np.add(hotwater_demand, param_input["sys_load"]["hotwater_load"]["hotwater" + str(i+1)]["load"]).tolist()
+            hotwater_demand = np.add(hotwater_demand, param_input["objective_load"]["hotwater"][i]["load"]).tolist()
         g_demand = np.multiply(g_demand, (1e6 / 3600)).tolist()  # GJ/h -> kW
         q_demand = np.multiply(q_demand, (1e6 / 3600)).tolist()  # GJ/h -> kW
 
@@ -680,10 +680,10 @@ class ISService:
         # ----steam_storage----#
             m.addCons(m_steam_sto[i] <= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_sto_max)
             m.addCons(m_steam_sto[i] >= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_sto_min)
-            m.addCons(m_steam_sto_in[i] <= m_steam_sto[i] * k_steam_power_max)
-            m.addCons(m_steam_sto_in[i] >= m_steam_sto[i] * k_steam_power_min)
-            m.addCons(m_steam_sto_out[i] <= m_steam_sto[i] * k_steam_power_max)
-            m.addCons(m_steam_sto_out[i] >= m_steam_sto[i] * k_steam_power_min)
+            m.addCons(m_steam_sto_in[i] <= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_power_max)
+            m.addCons(m_steam_sto_in[i] >= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_power_min)
+            m.addCons(m_steam_sto_out[i] <= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_power_max)
+            m.addCons(m_steam_sto_out[i] >= (m_steam_sto_max + param_input["device"]["steam_storage"]["water_already"]) * k_steam_power_min)
 
         # 储能设备约束
         for i in range(period - 1):
@@ -891,9 +891,13 @@ class ISService:
 
         #---------------------------gurobi求解-----------------------------#
         m.optimize()
-        sol = m.getBestSol()
-        cost = m.getObjVal()
-        print("Optimal value:", cost)
+        if m.getStatus() == "optimal":  # 检查是否找到最优解
+            t_end = time.time()
+            cost = m.getObjVal()
+            print("Optimal value: {}, cost time: {}s".format(cost, t_end - t0))
+        else:
+            print("Solver status:", m.getStatus())
+            raise ValueError("未找到最优解！请检查模型设置是否正确！")
         # try:
         #     m.optimize()
         # except gp.GurobiError:
@@ -905,6 +909,7 @@ class ISService:
         # print("Irreducible inconsistent subsystem is written to file 'model.ilp'")
 
         #---------------------------计算投资回报等信息-----------------------------#
+        t_end = time.time()
         sys_life = 20  # 系统设计年限
         # whole_energy，包含负荷和出售能量，单位为 kWh
         whole_energy = (sum(ele_load)
@@ -933,7 +938,7 @@ class ISService:
         revenue_ele = sum(lambda_ele_revenue[i] * ele_load[i] for i in range(period))
         if param_input["base"]["base_method_heating"] == "集中供热":
             if param_input["income"]["heat_type"] == "供暖面积":
-                revenue_heat = param_input["income"]["heat_price"] * param_input["sys_load"]["g_load_area"]
+                revenue_heat = param_input["income"]["heat_price"] * param_input["objective_load"]["g_load_area"]
             elif param_input["income"]["heat_type"] == "热量":
                 revenue_heat = param_input["income"]["heat_price"] * sum(g_demand)
             else:
@@ -948,7 +953,7 @@ class ISService:
             raise ValueError("非法 base_method_heating 值！")
         if param_input["base"]["base_method_cooling"] == "集中供冷":
             if param_input["income"]["cool_type"] == "供冷面积":
-                revenue_cool = param_input["income"]["cool_price"] * param_input["sys_load"]["q_load_area"]
+                revenue_cool = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "冷量":
                 revenue_cool = param_input["income"]["cool_price"] * sum(q_demand)
             else:
@@ -1211,7 +1216,7 @@ class ISService:
                     # 对比方案: 纯电 (热泵供暖) 方案
                     "capex_all_hp": format(capex_all_hp / 1e4, ".2f"),  # 初始投资成本 (万元)
                     "capex_all_crf_hp": format(capex_all_crf_hp / 1e4, ".2f"),  # 年化投资成本 (万元)
-                    "opex_sum_hp": format(m.getVal(opex_sum_hp) / 1e4, ".2f"),  # 年化运行成本 (万元)
+                    "opex_sum_hp": format(opex_sum_hp / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual_hp": format(cost_annual_hp / 1e4, ".2f"),  # 年化总成本 (万元)
                     "pure_revenue_hp": format(pure_revenue_hp, ".2f"),  # 年净收益
                     "cost_annual_per_energy_hp": format(cost_annual_per_energy_hp, ".4f"),  # 单位能源成本 (元/kWh)
@@ -1223,7 +1228,7 @@ class ISService:
                     # 对比方案: 燃气方案
                     "capex_all_gas": format(capex_all_gas / 1e4, ".2f"),  # 初始投资成本 (万元)
                     "capex_all_crf_gas": format(capex_all_crf_gas / 1e4, ".2f"),  # 年化投资成本 (万元)
-                    "opex_sum_gas": format(m.getVal(opex_sum_gas) / 1e4, ".2f"),  # 年化运行成本 (万元)
+                    "opex_sum_gas": format(opex_sum_gas / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual_gas": format(cost_annual_gas / 1e4, ".2f"),  # 年化总成本 (万元)
                     "pure_revenue_gas": format(pure_revenue_gas, ".2f"),  # 年净收益
                     "cost_annual_per_energy_gas": format(cost_annual_per_energy_gas, ".4f"),  # 单位能源成本 (元/kWh)

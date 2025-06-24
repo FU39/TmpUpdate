@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Union
 
 
 class Cycle(BaseModel):
@@ -8,13 +8,6 @@ class Cycle(BaseModel):
     """
     start: str  # 周期开始时间
     end: str  # 周期结束时间
-
-
-class LoadItem(BaseModel):
-    name: str
-    type: str
-    temperature: float
-    load8760: List[float]
 
 
 class Base(BaseModel):
@@ -52,22 +45,31 @@ class Trading(BaseModel):
     power_buy_enable: bool
     power_sell_enable: bool
     power_buy_price_type: str
-    h2_buy_enable: bool
-    h2_sell_enable: bool
-    heating_buy_enable: bool
-    heating_sell_enable: bool
+    heat_buy_enable: bool  # 买热许可
+    heat_sell_enable: bool  # 卖热许可
+    cool_buy_enable: bool  # 买冷许可
+    cool_sell_enable: bool  # 卖冷许可
+    h2_buy_enable: bool  # 买氢许可
+    h2_sell_enable: bool  # 卖氢许可
     steam_buy: List[SteamBuySellItem]
     steam_sell: List[SteamBuySellItem]
+    hotwater_buy_enable: bool  # 买热水许可
+    hotwater_sell_enable: bool  # 卖热水许可
     power_buy_24_price: List[float]
     power_buy_8760_price: List[float]
+    power_buy_capacity_price: float  # 容量电价
     power_sell_24_price: List[float]
-    power_sell_price: float
-    heat_sell_price: float
-    hydrogen_sell_price: float
+    # 取消 power_sell_price，若只为单值价格，请拓为 24h，即 power_sell_24_price
     heat_buy_price: float
+    heat_sell_price: float
     cool_buy_price: float
-    carbon_buy_price: float
+    cool_sell_price: float  # 卖冷单价
     hydrogen_buy_price: float
+    hydrogen_sell_price: float
+    hotwater_buy_price: float  # 买热水单价
+    hotwater_sell_price: float  # 卖热水单价
+    gas_buy_price: float  # 买天然气单价
+    carbon_buy_price: float
     heat_resource: HeatResource  # 修改: 将 heat_resource 的类型从 dict 修改为 HeatResource
 
 
@@ -84,274 +86,263 @@ class Income(BaseModel):
 
 # 新增设备相关的 BaseModel 定义
 class CO(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_co: float
+    power_already: float = 1000
+    power_max: float = 10000
+    power_min: float = 0
+    cost: float = 1000
+    crf: float = 10
+    beta_co: float = 1.399
 
 
 class FC(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    eta_fc_p: float
-    eta_ex_g: float
-    theta_ex: float
-
-
-class HT(BaseModel):
-    water_already: float
-    water_max: float
-    water_min: float
-    cost: float
-    crf: float
-    se: float
-    t_max: float
-    t_min: float
-    t_supply: float
-
-
-class EB(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_eb: float
-
-
-class AC(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_ac: float
-
-
-class HP(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_hpg: float
-    beta_hpq: float
-
-
-class GHP(BaseModel):
-    power_already: float
-    balance_flag: int
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_ghpg: float
-    beta_ghpq: float
-
-
-class GTW(BaseModel):
-    number_already: float
-    number_max: float
-    number_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_gtw: float
-
-
-class GHPDeep(BaseModel):
-    power_already: float
-    balance_flag: int
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_ghpg: float
-
-
-class GTW2500(BaseModel):
-    number_already: float
-    number_max: float
-    number_min: float
-    cost: float
-    crf: float
-    se: float
-    beta_gtw: float
-
-
-class CT(BaseModel):
-    water_already: float
-    water_max: float
-    water_min: float
-    cost: float
-    crf: float
-    se: float
-    t_max: float
-    t_min: float
-    t_supply: float
-
-
-class HST(BaseModel):
-    sto_already: float
-    sto_max: float
-    sto_min: float
-    cost: float
-    crf: float
-    se: float
-    pressure_upper: float
-    pressure_lower: float
-    inout_max: float
+    power_already: float = 1
+    power_max: float = 10000000
+    power_min: float = 300
+    cost: float = 8000
+    crf: float = 10
+    eta_fc_p: float = 15
+    eta_ex_g: float = 17
+    theta_ex: float = 0.95
 
 
 class EL(BaseModel):
-    nm3_already: float
-    nm3_max: float
-    nm3_min: float
-    cost: float
-    crf: float
-    eta_el_h: float
-    eta_ex_g: float
-    theta_ex: float
+    nm3_already: float = 0
+    nm3_max: float = 100000
+    nm3_min: float = 0
+    cost: float = 2240
+    crf: float = 7
+    eta_el_h: float = 15
+    eta_ex_g: float = 17
+    theta_ex: float = 0.95
 
 
-class SC(BaseModel):
-    area_already: float
-    area_max: float
-    area_min: float
-    cost: float
-    crf: float
-    beta_sc: float
-    theta_ex: float
-    solar_data8760: List[float]
-    s_sc_per_unit: float
+class HST(BaseModel):
+    sto_already: float = 0
+    sto_max: float = 100000
+    sto_min: float = 0
+    cost: float = 3000
+    crf: float = 15
 
 
-class PV(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    pv_data8760: List[float]
-    s_pv_per_unit: float
+class HT(BaseModel):
+    water_already: float = 1
+    water_max: float = 2000000
+    water_min: float = 0
+    cost: float = 0.5
+    crf: float = 20
+    loss_rate: float = 0.001
+    g_storage_max_per_unit: float = 90
+    g_storage_min_per_unit: float = 45
+    g_power_max_per_unit: float = 90
+    g_power_min_per_unit: float = 45
 
 
-class WD(BaseModel):
-    number_already: float
-    number_max: float
-    number_min: float
-    capacity_unit: float
-    wd_data8760: List[float]
-    cost: float
-    crf: float
-    s_pv_per_unit: float
-
-
-class HP120(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    cop: float
-    temperature_in: float
-    temperature_out: float
-
-
-class CO180(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    k_e_m: float
-    cost: float
-    crf: float
-    temperature_in: float
-    temperature_out: float
-
-
-class WHP(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    cop_heat: float
-    cop_cold: float
+class CT(BaseModel):
+    water_already: float = 1
+    water_max: float = 500000
+    water_min: float = 0
+    cost: float = 0.5
+    crf: float = 15
+    loss_rate: float = 0.001
+    q_storage_max_per_unit: float = 90
+    q_storage_min_per_unit: float = 45
+    q_power_max_per_unit: float = 90
+    q_power_min_per_unit: float = 45
 
 
 class BAT(BaseModel):
-    power_already: float
-    power_max: float
-    power_min: float
-    cost: float
-    crf: float
-    ele_storage_max_per_unit: float
-    ele_storage_min_per_unit: float
-    ele_power_max_per_unit: float
-    ele_power_min_per_unit: float
-    miu_loss: float
-
-
-class BioStorage(BaseModel):
-    bio_already: float
-    bio_max: float
-    bio_min: float
-    cost: float
-    crf: float
+    power_already: float = 1
+    power_max: float = 20000
+    power_min: float = 0
+    cost: float = 2500
+    crf: float = 15
+    loss_rate: float = 0.01
+    ele_storage_max_per_unit: float = 90
+    ele_storage_min_per_unit: float = 45
+    ele_power_max_per_unit: float = 90
+    ele_power_min_per_unit: float = 45
 
 
 class SteamStorage(BaseModel):
-    water_already: float
-    water_max: float
-    water_min: float
-    cost: float
-    crf: float
-    steam_storage_max_per_unit: float
-    steam_storage_min_per_unit: float
-    steam_power_max_per_unit: float
-    steam_power_min_per_unit: float
-    miu_loss: float
+    water_already: float = 1
+    water_max: float = 2000000
+    water_min: float = 0
+    cost: float = 0.5
+    crf: float = 20
+    loss_rate: float = 0.01
+    steam_storage_max_per_unit: float = 90
+    steam_storage_min_per_unit: float = 45
+    steam_power_max_per_unit: float = 90
+    steam_power_min_per_unit: float = 45
 
 
-# 修改 Device 类，将 dict 替换为具体的 BaseModel 类型
+class PV(BaseModel):
+    power_already: float = 1
+    power_max: float = 500
+    power_min: float = 500
+    cost: float = 3500
+    crf: float = 20
+    beta_pv: float = 0.95
+    pv_data8760: List[float] = [1, 2, 3]
+    s_pv_per_unit: float = 100
+
+
+class SC(BaseModel):
+    area_already: float = 0
+    area_max: float = 10000
+    area_min: float = 0
+    cost: float = 800
+    crf: float = 20
+    beta_sc: float = 0.72
+    theta_ex: float = 0.9
+    solar_data8760: List[float] = [1, 2, 3]
+    s_sc_per_unit: float = 100
+
+
+class WD(BaseModel):
+    number_already: float = 0
+    number_max: float = 20
+    number_min: float = 0
+    capacity_unit: float = 1000
+    wd_data8760: List[float] = [1, 2, 3]
+    cost: float = 4500
+    crf: float = 20
+    s_wd_per_unit: float = 100
+
+
+class EB(BaseModel):
+    power_already: float = 1
+    power_max: float = 200000
+    power_min: float = 600
+    cost: float = 700
+    crf: float = 10
+    beta_eb: float = 0.9
+
+
+class ABC(BaseModel):
+    power_already: float = 0
+    power_max: float = 10000
+    power_min: float = 0
+    cost: float = 3000
+    crf: float = 10
+    beta_abc: float = 1.2
+
+
+class AC(BaseModel):
+    power_already: float = 0
+    power_max: float = 10000
+    power_min: float = 0
+    cost: float = 3000
+    crf: float = 10
+    beta_ac: float = 4
+
+
+class HP(BaseModel):
+    power_already: float = 0
+    power_max: float = 600
+    power_min: float = 0
+    cost: float = 3000
+    crf: float = 15
+    beta_hpg: float = 1.5
+    beta_hpq: float = 6
+
+
+class GHP(BaseModel):
+    power_already: float = 0
+    balance_flag: int = 1
+    power_max: float = 1000000
+    power_min: float = 0
+    cost: float = 2500
+    crf: float = 15
+    beta_ghpg: float = 4.5
+    beta_ghpq: float = 6
+
+
+class GHPDeep(BaseModel):
+    power_already: float = 0
+    power_max: float = 1000000
+    power_min: float = 0
+    cost: float = 2500
+    crf: float = 15
+    beta_ghpg: float = 4.5
+
+
+class GTW(BaseModel):
+    number_already: float = 0
+    number_max: float = 100000
+    number_min: float = 0
+    cost: float = 20000
+    crf: float = 30
+    beta_gtw: float = 7
+
+
+class GTW2500(BaseModel):
+    number_already: float = 0
+    number_max: float = 2
+    number_min: float = 0
+    cost: float = 2200000
+    crf: float = 30
+    beta_gtw: float = 410
+
+
+class HP120(BaseModel):
+    power_already: float = 0
+    power_max: float = 1000000
+    power_min: float = 0
+    cost: float = 2700
+    crf: float = 10
+    cop: float = 2.26
+    temperature_in: float = 120
+    temperature_out: float = 150
+
+
+class CO180(BaseModel):
+    power_already: float = 0
+    power_max: float = 10000
+    power_min: float = 0
+    k_e_m: float = 200
+    cost: float = 500
+    crf: float = 10
+    temperature_in: float = 120
+    temperature_out: float = 150
+
+
+class WHP(BaseModel):
+    power_already: float = 1
+    power_max: float = 20000
+    power_min: float = 0
+    cost: float = 2500
+    crf: float = 15
+    cop_heat: float = 2.26
+    cop_cold: float = 2.26
+
+
 class Device(BaseModel):
     """
     设备配置类，包含各种能源设备的详细配置。
     """
     co: CO  # 氢气压缩机
     fc: FC  # 燃料电池
+    el: EL  # 电解槽
+    hst: HST  # 储氢罐
     ht: HT  # 储热水箱
+    ct: CT  # 储冷水箱
+    bat: BAT  # 电池储能
+    steam_storage: SteamStorage  # 蒸汽储能
+    pv: PV  # 光伏板
+    sc: SC  # 太阳能集热器
+    wd: WD  # 风机
     eb: EB  # 电锅炉
+    abc: ABC  # 新增设备
     ac: AC  # 空调
     hp: HP  # 空气源热泵
     ghp: GHP  # 浅层地源热泵
-    gtw: GTW  # 浅层地埋井
     ghp_deep: GHPDeep  # 中深层地源热泵
+    gtw: GTW  # 浅层地埋井
     gtw2500: GTW2500  # 中深层地埋井，深度2500
-    ct: CT  # 储冷水箱
-    hst: HST  # 储氢罐
-    el: EL  # 电解槽
-    sc: SC  # 太阳能集热器
-    pv: PV  # 光伏板
-    wd: WD  # 风机
     hp120: HP120  # 高温热泵
     co180: CO180  # 高温蒸汽压缩机
     whp: WHP  # 余热热泵
-    bat: BAT  # 电池储能
-    bio_storage: BioStorage  # 生物质储能
-    steam_storage: SteamStorage  # 蒸汽储能
 
 
 class CustomDeviceStorage(BaseModel):
@@ -371,19 +362,36 @@ class CustomDeviceStorage(BaseModel):
 
 class CustomDeviceExchange(BaseModel):
     device_name: str
-    energy_in_type: str
-    energy_out_type: str
+    energy_in_type: List[float]  # 上周已沟通，改为传 [0, 0, 0, 0, 0, 0, 0]，赋值 1 项对应哪个能量
+    energy_out_type: List[float]
     device_already: float
     device_max: float
     device_min: float
     cost: float
     crf: float
-    energy_in_standard_per_unit: float
-    energy_out_standard_per_unit: float
+    energy_in_standard_per_unit: List[float]  # 上周沟通过，改为传 [0, 0, 0, 0, 0, 0, 0]，赋值项对应哪个能量
+    energy_out_standard_per_unit: List[float]
+
+
+class LoadWithTemperature(BaseModel):
+    load: List[float]
+    temperature: float
+
+
+class ObjectiveLoad(BaseModel):
+    load_area: float  # 负荷面积，来自负荷，上周已沟通
+    g_load_area: float  # 热负荷面积，来自负荷，上周已沟通
+    q_load_area: float  # 冷负荷面积，来自负荷，上周已沟通
+    h2_demand: List[float] = []
+    power_demand: List[float] = []
+    steam_demand: List[LoadWithTemperature] = []
+    cooling_demand: List[LoadWithTemperature] = []
+    heating_demand: List[LoadWithTemperature] = []
+    hotwater: List[LoadWithTemperature] = []
 
 
 class OptimizationBody(BaseModel):
-    objective_load: List[LoadItem]
+    objective_load: ObjectiveLoad
     base: Base
     trading: Trading
     income: Income
@@ -392,127 +400,7 @@ class OptimizationBody(BaseModel):
     custom_device_exchange: List[CustomDeviceExchange]
 
 
-class DeviceCapacity(BaseModel):
-    p_co_installed: float
-    p_fc_installed: float
-    p_el_installed: float
-    h_hst_installed: float
-    m_ht_installed: float
-    m_ct_installed: float
-    p_pv_installed: float
-    s_sc_installed: float
-    num_wd_installed: int
-    p_eb_installed: float
-    p_ac_installed: float
-    p_hp_installed: float
-    p_ghp_installed: float
-    p_ghp_deep_installed: float
-    num_gtw_installed: int
-    num_gtw2500_installed: int
-    p_hp120_installed: float
-    p_co180_installed: float
-    p_whp_installed: float
-    p_bat_installed: float
-    steam_storage_installed: float
-
-
-class DeviceCAPEX(BaseModel):
-    capex_co: float
-    capex_fc: float
-    capex_el: float
-    capex_hst: float
-    capex_ht: float
-    capex_ct: float
-    capex_pv: float
-    capex_sc: float
-    capex_wd: float
-    capex_eb: float
-    capex_ac: float
-    capex_hp: float
-    capex_ghp: float
-    capex_ghp_deep: float
-    capex_gtw: float
-    capex_gtw2500: float
-    capex_hp120: float
-    capex_co180: float
-    capex_whp: float
-    capex_bat: float
-    capex_storage: float
-
-
-class SystemPerformance(BaseModel):
-    capex: float
-    opex_sum: float
-    opex_pure: float
-    opex_ele_buy: float
-    opex_hydrogen_buy: float
-    revenue_sum: float
-    revenue_net: float
-    revenue_fixed: float
-    revenue_ele: float
-    revenue_ele_sell: float
-    revenue_heat: float
-    revenue_cool: float
-
-
-class DeviceResult(BaseModel):
-    device_capacity: DeviceCapacity
-    device_capex: DeviceCAPEX
-
-
-class SchedulingResult(BaseModel):
-    ele_buy: List[float]
-    ele_sell: List[float]
-    hydrogen_buy: List[float]
-    gas_buy: List[float]
-    steam120_buy: List[float]
-    steam120_sell: List[float]
-    steam180_buy: List[float]
-    steam180_sell: List[float]
-    custom_buy: List[float]
-    p_hyd: List[float]
-    p_co: List[float]
-    p_fc: List[float]
-    g_fc: List[float]
-    h_fc: List[float]
-    p_el: List[float]
-    h_el: List[float]
-    h_sto: List[float]
-    g_ht: List[float]
-    g_ht_in: List[float]
-    g_ht_out: List[float]
-    q_ct: List[float]
-    q_ct_in: List[float]
-    q_ct_out: List[float]
-    p_pv_theory: List[float]
-    p_pv: List[float]
-    g_sc: List[float]
-    p_wd: List[float]
-    p_eb: List[float]
-    g_eb: List[float]
-    p_ac: List[float]
-    q_ac: List[float]
-    p_hp: List[float]
-    g_hp: List[float]
-    p_hp_c: List[float]
-    q_hp: List[float]
-    p_ghp: List[float]
-    g_ghp: List[float]
-    p_ghp_c: List[float]
-    q_ghp: List[float]
-    g_ghp_inject: List[float]
-    p_ghp_deep: List[float]
-    g_ghp_deep: List[float]
-    p_hp120: List[float]
-    m_hp120: List[float]
-    g_hp120: List[float]
-    p_co180: List[float]
-    g_tube: List[float]
-    g_tube2steam120: List[float]
-    m_steam1202steam180: List[float]
-
-
-class PlanningResult(BaseModel):
-    sys_performance: SystemPerformance
-    device_result: DeviceResult
-    scheduling_result: SchedulingResult
+class OptimizationResponseBody(BaseModel):
+    id: Optional[str] = None
+    status: Optional[str] = None
+    msg: Optional[str] = None

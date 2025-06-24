@@ -105,46 +105,14 @@
             "custom_exchange_installed": [
                 {
                     "device_name": "CustomExchange",
-                    "energy_in_type": [
-                        0,
-                        1,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0
-                    ],
-                    "energy_out_type": [
-                        0,
-                        0,
-                        1,
-                        0,
-                        0,
-                        0,
-                        0
-                    ],
+                    "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
+                    "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
                     "installed_capacity": 20.0
                 },
                 {
                     "device_name": "CustomExchange2",
-                    "energy_in_type": [
-                        1,
-                        1,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0
-                    ],
-                    "energy_out_type": [
-                        0,
-                        1,
-                        1,
-                        0,
-                        0,
-                        0,
-                        0
-                    ],
+                    "energy_in_type": [1, 1, 0, 0, 0, 0, 0],
+                    "energy_out_type": [0, 1, 1, 0, 0, 0, 0],
                     "installed_capacity": 15.0
                 }
             ]
@@ -201,367 +169,135 @@
         }
     },
     "scheduling_result": {
-        "ele_buy": [
-            8760
-        ],
-        "ele_sell": [
-            8760
-        ],
-        "heat_buy": [
-            8760
-        ],
-        "heat_sell": [
-            8760
-        ],
-        "cooling_buy": [
-            8760
-        ],
-        "cooling_sell": [
-            8760
-        ],
-        "hydrogen_buy": [
-            8760
-        ],
-        "hydrogen_sell": [
-            8760
-        ],
-        "steam120_buy": [
-            8760
-        ],
-        "steam120_sell": [
-            8760
-        ],
-        "steam180_buy": [
-            8760
-        ],
-        "steam180_sell": [
-            8760
-        ],
-        "heat_water_buy": [
-            8760
-        ],
-        "heat_water_sell": [
-            8760
-        ],
-        "p_co": [
-            8760
-        ],
-        "p_fc": [
-            8760
-        ],
-        "g_fc": [
-            8760
-        ],
-        "h_fc": [
-            8760
-        ],
-        "p_el": [
-            8760
-        ],
-        "g_el": [
-            8760
-        ],
-        "h_el": [
-            8760
-        ],
-        "h_sto": [
-            8760
-        ],
-        "g_ht": [
-            8760
-        ],
-        "g_ht_in": [
-            8760
-        ],
-        "g_ht_out": [
-            8760
-        ],
-        "q_ct": [
-            8760
-        ],
-        "q_ct_in": [
-            8760
-        ],
-        "q_ct_out": [
-            8760
-        ],
-        "p_bat": [
-            8760
-        ],
-        "p_bat_ch": [
-            8760
-        ],
-        "p_bat_dis": [
-            8760
-        ],
-        "m_steam_storage": [
-            8760
-        ],
-        "m_steam_storage_in": [
-            8760
-        ],
-        "m_steam_storage_out": [
-            8760
-        ],
-        "p_pv_theory": [
-            8760
-        ],
-        "p_pv": [
-            8760
-        ],
-        "g_sc": [
-            8760
-        ],
-        "p_wd": [
-            8760
-        ],
-        "p_eb": [
-            8760
-        ],
-        "g_eb": [
-            8760
-        ],
-        "g_abc": [
-            8760
-        ],
-        "q_abc": [
-            8760
-        ],
-        "p_ac": [
-            8760
-        ],
-        "q_ac": [
-            8760
-        ],
-        "p_hp": [
-            8760
-        ],
-        "g_hp": [
-            8760
-        ],
-        "p_hp_c": [
-            8760
-        ],
-        "q_hp": [
-            8760
-        ],
-        "p_ghp": [
-            8760
-        ],
-        "g_ghp": [
-            8760
-        ],
-        "p_ghp_c": [
-            8760
-        ],
-        "q_ghp": [
-            8760
-        ],
-        "g_ghp_inject": [
-            8760
-        ],
-        "p_ghp_deep": [
-            8760
-        ],
-        "g_ghp_deep": [
-            8760
-        ],
-        "p_hp120": [
-            8760
-        ],
-        "m_hp120": [
-            8760
-        ],
-        "g_hp120": [
-            8760
-        ],
-        "p_co180": [
-            8760
-        ],
-        "m_co180_in": [
-            8760
-        ],
-        "m_co180": [
-            8760
-        ],
-        "p_whp": [
-            8760
-        ],
-        "g_whp": [
-            8760
-        ],
-        "p_whp_c": [
-            8760
-        ],
-        "q_whp": [
-            8760
-        ],
+        "ele_buy": [8760],
+        "ele_sell": [8760],
+        "heat_buy": [8760],
+        "heat_sell": [8760],
+        "cooling_buy": [8760],
+        "cooling_sell": [8760],
+        "hydrogen_buy": [8760],
+        "hydrogen_sell": [8760],
+        "steam120_buy": [8760],
+        "steam120_sell": [8760],
+        "steam180_buy": [8760],
+        "steam180_sell": [8760],
+        "heat_water_buy": [8760],
+        "heat_water_sell": [8760],
+        "p_co": [8760],
+        "p_fc": [8760],
+        "g_fc": [8760],
+        "h_fc": [8760],
+        "p_el": [8760],
+        "g_el": [8760],
+        "h_el": [8760],
+        "h_sto": [8760],
+        "g_ht": [8760],
+        "g_ht_in": [8760],
+        "g_ht_out": [8760],
+        "q_ct": [8760],
+        "q_ct_in": [8760],
+        "q_ct_out": [8760],
+        "p_bat": [8760],
+        "p_bat_ch": [8760],
+        "p_bat_dis": [8760],
+        "m_steam_storage": [8760],
+        "m_steam_storage_in": [8760],
+        "m_steam_storage_out": [8760],
+        "p_pv_theory": [8760],
+        "p_pv": [8760],
+        "g_sc": [8760],
+        "p_wd": [8760],
+        "p_eb": [8760],
+        "g_eb": [8760],
+        "g_abc": [8760],
+        "q_abc": [8760],
+        "p_ac": [8760],
+        "q_ac": [8760],
+        "p_hp": [8760],
+        "g_hp": [8760],
+        "p_hp_c": [8760],
+        "q_hp": [8760],
+        "p_ghp": [8760],
+        "g_ghp": [8760],
+        "p_ghp_c": [8760],
+        "q_ghp": [8760],
+        "g_ghp_inject": [8760],
+        "p_ghp_deep": [8760],
+        "g_ghp_deep": [8760],
+        "p_hp120": [8760],
+        "m_hp120": [8760],
+        "g_hp120": [8760],
+        "p_co180": [8760],
+        "m_co180_in": [8760],
+        "m_co180": [8760],
+        "p_whp": [8760],
+        "g_whp": [8760],
+        "p_whp_c": [8760],
+        "q_whp": [8760],
         "custom_storage": [
             {
                 "device_name": "CustomStorage",
                 "energy_type": "custom_energy",
-                "storage_state": [
-                    8760
-                ],
-                "storage_in": [
-                    8760
-                ],
-                "storage_out": [
-                    8760
-                ]
+                "storage_state": [8760],
+                "storage_in": [8760],
+                "storage_out": [8760]
             },
             {
                 "device_name": "CustomStorage2",
                 "energy_type": "custom_energy2",
-                "storage_state": [
-                    8760
-                ],
-                "storage_in": [
-                    8760
-                ],
-                "storage_out": [
-                    8760
-                ]
+                "storage_state": [8760],
+                "storage_in": [8760],
+                "storage_out": [8760]
             }
         ],
         "custom_exchange": [
             {
                 "device_name": "CustomExchange",
-                "energy_in_type": [
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
-                "energy_out_type": [
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
+                "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
                 "energy_in": [
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ]
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760]
                 ],
                 "energy_out": [
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ]
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760]
                 ]
             },
             {
                 "device_name": "CustomExchange2",
-                "energy_in_type": [
-                    1,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
-                "energy_out_type": [
-                    0,
-                    1,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "energy_in_type": [1, 1, 0, 0, 0, 0, 0],
+                "energy_out_type": [0, 1, 1, 0, 0, 0, 0],
                 "energy_in": [
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ]
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760]
                 ],
                 "energy_out": [
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ],
-                    [
-                        8760
-                    ]
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760],
+                    [8760]
                 ]
             }
         ],
-        "g_tube": [
-            8760
-        ]
+        "g_tube": [8760]
     }
 }
