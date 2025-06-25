@@ -379,8 +379,8 @@ class ISService:
         m = Model("mip")
         # ---------------创建变量--------------#
         # 规划容量部分变量
-        opex_sum = m.addVar(vtype="C", lb=0, ub=M, name=f"op_sum")
-        opex_sum_pure = m.addVar(vtype="C", lb=0, ub=M, name=f"op_sum_pure")  # 纯运行成本
+        opex_sum = m.addVar(vtype="C", lb=-M, name=f"op_sum")
+        opex_sum_pure = m.addVar(vtype="C", lb=-M, name=f"op_sum_pure")  # 纯运行成本
         capex_sum = m.addVar(vtype="C", lb=0, name=f"capex_sum")  # 总设备投资
         capex_crf = m.addVar(vtype="C", lb=0, name=f"capex_crf")  # 总设备年化收益
         ce_h = m.addVar(vtype="C", lb=0, name="ce_h")  # 碳排放量 (买电*碳排因子)
@@ -744,18 +744,20 @@ class ISService:
         #---自定义能量交换设备---#
         for t in range(period):
             for i in range(num_custom_exchange_device):
-                m.addCons(standard_ced[i][t] <= ced_install[i] + ced_data[i]["device_already"])
                 for j in range(energy_type_num):
-                    # m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
-                    # m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
                     if param_input["custom_device_exchange"][i]["energy_in_type"][j] == 1:
                         m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
                     elif param_input["custom_device_exchange"][i]["energy_in_type"][j] == 0:
-                        m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == 0)
+                        m.addCons(ced_energy_in[i][j][t] == 0)
+                    else:
+                        raise ValueError("Invalid energy type index!")
                     if param_input["custom_device_exchange"][i]["energy_out_type"][j] == 1:
                         m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
                     elif param_input["custom_device_exchange"][i]["energy_out_type"][j] == 0:
-                        m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == 0)
+                        m.addCons(ced_energy_out[i][j][t] == 0)
+                    else:
+                        raise ValueError("Invalid energy type index!")
+                m.addCons(standard_ced[i][t] <= ced_install[i] + ced_data[i]["device_already"])
         # ---自定义储能设备的约束--- #
         for i in range(num_custom_storage_device):
             for j in range(energy_type_num):
@@ -792,7 +794,7 @@ class ISService:
         m.addCons(k_s_pv * p_pv_max + k_s_sc * s_sc + k_s_wd * num_wd <= s_outside + s_roof)
         m.addCons(k_s_wd * num_wd <= s_outside)
         #-----------------------------运行费用约束-----------------------------#
-
+        #？？？max
         m.addCons(opex_sum_pure == (quicksum([lambda_ele_in[i] * p_pur[i] for i in range(period)]) + lambda_ele_capacity * p_pur_max * 12
                                     + lambda_g_in * quicksum([g_pur[i] for i in range(period)])
                                     + lambda_q_in * quicksum([q_pur[i] for i in range(period)])
@@ -1188,8 +1190,8 @@ class ISService:
                 "device_name": device["device_name"],
                 "energy_in_type": device["energy_in_type"],
                 "energy_out_type": device["energy_out_type"],
-                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in energy_in_type_indices],
-                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in energy_out_type_indices]
+                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))],
+                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))]
             })
 
         # TODO: (HSL, ZYL) 检查输出是否满足报告需求，包括字段的完整性和单位的一致性
@@ -1424,6 +1426,8 @@ class ISService:
                 "custom_exchange": custom_exchange,
                 # 总线
                 "g_tube": [m.getVal(g_tube[i]) for i in range(period)],
+                # debug 用
+                "standard_ced": [m.getVal(standard_ced[i]) for i in range(period)],
             }
         }
         return result
