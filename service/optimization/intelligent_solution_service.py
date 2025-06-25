@@ -747,8 +747,16 @@ class ISService:
                 for j in range(energy_type_num):
                     if param_input["custom_device_exchange"][i]["energy_in_type"][j] == 1:
                         m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
+                    elif param_input["custom_device_exchange"][i]["energy_in_type"][j] == 0:
+                        m.addCons(ced_energy_in[i][j][t] == 0)
+                    else:
+                        raise ValueError("Invalid energy type index!")
                     if param_input["custom_device_exchange"][i]["energy_out_type"][j] == 1:
                         m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
+                    elif param_input["custom_device_exchange"][i]["energy_out_type"][j] == 0:
+                        m.addCons(ced_energy_out[i][j][t] == 0)
+                    else:
+                        raise ValueError("Invalid energy type index!")
                 m.addCons(standard_ced[i][t] <= ced_install[i] + ced_data[i]["device_already"])
         # ---自定义储能设备的约束--- #
         for i in range(num_custom_storage_device):
@@ -1182,8 +1190,8 @@ class ISService:
                 "device_name": device["device_name"],
                 "energy_in_type": device["energy_in_type"],
                 "energy_out_type": device["energy_out_type"],
-                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in energy_in_type_indices],
-                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in energy_out_type_indices]
+                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))],
+                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))]
             })
 
         # TODO: (HSL, ZYL) 检查输出是否满足报告需求，包括字段的完整性和单位的一致性
@@ -1418,6 +1426,8 @@ class ISService:
                 "custom_exchange": custom_exchange,
                 # 总线
                 "g_tube": [m.getVal(g_tube[i]) for i in range(period)],
+                # debug 用
+                "standard_ced": [m.getVal(standard_ced[i]) for i in range(period)],
             }
         }
         return result

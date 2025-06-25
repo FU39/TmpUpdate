@@ -195,7 +195,7 @@
             "q_power_min_per_unit": 0
         },
         "bat": {
-            "power_already": 1,
+            "power_already": 0,
             "power_max": 20000,
             "power_min": 0,
             "cost": 2000,
