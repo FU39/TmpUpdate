@@ -69,13 +69,13 @@ input_body = OptimizationBody.model_validate(param_input)
 
 service = ISService()
 # result = service.planning_opt(param_input=param_input)
-# result = service.exec(input_body)
+result = service.exec(input_body)
 
 opt_output_file = "./io_template/opt_output_demo.json"
-# dump_json_with_compact_lists(result, opt_output_file, indent=4)
+dump_json_with_compact_lists(result, opt_output_file, indent=4)
 
 energy_type_list = ["电", "热", "冷", "氢", "120蒸汽", "180蒸汽", "生活热水"]
-# scheduling_result = result.get("scheduling_result", {})
+scheduling_result = result.get("scheduling_result", {})
 with open(opt_output_file, 'r', encoding='utf-8') as f:
     scheduling_result = json.load(f).get("scheduling_result", {})
 

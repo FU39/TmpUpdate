@@ -472,18 +472,18 @@ input_data = {
     "custom_device_exchange": [
         {
             "device_name": "str",  # 设备名称
-            # TODO: (DZY, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输入类型，对应 index 为 0：电，1：热，2：冷，3：氢，4：120蒸汽，5：180蒸汽，6：生活热水
+
             "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
-            # TODO: (DZY, ZYL, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输出类型，对应 index 为 0：电，1：热，2：冷，3：氢，4：120蒸汽，5：180蒸汽，6：生活热水
+
             "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
             "device_already": 100,  # 已有装机
             "device_max": 2000000,  # 新增装机上限
             "device_min": 0,  # 新增装机下限
             "cost": 0.5,
             "crf": 20,
-            # TODO: (DZY, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输入量，对应 index 意义同上
+
             "energy_in_standard_per_unit": [0, 90, 0, 0, 0, 0, 0],
-            # TODO: (DZY, 前端) 与前端同步该字段描述方式：单位装机满负荷运行时的能源输出量，对应 index 意义同上
+
             "energy_out_standard_per_unit": [0, 0, 45, 0, 0, 0, 0]
         },
         {
