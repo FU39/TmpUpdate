@@ -329,10 +329,11 @@ class ISService:
 
         cop_in2standerd_ced = [[0] * energy_type_num] * num_custom_exchange_device
         cop_standerd2out_ced = [[0] * energy_type_num] * num_custom_exchange_device
-        k_install2sto_max_csd = [[0] * energy_type_num] * num_custom_storage_device
-        k_install2sto_min_csd = [[0] * energy_type_num] * num_custom_storage_device
-        k_sto2io_max_csd = [[0] * energy_type_num] * num_custom_storage_device
-        k_sto2io_min_csd = [[0] * energy_type_num] * num_custom_storage_device
+        k_install2sto_max_csd = [0] * num_custom_storage_device
+        k_install2sto_min_csd = [0] * num_custom_storage_device
+        k_sto2io_max_csd = [0] * num_custom_storage_device
+        k_sto2io_min_csd = [0] * num_custom_storage_device
+        csd_energy_type_index = [0] * num_custom_storage_device
         for i in range(num_custom_exchange_device):
             cop_in2standerd_ced[i] = ced_data[i]["energy_in_standard_per_unit"]
             cop_standerd2out_ced[i] = ced_data[i]["energy_out_standard_per_unit"]
@@ -341,11 +342,11 @@ class ISService:
             if device["energy_type"] not in energy_type_list:
                 raise ValueError(f"Invalid energy type '{device['energy_type']}' in custom storage device.")
             # 获取能量类型索引
-            energy_type_index = energy_type_list.index(device["energy_type"])
-            k_install2sto_max_csd[i][energy_type_index] = device["energy_storage_max_per_unit"]
-            k_install2sto_min_csd[i][energy_type_index] = device["energy_storage_min_per_unit"]
-            k_sto2io_max_csd[i][energy_type_index] = device["energy_power_max_per_unit"]
-            k_sto2io_min_csd[i][energy_type_index] = device["energy_power_min_per_unit"]
+            csd_energy_type_index[i] = energy_type_list.index(device["energy_type"])
+            k_install2sto_max_csd[i] = device["energy_storage_max_per_unit"]
+            k_install2sto_min_csd[i] = device["energy_storage_min_per_unit"]
+            k_sto2io_max_csd[i] = device["energy_power_max_per_unit"]
+            k_sto2io_min_csd[i] = device["energy_power_min_per_unit"]
 
         # --- 基准方案信息 --- #
         # TODO: (前端) 明确和统一当前传入值的名称
@@ -548,12 +549,12 @@ class ISService:
         # 自定义储能设备的设备变量
         csd_install = [m.addVar(vtype="C", lb=csd_data[i]["device_min"], ub=csd_data[i]["device_max"],
                                 name=f"csd_install{i}") for i in range(num_custom_exchange_device)]  # 设备装机容量
-        csd_sto = [[[m.addVar(vtype="C", lb=0,
-                              name=f"csd_sto{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_storage_device)]
+        csd_sto = [[m.addVar(vtype="C", lb=0,
+                              name=f"csd_sto{i}{t}") for t in range(period)]  for i in range(num_custom_storage_device)]
         csd_energy_in = [[[m.addVar(vtype="C", lb=0,
-                                    name=f"csd_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_storage_device)]
+                                    name=f"csd_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)]for i in range(num_custom_storage_device)]
         csd_energy_out = [[[m.addVar(vtype="C", lb=0,
-                                     name=f"csd_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_storage_device)]
+                                     name=f"csd_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)]for i in range(num_custom_storage_device)]
         #---------------创建约束条件--------------#
         #-----------------------------系统约束-----------------------------#
         # 能量流顺序 0：电   1：热   2：冷   3：氢   4：120蒸汽  5：180蒸汽  6：家用热水（仅自定义设备）
@@ -563,10 +564,10 @@ class ISService:
                 p_sol[i] + ele_load[i] + p_whp[i] + p_co180[i] + p_hp120[i] + p_el[i] + p_hp[i] + p_hpc[i] + p_ghp[i] + p_ghp_deep[i]
                 + p_ghpc[i] + p_eb[i] + p_ac[i] + p_co[i] + p_bat_in[i]
                 + quicksum([ced_energy_in[device_index][0][i] for device_index in range(num_custom_exchange_device)])
-                + quicksum([csd_energy_in[device_index][0][i] for device_index in range(num_custom_storage_device)])
+                + quicksum([csd_energy_in[device_index][0][i] for device_index in range(num_custom_exchange_device)])
                 == p_pur[i] + p_fc[i] + p_pv[i] + p_wd[i] + p_bat_out[i]
                 + quicksum([ced_energy_out[device_index][0][i] for device_index in range(num_custom_exchange_device)])
-                + quicksum([csd_energy_out[device_index][0][i] for device_index in range(num_custom_storage_device)])
+                + quicksum([ced_energy_out[device_index][0][i] for device_index in range(num_custom_exchange_device)])
             )
             # 热总线约束 (包含生活热水)
             m.addCons(
@@ -762,39 +763,62 @@ class ISService:
         for i in range(num_custom_storage_device):
             for j in range(energy_type_num):
                 for t in range(period - 1):
-                    m.addCons(csd_sto[i][j][t+1] - csd_sto[i][j][t] == csd_energy_in[i][j][t] - csd_energy_out[i][j][t])
-                    m.addCons(csd_sto[i][j][t] <= ((csd_install[i] + csd_data[i]["device_already"])
-                                                   * k_install2sto_max_csd[i][j]))
-                    m.addCons(csd_sto[i][j][t] >= ((csd_install[i] + csd_data[i]["device_already"])
-                                                    * k_install2sto_min_csd[i][j]))
+                    m.addCons(csd_sto[i][t+1] - csd_sto[i][t] == csd_energy_in[i][j][t] - csd_energy_out[i][j][t])
+                    m.addCons(csd_sto[i][t] <= ((csd_install[i] + csd_data[i]["device_already"])
+                                                   * k_install2sto_max_csd[i]))
+                    m.addCons(csd_sto[i][t] >= ((csd_install[i] + csd_data[i]["device_already"])
+                                                    * k_install2sto_min_csd[i]))
                     m.addCons(csd_energy_in[i][j][t] <= (csd_install[i] + csd_data[i]["device_already"])
-                                                         * k_sto2io_max_csd[i][j])
+                                                         * k_sto2io_max_csd[i])
                     m.addCons(csd_energy_out[i][j][t] <= (csd_install[i] + csd_data[i]["device_already"])
-                                                          * k_sto2io_max_csd[i][j])
-                    m.addCons(csd_energy_in[i][j][t] >= (csd_install[i] + csd_data[i]["device_already"])
-                                                         * k_sto2io_min_csd[i][j])
-                    m.addCons(csd_energy_out[i][j][t] >= (csd_install[i] + csd_data[i]["device_already"])
-                                                          * k_sto2io_min_csd[i][j])
-                m.addCons(csd_sto[i][j][0] - csd_sto[i][j][-1] == csd_energy_in[i][j][-1] - csd_energy_out[i][j][-1])
-                m.addCons(csd_sto[i][j][-1] <= (csd_install[-1] + csd_data[i]["device_already"])
-                                                * k_install2sto_max_csd[i][j])
-                m.addCons(csd_sto[i][j][-1] >= (csd_install[-1] + csd_data[i]["device_already"])
-                                                * k_install2sto_min_csd[i][j])
+                                                          * k_sto2io_max_csd[i])
+                    # m.addCons(csd_energy_in[i][j][t] >= (csd_install[i] + csd_data[i]["device_already"])
+                    #                                      * k_sto2io_min_csd[i])
+                    # m.addCons(csd_energy_out[i][j][t] >= (csd_install[i] + csd_data[i]["device_already"])
+                    #                                       * k_sto2io_min_csd[i])
+                m.addCons(csd_sto[i][0] - csd_sto[i][-1] == csd_energy_in[i][j][-1] - csd_energy_out[i][j][-1])
+                m.addCons(csd_sto[i][-1] <= (csd_install[-1] + csd_data[i]["device_already"])
+                                                * k_install2sto_max_csd[i])
+                m.addCons(csd_sto[i][-1] >= (csd_install[-1] + csd_data[i]["device_already"])
+                                                * k_install2sto_min_csd[i])
                 m.addCons(csd_energy_in[i][j][-1] <= (csd_install[i] + csd_data[i]["device_already"])
-                                                      * k_sto2io_max_csd[i][j])
+                                                      * k_sto2io_max_csd[i])
                 m.addCons(csd_energy_out[i][j][-1] <= (csd_install[i] + csd_data[i]["device_already"])
-                                                       * k_sto2io_max_csd[i][j])
-                m.addCons(csd_energy_in[i][j][-1] >= (csd_install[i] + csd_data[i]["device_already"])
-                                                      * k_sto2io_min_csd[i][j])
-                m.addCons(csd_energy_out[i][j][-1] >= (csd_install[i] + csd_data[i]["device_already"])
-                                                       * k_sto2io_min_csd[i][j])
+                                                       * k_sto2io_max_csd[i])
+                # m.addCons(csd_energy_in[i][j][-1] >= (csd_install[i] + csd_data[i]["device_already"])
+                #                                       * k_sto2io_min_csd[i])
+                # m.addCons(csd_energy_out[i][j][-1] >= (csd_install[i] + csd_data[i]["device_already"])
+                #                                        * k_sto2io_min_csd[i])
+        for t in range(period):
+            for i in range(num_custom_storage_device):
+                if csd_energy_type_index[i] != 0:
+                    m.addCons(csd_energy_in[i][0][t] == 0)
+                    m.addCons(csd_energy_out[i][0][t] == 0)
+                if csd_energy_type_index[i] != 1:
+                    m.addCons(csd_energy_in[i][1][t] == 0)
+                    m.addCons(csd_energy_out[i][1][t] == 0)
+                if csd_energy_type_index[i] != 2:
+                    m.addCons(csd_energy_in[i][2][t] == 0)
+                    m.addCons(csd_energy_out[i][2][t] == 0)
+                if csd_energy_type_index[i] != 3:
+                    m.addCons(csd_energy_in[i][3][t] == 0)
+                    m.addCons(csd_energy_out[i][3][t] == 0)
+                if csd_energy_type_index[i] != 4:
+                    m.addCons(csd_energy_in[i][4][t] == 0)
+                    m.addCons(csd_energy_out[i][4][t] == 0)
+                if csd_energy_type_index[i] != 5:
+                    m.addCons(csd_energy_in[i][5][t] == 0)
+                    m.addCons(csd_energy_out[i][5][t] == 0)
+                if csd_energy_type_index[i] != 6:
+                    m.addCons(csd_energy_in[i][6][t] == 0)
+                    m.addCons(csd_energy_out[i][6][t] == 0)
+
         #-----------------------------安装面积等约束-----------------------------#
         s_outside = param_input["base"]["area_outside"]
         s_roof = param_input["base"]["power_pv_house_top"]
         m.addCons(k_s_pv * p_pv_max + k_s_sc * s_sc + k_s_wd * num_wd <= s_outside + s_roof)
         m.addCons(k_s_wd * num_wd <= s_outside)
         #-----------------------------运行费用约束-----------------------------#
-        #？？？max
         m.addCons(opex_sum_pure == (quicksum([lambda_ele_in[i] * p_pur[i] for i in range(period)]) + lambda_ele_capacity * p_pur_max * 12
                                     + lambda_g_in * quicksum([g_pur[i] for i in range(period)])
                                     + lambda_q_in * quicksum([q_pur[i] for i in range(period)])
@@ -905,6 +929,7 @@ class ISService:
             print("Optimal value: {}, cost time: {}s".format(cost, t_end - t0))
         else:
             print("Solver status:", m.getStatus())
+            m.writeProblem("m.lp")
             raise ValueError("未找到最优解！请检查模型设置是否正确！")
         # try:
         #     m.optimize()
@@ -1427,7 +1452,7 @@ class ISService:
                 # 总线
                 "g_tube": [m.getVal(g_tube[i]) for i in range(period)],
                 # debug 用
-                "standard_ced": [m.getVal(standard_ced[i]) for i in range(period)],
+                # "standard_ced": [m.getVal(standard_ced[i]) for i in range(period)],
             }
         }
         return result

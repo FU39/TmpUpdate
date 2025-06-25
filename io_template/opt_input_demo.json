@@ -46,14 +46,14 @@
         "base_method_steam": "购买蒸汽",
         "base_method_hotwater": "空气源热泵",
         "cer_enable": true,
-        "cer": 1,
+        "cer": 0,
         "other_investment": 0.2
     },
     "trading": {
-        "power_buy_enable": false,
+        "power_buy_enable": true,
         "power_sell_enable": false,
         "power_buy_price_type": "1",
-        "heat_buy_enable": false,
+        "heat_buy_enable": true,
         "heat_sell_enable": false,
         "cool_buy_enable": false,
         "cool_sell_enable": false,
@@ -131,7 +131,7 @@
     "device": {
         "co": {
             "power_already": 0,
-            "power_max": 0,
+            "power_max": 10000,
             "power_min": 0,
             "cost": 1000,
             "crf": 10,
@@ -288,7 +288,7 @@
         },
         "ghp_deep": {
             "power_already": 0,
-            "power_max": 0,
+            "power_max": 2000,
             "power_min": 0,
             "cost": 2500,
             "crf": 15,
@@ -364,9 +364,9 @@
             "cost": 0.5,
             "crf": 20,
             "energy_storage_max_per_unit": 90,
-            "energy_storage_min_per_unit": 45,
+            "energy_storage_min_per_unit": 0,
             "energy_power_max_per_unit": 90,
-            "energy_power_min_per_unit": 45,
+            "energy_power_min_per_unit": 0,
             "energy_loss": 0.01
         }
     ],
@@ -375,7 +375,7 @@
             "device_name": "sick",
             "energy_in_type": [0, 0, 0, 0, 0, 0, 0],
             "energy_out_type": [0, 0, 0, 0, 0, 0, 0],
-            "device_already": 100,
+            "device_already": 0,
             "device_max": 0,
             "device_min": 0,
             "cost": 0.5,
@@ -387,8 +387,8 @@
             "device_name": "str",
             "energy_in_type": [0, 0, 0, 0, 0, 0, 0],
             "energy_out_type": [0, 0, 0, 0, 0, 0, 0],
-            "device_already": 100,
-            "device_max": 2000000,
+            "device_already": 0,
+            "device_max": 0,
             "device_min": 0,
             "cost": 0.5,
             "crf": 20,
