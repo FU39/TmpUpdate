@@ -537,24 +537,24 @@ class ISService:
         g_whp = [m.addVar(vtype="C", lb=0, name=f"g_whp{t}") for t in range(period)]  # 余热热泵产热
         q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
         # 用户自定义库中设备变量
-       # # 自定义能量交换设备
-       #  ced_install = [m.addVar(vtype="C", lb=ced_data[i]["device_min"], ub=ced_data[i]["device_max"],
-       #                          name=f"ced_install{i}") for i in range(num_custom_exchange_device)]    # 设备装机容量
-       #  standard_ced = [[m.addVar(vtype="C", lb=0,
-       #                            name=f"standard_ced{i}{t}") for t in range(period)] for i in range(num_custom_exchange_device)]   # 设备运行中间变量
-       #  ced_energy_in = [[[m.addVar(vtype="C", lb=0,
-       #                              name=f"ced_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]  # 设备i 的能量种类j 在t时刻的输入
-       #  ced_energy_out = [[[m.addVar(vtype="C", lb=0,
-       #                               name=f"ced_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]     # 设备i 的能量种类j 在t时刻的输出
-       #  # 自定义储能设备的设备变量
-       #  csd_install = [m.addVar(vtype="C", lb=csd_data[i]["device_min"], ub=csd_data[i]["device_max"],
-       #                          name=f"csd_install{i}") for i in range(num_custom_exchange_device)]  # 设备装机容量
-       #  csd_sto = [[[m.addVar(vtype="C", lb=0,
-       #                        name=f"csd_sto{i}{t}") for t in range(period)] for j in range(energy_type_num)]  for i in range(num_custom_storage_device)]
-       #  csd_energy_in = [[[m.addVar(vtype="C", lb=0,
-       #                              name=f"csd_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)]for i in range(num_custom_storage_device)]
-       #  csd_energy_out = [[[m.addVar(vtype="C", lb=0,
-       #                               name=f"csd_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)]for i in range(num_custom_storage_device)]
+        # 自定义能量交换设备
+        # ced_install = [m.addVar(vtype="C", lb=ced_data[i]["device_min"], ub=ced_data[i]["device_max"],
+        #                         name=f"ced_install{i}") for i in range(num_custom_exchange_device)]    # 设备装机容量
+        # standard_ced = [[m.addVar(vtype="C", lb=0,
+        #                           name=f"standard_ced{i}{t}") for t in range(period)] for i in range(num_custom_exchange_device)]   # 设备运行中间变量
+        # ced_energy_in = [[[m.addVar(vtype="C", lb=0,
+        #                             name=f"ced_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]  # 设备i 的能量种类j 在t时刻的输入
+        # ced_energy_out = [[[m.addVar(vtype="C", lb=0,
+        #                              name=f"ced_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]     # 设备i 的能量种类j 在t时刻的输出
+        # # 自定义储能设备的设备变量
+        # csd_install = [m.addVar(vtype="C", lb=csd_data[i]["device_min"], ub=csd_data[i]["device_max"],
+        #                         name=f"csd_install{i}") for i in range(num_custom_exchange_device)]  # 设备装机容量
+        # csd_sto = [[[m.addVar(vtype="C", lb=0,
+        #                       name=f"csd_sto{i}{t}") for t in range(period)] for j in range(energy_type_num)]  for i in range(num_custom_storage_device)]
+        # csd_energy_in = [[[m.addVar(vtype="C", lb=0,
+        #                             name=f"csd_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)]for i in range(num_custom_storage_device)]
+        # csd_energy_out = [[[m.addVar(vtype="C", lb=0,
+        #                              name=f"csd_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)]for i in range(num_custom_storage_device)]
         #---------------创建约束条件--------------#
         #-----------------------------系统约束-----------------------------#
         # 能量流顺序 0：电   1：热   2：冷   3：氢   4：120蒸汽  5：180蒸汽  6：家用热水（仅自定义设备）
@@ -744,7 +744,7 @@ class ISService:
             m.addCons(q_whp[i] + p_whpc[i] <= c * heat_resource[i] * param_input["trading"]["heat_resource"]["temperature_decrease_limit"])
             m.addCons(p_whp[i] + p_whpc[i] <= (p_whp_max + param_input["device"]["whp"]["power_already"]))
         #-----------------------------用户自定义的设备约束-----------------------------#
-        # #---自定义能量交换设备---#
+        #---自定义能量交换设备---#
         # for t in range(period):
         #     for i in range(num_custom_exchange_device):
         #         for j in range(energy_type_num):
@@ -932,7 +932,7 @@ class ISService:
                                 + num_gtw * cost_gtw + num_gtw2500 * cost_gtw2500
                                 + p_hp120_max * cost_hp120 + p_co180_max * cost_co180 + p_whp_max * cost_whp))
                                 # + quicksum([ced_install[i] * cost_ced[i] for i in range(num_custom_exchange_device)])
-                                # + quicksum([csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)])))
+                                # + quicksum([csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)]))
         m.addCons(capex_crf == (crf_co * p_co_max * cost_co + crf_fc * p_fc_max * cost_fc + crf_el * p_el_max * cost_el
                                 + crf_hst * hst * cost_hst + crf_ht * m_ht * cost_ht + crf_ct * m_ct * cost_ct
                                 + crf_bat * p_bat_max * cost_bat + crf_steam_storage * m_steam_sto_max * cost_steam_storage
@@ -943,7 +943,7 @@ class ISService:
                                 + crf_hp120 * p_hp120_max * cost_hp120 + crf_co180 * p_co180_max * cost_co180
                                 + crf_whp * p_whp_max * cost_whp))
                                 # + quicksum([crf_ced[i] * ced_install[i] * cost_ced[i] for i in range(num_custom_exchange_device)])
-                                # + quicksum([crf_csd[i] * csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)])))
+                                # + quicksum([crf_csd[i] * csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)]))
 
         #-----------------------------目标函数-----------------------------#
         m.setObjective(capex_crf + opex_sum, "minimize")
@@ -958,6 +958,13 @@ class ISService:
             t_end = time.time()
             cost = m.getObjVal()
             print("Optimal value: {}, cost time: {}s".format(cost, t_end - t0))
+
+        elif m.getStatus() == "gaplimit":
+            if m.getNSols() > 0:  # 检查可行解数量
+                print("可行解目标值:", m.getObjVal())
+                sol = m.getBestSol()  # 获取当前最佳解
+            else:
+                print("虽状态为gaplimit，但未找到可行解！")  # 罕见情况，需检查模型
         else:
             print("Solver status:", m.getStatus())
             # m.writeProblem("m.lp")
@@ -1220,10 +1227,10 @@ class ISService:
         #     custom_storage.append({
         #         "device_name": device["device_name"],
         #         "energy_type": device["energy_type"],
-                # "storage_state": [m.getVal(csd_sto[i][energy_type_index][t]) for t in range(period)],
-                # "storage_in": [m.getVal(csd_energy_in[i][energy_type_index][t]) for t in range(period)],
-                # "storage_out": [m.getVal(csd_energy_out[i][energy_type_index][t]) for t in range(period)],
-            # })
+        #         "storage_state": [m.getVal(csd_sto[i][energy_type_index][t]) for t in range(period)],
+        #         "storage_in": [m.getVal(csd_energy_in[i][energy_type_index][t]) for t in range(period)],
+        #         "storage_out": [m.getVal(csd_energy_out[i][energy_type_index][t]) for t in range(period)],
+        #     })
         # for i in range(num_custom_exchange_device):
         #     device = ced_data[i]
         #     energy_in_type_indices = [index for index, value in enumerate(device["energy_in_type"]) if value == 1]
@@ -1356,8 +1363,8 @@ class ISService:
                     "p_hp120_installed": format(m.getVal(p_hp120_max), ".2f"),  # 高温热泵装机容量 (kW)
                     "p_co180_installed": format(m.getVal(p_co180_max), ".2f"),  # 蒸汽压缩机装机容量 (kW)
                     "p_whp_installed": format(m.getVal(p_whp_max), ".2f"),  # 水源热泵装机容量 (kW)
-                    # "custom_storage_installed": custom_storage_installed,  # 自定义储能设备装机容量
-                    # "custom_exchange_installed": custom_exchange_installed,  # 自定义能量交换设备装机容量
+                    "custom_storage_installed": custom_storage_installed,  # 自定义储能设备装机容量
+                    "custom_exchange_installed": custom_exchange_installed,  # 自定义能量交换设备装机容量
                 },
                 # 设备投资成本
                 "device_capex": {
