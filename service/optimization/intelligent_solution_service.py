@@ -612,13 +612,13 @@ class ISService:
             )
         for i in range(period - 1):
             # 氢气约束
-            m.addCons(h_sto[i + 1] - h_sto[i] == h_pur[i] + h_el[i] - h_demand[i] - h_fc[i])
+            m.addCons(h_sto[i + 1] - h_sto[i] == h_pur[i] + h_el[i] - h_sol[i] - h_demand[i] - h_fc[i])
                       # + quicksum([ced_energy_out[device_index][3][i] for device_index in range(num_custom_exchange_device)])
                       # + quicksum([csd_energy_out[device_index][3][i] for device_index in range(num_custom_storage_device)])
                       # - quicksum([ced_energy_in[device_index][3][i] for device_index in range(num_custom_exchange_device)])
                       # - quicksum([csd_energy_in[device_index][5][i] for device_index in range(num_custom_storage_device)]))
         # 初始状态和末状态平衡
-        m.addCons(h_sto[0] - h_sto[-1] == h_pur[-1] + h_el[-1] - h_fc[-1] - h_demand[-1])
+        m.addCons(h_sto[0] - h_sto[-1] == h_pur[-1] + h_el[-1] - h_fc[-1] - h_demand[-1] - h_sol[-1])
                   # + quicksum([ced_energy_out[device_index][3][-1] for device_index in range(num_custom_exchange_device)])
                   # + quicksum([csd_energy_out[device_index][3][-1] for device_index in range(num_custom_storage_device)])
                   # - quicksum([ced_energy_in[device_index][3][-1] for device_index in range(num_custom_exchange_device)])
@@ -960,7 +960,7 @@ class ISService:
             print("Optimal value: {}, cost time: {}s".format(cost, t_end - t0))
         else:
             print("Solver status:", m.getStatus())
-            m.writeProblem("m.lp")
+            # m.writeProblem("m.lp")
             raise ValueError("未找到最优解！请检查模型设置是否正确！")
         # try:
         #     m.optimize()
