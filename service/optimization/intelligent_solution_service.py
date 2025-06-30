@@ -859,7 +859,7 @@ class ISService:
 
         ce_base = load2ele_sum * alpha_e + load2gas_sum * alpha_gas + load2h_sum * alpha_h + load2co_heat
         if param_input["base"]["cer_enable"] is True:
-            cerr = param_input["base"]["cer"]  # 碳减排率
+            cerr = param_input["base"]["cer"] / 100 # 碳减排率
             m.addCons(ce_h <= (1 - cerr) * ce_base)
         m.addCons(ce_h == quicksum(p_pur) * alpha_e)
         #-----------------------------规划设备花费约束-----------------------------#
@@ -953,7 +953,7 @@ class ISService:
 
         # TODO: (前端) 确认返回值
         if param_input["income"]["power_type"] == "买电电价折扣":
-            lambda_ele_revenue = [price * param_input["income"]["power_price"] for price in lambda_ele_in]
+            lambda_ele_revenue = [price * param_input["income"]["power_price"] / 100 for price in lambda_ele_in]
         elif param_input["income"]["power_type"] == "固定价格":
             lambda_ele_revenue = [param_input["income"]["power_price"]] * period
         else:
@@ -1019,7 +1019,7 @@ class ISService:
         # ---------------------------对比方案: 纯电 (电锅炉供暖) 方案-----------------------------#
         capex_ele_eb = 0
         capex_g_eb = max(g_demand) / k_eb * cost_eb
-        # TODO: (DZY, ZYL) 确认对比方案供冷方式，先使用水冷机组供冷 + 集中供冷
+
         capex_q_eb = max(q_demand) / k_ac * cost_ac
         capex_steam120_eb = max(steam120_demand) * 750 / k_eb * cost_eb
         capex_steam180_eb = max(steam180_demand) * 770 / k_eb * cost_eb
@@ -1027,8 +1027,11 @@ class ISService:
         capex_all_eb = ((capex_ele_eb + capex_g_eb + capex_q_eb
                          + capex_steam120_eb + capex_steam180_eb + capex_hotwater_eb)
                         * (1 + param_input["base"]["other_investment"]))
-        # TODO: (DZY, ZYL) 确认年化投资成本如何计算，即电锅炉使用年限是按输入来
-        capex_all_crf_eb = crf(10) * capex_all_eb + capex_all_eb * param_input["base"]["other_investment"] / 10
+        # 电锅炉使用年限是按输入来
+        if param_input["device"]["eb"]["power_already"] == 0 and param_input["device"]["eb"]["power_max"] == 0:
+            capex_all_crf_eb = crf(10) * capex_all_eb + capex_all_eb * param_input["base"]["other_investment"] / 10
+        else:
+            capex_all_crf_eb = crf_eb * capex_all_eb + capex_all_eb * param_input["base"]["other_investment"] / 10
         p_pur_eb = [(ele_load[i] + g_demand[i] / k_eb + q_demand[i] / k_ac
                      + steam120_demand[i] * 750 / k_eb + steam180_demand[i] * 770 / k_eb
                      + hotwater_demand[i] / k_eb) for i in range(period)]
@@ -1064,8 +1067,11 @@ class ISService:
         capex_all_hp = ((capex_ele_hp + capex_g_hp + capex_q_hp
                          + capex_steam120_hp + capex_steam180_hp + capex_hotwater_hp)
                         * (1 + param_input["base"]["other_investment"]))
-        # TODO: (DZY, ZYL) 确认年化投资成本如何计算，即热泵使用年限是按输入来
-        capex_all_crf_hp = crf(15) * capex_all_hp + capex_all_hp * param_input["base"]["other_investment"] / 15
+        # 热泵使用年限是按输入来
+        if param_input["device"]["hp"]["power_already"] == 0 and param_input["device"]["hp"]["power_max"] == 0:
+            capex_all_crf_hp = crf(10) * capex_all_hp + capex_all_hp * param_input["base"]["other_investment"] / 10
+        else:
+            capex_all_crf_hp = crf_hp * capex_all_hp + capex_all_hp * param_input["base"]["other_investment"] / 10
         p_pur_hp = [(ele_load[i] + g_demand[i] / k_hp_g + q_demand[i] / k_hp_q
                     + steam120_demand[i] * 750 / k_hp_g + steam180_demand[i] * 770 / k_hp_g
                     + hotwater_demand[i] / k_hp_g) for i in range(period)]
@@ -1086,10 +1092,10 @@ class ISService:
         cer_rate_hp = cer_hp / (ce_base + 1e-7)
 
         # --------------------------对比方案: 燃气方案-----------------------------#
-        # TODO: (DZY, ZYL) 确认过去计算方式中的 0.3525 是元/kwh 效率*元/方*方/kWh
+        #  0.3525 是元/kwh 效率*元/方*方/kWh
         capex_ele_gas = 0
         capex_g_gas = max(g_demand) / k_gas * cost_gas
-        # TODO: (DZY, ZYL) 确认对比方案供冷方式，先使用水冷机组供冷+集中供冷
+
         capex_q_gas = max(q_demand) / k_ac * cost_ac
         capex_steam120_gas = max(steam120_demand) * 750 / k_gas * cost_gas
         capex_steam180_gas = max(steam180_demand) * 770 / k_gas * cost_gas
