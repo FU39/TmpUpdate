@@ -271,13 +271,13 @@ class ISService:
         loss_steam_sto = param_input["device"]["steam_storage"]["loss_rate"]  # 能量损失系数
         # ----pv----#
         eta_pv = param_input["device"]["pv"]["beta_pv"]  # 剩余能量系数
-        k_s_pv = param_input["device"]["pv"]["s_pv_per_unit"]   # 功率需面积系数   kw/m2
+        k_s_pv = param_input["device"]["pv"]["s_pv_per_unit"]   # 功率需面积系数   m2/kw
         # ----sc----#
         k_sc = param_input["device"]["sc"]["beta_sc"]       # 面积供热  GJ/m2
         sc_theta_ex = param_input["device"]["sc"]["theta_ex"]   # 能量损失系数
         k_s_sc = param_input["device"]["sc"]["s_sc_per_unit"]   # m2/m2
         # ----wd----#
-        k_s_wd = param_input["device"]["wd"]["s_wd_per_unit"]   # kWh/m2
+        k_s_wd = param_input["device"]["wd"]["s_wd_per_unit"]   # m2/个
         # ----eb----#
         k_eb = param_input["device"]["eb"]["beta_eb"]           # %
         #----abc---#
@@ -538,14 +538,14 @@ class ISService:
         q_whp = [m.addVar(vtype="C", lb=0, name=f"q_whp{t}") for t in range(period)]  # 余热热泵产冷
         # 用户自定义库中设备变量
         # 自定义能量交换设备
-        # ced_install = [m.addVar(vtype="C", lb=ced_data[i]["device_min"], ub=ced_data[i]["device_max"],
-        #                         name=f"ced_install{i}") for i in range(num_custom_exchange_device)]    # 设备装机容量
-        # standard_ced = [[m.addVar(vtype="C", lb=0,
-        #                           name=f"standard_ced{i}{t}") for t in range(period)] for i in range(num_custom_exchange_device)]   # 设备运行中间变量
-        # ced_energy_in = [[[m.addVar(vtype="C", lb=0,
-        #                             name=f"ced_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]  # 设备i 的能量种类j 在t时刻的输入
-        # ced_energy_out = [[[m.addVar(vtype="C", lb=0,
-        #                              name=f"ced_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]     # 设备i 的能量种类j 在t时刻的输出
+        ced_install = [m.addVar(vtype="C", lb=ced_data[i]["device_min"], ub=ced_data[i]["device_max"],
+                                name=f"ced_install{i}") for i in range(num_custom_exchange_device)]    # 设备装机容量
+        standard_ced = [[m.addVar(vtype="C", lb=0,
+                                  name=f"standard_ced{i}{t}") for t in range(period)] for i in range(num_custom_exchange_device)]   # 设备运行中间变量
+        ced_energy_in = [[[m.addVar(vtype="C", lb=0,
+                                    name=f"ced_energy_in{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]  # 设备i 的能量种类j 在t时刻的输入
+        ced_energy_out = [[[m.addVar(vtype="C", lb=0,
+                                     name=f"ced_energy_out{i}{j}{t}") for t in range(period)] for j in range(energy_type_num)] for i in range(num_custom_exchange_device)]     # 设备i 的能量种类j 在t时刻的输出
         # # 自定义储能设备的设备变量
         # csd_install = [m.addVar(vtype="C", lb=csd_data[i]["device_min"], ub=csd_data[i]["device_max"],
         #                         name=f"csd_install{i}") for i in range(num_custom_exchange_device)]  # 设备装机容量
@@ -561,68 +561,69 @@ class ISService:
         for i in range(period):
             # 电总线约束
             m.addCons(
-                p_sol[i] + ele_load[i] + p_whp[i] + p_co180[i] + p_hp120[i] + p_el[i] + p_hp[i] + p_hpc[i] + p_ghp[i] + p_ghp_deep[i]
-                + p_ghpc[i] + p_eb[i] + p_ac[i] + p_co[i] + p_bat_in[i]
-                # + quicksum([ced_energy_in[device_index][0][i] for device_index in range(num_custom_exchange_device)])
+                p_sol[i] + ele_load[i] + p_whp[i] + p_co180[i] + p_hp120[i] + p_el[i] + p_hp[i] + p_hpc[i] + p_ghp[i]
+                + p_ghpc[i] + p_eb[i] + p_ac[i] + p_co[i] + p_bat_in[i] + p_ghp_deep[i]
+                + quicksum([ced_energy_in[device_index][0][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_in[device_index][0][i] for device_index in range(num_custom_storage_device)])
                 == p_pur[i] + p_fc[i] + p_pv[i] + p_wd[i] + p_bat_out[i]
-                # + quicksum([ced_energy_out[device_index][0][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_out[device_index][0][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_out[device_index][0][i] for device_index in range(num_custom_storage_device)])
             )
             # 热总线约束 (包含生活热水)
             m.addCons(
                 g_sol[i] + g_tube[i] + hotwater_sol[i] + g_hp120_in[i] + g_ht_in[i] + g_ghp_gr[i] + g_abc[i]
-                # + quicksum([ced_energy_in[device_index][1][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_in[device_index][1][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_in[device_index][1][i] for device_index in range(num_custom_storage_device)])
-                # + quicksum([ced_energy_in[device_index][6][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_in[device_index][6][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_in[device_index][6][i] for device_index in range(num_custom_storage_device)])
-                == g_pur[i] + hotwater_pur[i] + g_fc[i] + g_whp[i] + g_ghp_deep[i] + g_eb[i] + g_sc[i] + g_ht_out[i] + g_hp[i] + g_ghp[i] + g_el[i]
-                # + quicksum([ced_energy_out[device_index][1][i] for device_index in range(num_custom_exchange_device)])
+                == g_pur[i] + hotwater_pur[i] + g_fc[i] + g_whp[i] + g_ghp_deep[i] + g_eb[i] + g_sc[i] + g_ht_out[i]
+                + g_hp[i] + g_ghp[i] + g_el[i]
+                + quicksum([ced_energy_out[device_index][1][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_out[device_index][1][i] for device_index in range(num_custom_storage_device)])
-                # + quicksum([ced_energy_out[device_index][6][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_out[device_index][6][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_out[device_index][6][i] for device_index in range(num_custom_storage_device)])
             )
             m.addCons(g_demand[i] + hotwater_demand[i] == g_tube[i])  # 区分能灌热的和不能灌热的
             # 冷总线约束
             m.addCons(
                 q_sol[i] + q_demand[i] + q_ct_in[i]
-                # + quicksum([ced_energy_in[device_index][2][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_in[device_index][2][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_in[device_index][2][i] for device_index in range(num_custom_storage_device)])
                 == q_pur[i] + q_ct_out[i] + q_hp[i] + q_ac[i] + q_ghp[i] + q_whp[i] + q_abc[i]
-                # + quicksum([ced_energy_out[device_index][2][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_out[device_index][2][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_out[device_index][2][i] for device_index in range(num_custom_storage_device)])
             )
             # 120蒸气约束
             m.addCons(
                 steam120_sol[i] + steam120_demand[i] + m_co180_in[i]
-                # + quicksum([ced_energy_in[device_index][4][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_in[device_index][4][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_in[device_index][4][i] for device_index in range(num_custom_storage_device)])
                 == steam120_pur[i] + m_hp120[i]
-                # + quicksum([ced_energy_out[device_index][4][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_out[device_index][4][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_out[device_index][4][i] for device_index in range(num_custom_storage_device)])
             )
             # 180蒸气约束
             m.addCons(
                 steam180_sol[i] + steam180_demand[i] + m_steam_sto_in[i]
-                # + quicksum([ced_energy_in[device_index][5][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_in[device_index][5][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_in[device_index][5][i] for device_index in range(num_custom_storage_device)])
                 == steam180_pur[i] + m_co180_out[i] + m_steam_sto_out[i]
-                # + quicksum([ced_energy_out[device_index][5][i] for device_index in range(num_custom_exchange_device)])
+                + quicksum([ced_energy_out[device_index][5][i] for device_index in range(num_custom_exchange_device)])
                 # + quicksum([csd_energy_out[device_index][5][i] for device_index in range(num_custom_storage_device)])
             )
         for i in range(period - 1):
             # 氢气约束
-            m.addCons(h_sto[i + 1] - h_sto[i] == h_pur[i] + h_el[i] - h_sol[i] - h_demand[i] - h_fc[i])
-                      # + quicksum([ced_energy_out[device_index][3][i] for device_index in range(num_custom_exchange_device)])
+            m.addCons(h_sto[i + 1] - h_sto[i] == h_pur[i] + h_el[i] - h_sol[i] - h_demand[i] - h_fc[i]
+                      + quicksum([ced_energy_out[device_index][3][i] for device_index in range(num_custom_exchange_device)])
                       # + quicksum([csd_energy_out[device_index][3][i] for device_index in range(num_custom_storage_device)])
-                      # - quicksum([ced_energy_in[device_index][3][i] for device_index in range(num_custom_exchange_device)])
-                      # - quicksum([csd_energy_in[device_index][5][i] for device_index in range(num_custom_storage_device)]))
+                      - quicksum([ced_energy_in[device_index][3][i] for device_index in range(num_custom_exchange_device)]))
+                      # - quicksum([csd_energy_in[device_index][3][i] for device_index in range(num_custom_storage_device)]))
         # 初始状态和末状态平衡
-        m.addCons(h_sto[0] - h_sto[-1] == h_pur[-1] + h_el[-1] - h_fc[-1] - h_demand[-1] - h_sol[-1])
-                  # + quicksum([ced_energy_out[device_index][3][-1] for device_index in range(num_custom_exchange_device)])
+        m.addCons(h_sto[0] - h_sto[-1] == h_pur[-1] + h_el[-1] - h_fc[-1] - h_demand[-1] - h_sol[-1]
+                  + quicksum([ced_energy_out[device_index][3][-1] for device_index in range(num_custom_exchange_device)])
                   # + quicksum([csd_energy_out[device_index][3][-1] for device_index in range(num_custom_storage_device)])
-                  # - quicksum([ced_energy_in[device_index][3][-1] for device_index in range(num_custom_exchange_device)])
-                  # - quicksum([csd_energy_in[device_index][5][-1] for device_index in range(num_custom_storage_device)]))
+                  - quicksum([ced_energy_in[device_index][3][-1] for device_index in range(num_custom_exchange_device)]))
+                  # - quicksum([csd_energy_in[device_index][3][-1] for device_index in range(num_custom_storage_device)]))
         #-----------------------------整体性约束-----------------------------#
         if param_input["device"]["ghp"]["balance_flag"] == 1:  # 如果需要考虑全年热平衡
             m.addCons(quicksum([g_ghp[i] - p_ghp[i] - q_ghp[i] - p_ghpc[i] - g_ghp_gr[i] for i in range(period)]) == 0)
@@ -745,22 +746,22 @@ class ISService:
             m.addCons(p_whp[i] + p_whpc[i] <= (p_whp_max + param_input["device"]["whp"]["power_already"]))
         #-----------------------------用户自定义的设备约束-----------------------------#
         #---自定义能量交换设备---#
-        # for t in range(period):
-        #     for i in range(num_custom_exchange_device):
-        #         for j in range(energy_type_num):
-        #             if param_input["custom_device_exchange"][i]["energy_in_type"][j] == 1:
-        #                 m.addCons(ced_energy_in[i][j][t] * cop_in2standerd_ced[i][j] == standard_ced[i][t])
-        #             elif param_input["custom_device_exchange"][i]["energy_in_type"][j] == 0:
-        #                 m.addCons(ced_energy_in[i][j][t] == 0)
-        #             else:
-        #                 raise ValueError("Invalid energy type index!")
-        #             if param_input["custom_device_exchange"][i]["energy_out_type"][j] == 1:
-        #                 m.addCons(ced_energy_out[i][j][t] * cop_standerd2out_ced[i][j] == standard_ced[i][t])
-        #             elif param_input["custom_device_exchange"][i]["energy_out_type"][j] == 0:
-        #                 m.addCons(ced_energy_out[i][j][t] == 0)
-        #             else:
-        #                 raise ValueError("Invalid energy type index!")
-        #         m.addCons(standard_ced[i][t] <= ced_install[i] + ced_data[i]["device_already"])
+        for t in range(period):
+            for i in range(num_custom_exchange_device):
+                for j in range(energy_type_num):
+                    if param_input["custom_device_exchange"][i]["energy_in_type"][j] == 1:
+                        m.addCons(ced_energy_in[i][j][t] == standard_ced[i][t] * cop_in2standerd_ced[i][j])
+                    elif param_input["custom_device_exchange"][i]["energy_in_type"][j] == 0:
+                        m.addCons(ced_energy_in[i][j][t] == 0)
+                    else:
+                        raise ValueError("Invalid energy type index!")
+                    if param_input["custom_device_exchange"][i]["energy_out_type"][j] == 1:
+                        m.addCons(ced_energy_out[i][j][t]  == standard_ced[i][t] * cop_standerd2out_ced[i][j])
+                    elif param_input["custom_device_exchange"][i]["energy_out_type"][j] == 0:
+                        m.addCons(ced_energy_out[i][j][t] == 0)
+                    else:
+                        raise ValueError("Invalid energy type index!")
+                m.addCons(standard_ced[i][t] <= ced_install[i] + ced_data[i]["device_already"])
         # # # ---自定义储能设备的约束--- #
         # for i in range(num_custom_storage_device):
         #     for j in range(energy_type_num):
@@ -930,8 +931,8 @@ class ISService:
                                 + p_eb_max * cost_eb + g_abc_max * cost_abc + p_ac_max * cost_ac
                                 + p_hp_max * cost_hp + p_ghp_max * cost_ghp + p_ghp_deep_max * cost_ghp_deep
                                 + num_gtw * cost_gtw + num_gtw2500 * cost_gtw2500
-                                + p_hp120_max * cost_hp120 + p_co180_max * cost_co180 + p_whp_max * cost_whp))
-                                # + quicksum([ced_install[i] * cost_ced[i] for i in range(num_custom_exchange_device)])
+                                + p_hp120_max * cost_hp120 + p_co180_max * cost_co180 + p_whp_max * cost_whp)
+                                + quicksum([ced_install[i] * cost_ced[i] for i in range(num_custom_exchange_device)]))
                                 # + quicksum([csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)]))
         m.addCons(capex_crf == (crf_co * p_co_max * cost_co + crf_fc * p_fc_max * cost_fc + crf_el * p_el_max * cost_el
                                 + crf_hst * hst * cost_hst + crf_ht * m_ht * cost_ht + crf_ct * m_ct * cost_ct
@@ -941,8 +942,8 @@ class ISService:
                                 + crf_hp * p_hp_max * cost_hp + crf_ghp * p_ghp_max * cost_ghp + crf_ghp_deep * p_ghp_deep_max * cost_ghp_deep
                                 + crf_gtw * num_gtw * cost_gtw + crf_gtw2500 * num_gtw2500 * cost_gtw2500
                                 + crf_hp120 * p_hp120_max * cost_hp120 + crf_co180 * p_co180_max * cost_co180
-                                + crf_whp * p_whp_max * cost_whp))
-                                # + quicksum([crf_ced[i] * ced_install[i] * cost_ced[i] for i in range(num_custom_exchange_device)])
+                                + crf_whp * p_whp_max * cost_whp)
+                                + quicksum([crf_ced[i] * ced_install[i] * cost_ced[i] for i in range(num_custom_exchange_device)]))
                                 # + quicksum([crf_csd[i] * csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)]))
 
         #-----------------------------目标函数-----------------------------#
@@ -1231,31 +1232,31 @@ class ISService:
         #         "storage_in": [m.getVal(csd_energy_in[i][energy_type_index][t]) for t in range(period)],
         #         "storage_out": [m.getVal(csd_energy_out[i][energy_type_index][t]) for t in range(period)],
         #     })
-        # for i in range(num_custom_exchange_device):
-        #     device = ced_data[i]
-        #     energy_in_type_indices = [index for index, value in enumerate(device["energy_in_type"]) if value == 1]
-        #     energy_out_type_indices = [index for index, value in enumerate(device["energy_out_type"]) if value == 1]
-        #     energy_in_type_indices.sort()
-        #     energy_out_type_indices.sort()
-        #     custom_exchange_installed.append({
-        #         "device_name": device["device_name"],
-        #         "energy_in_type": device["energy_in_type"],
-        #         "energy_out_type": device["energy_out_type"],
-        #         "installed_capacity": m.getVal(ced_install[i])
-        #     })
-        #     custom_exchange_capex.append({
-        #         "device_name": device["device_name"],
-        #         "energy_in_type": device["energy_in_type"],
-        #         "energy_out_type": device["energy_out_type"],
-        #         "capex": m.getVal(ced_install[i]) * cost_ced[i]
-        #     })
-        #     custom_exchange.append({
-        #         "device_name": device["device_name"],
-        #         "energy_in_type": device["energy_in_type"],
-        #         "energy_out_type": device["energy_out_type"],
-        #         "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))],
-        #         "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))]
-        #     })
+        for i in range(num_custom_exchange_device):
+            device = ced_data[i]
+            energy_in_type_indices = [index for index, value in enumerate(device["energy_in_type"]) if value == 1]
+            energy_out_type_indices = [index for index, value in enumerate(device["energy_out_type"]) if value == 1]
+            energy_in_type_indices.sort()
+            energy_out_type_indices.sort()
+            custom_exchange_installed.append({
+                "device_name": device["device_name"],
+                "energy_in_type": device["energy_in_type"],
+                "energy_out_type": device["energy_out_type"],
+                "installed_capacity": m.getVal(ced_install[i])
+            })
+            custom_exchange_capex.append({
+                "device_name": device["device_name"],
+                "energy_in_type": device["energy_in_type"],
+                "energy_out_type": device["energy_out_type"],
+                "capex": m.getVal(ced_install[i]) * cost_ced[i]
+            })
+            custom_exchange.append({
+                "device_name": device["device_name"],
+                "energy_in_type": device["energy_in_type"],
+                "energy_out_type": device["energy_out_type"],
+                "energy_in": [[m.getVal(ced_energy_in[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))],
+                "energy_out": [[m.getVal(ced_energy_out[i][j][t]) for t in range(period)] for j in range(len(energy_type_list))]
+            })
 
         # TODO: (HSL, ZYL) 检查输出是否满足报告需求，包括字段的完整性和单位的一致性
         # TODO: (DZY) 检查输出信息的单位，是否与测算方案中变量单位换算关系一致
