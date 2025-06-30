@@ -81,26 +81,23 @@ def generate_annual_heat_load(start_date, end_date, typical_daily_load):
     return annual_load
 
 
-# 示例使用
-if __name__ == "__main__":
-    # 示例输入数据
-    start_date = "10-01"  # 10月1日开始
-    end_date = "03-01"  # 次年3月1日结束
-    typical_daily_load = [0.8, 0.7, 0.6, 0.5, 0.4, 0.5,
-                          0.8, 1.0, 1.2, 1.3, 1.4, 1.5,
-                          1.6, 1.5, 1.4, 1.3, 1.2, 1.3,
-                          1.4, 1.5, 1.2, 1.0, 0.9, 0.8]  # 24小时数据
+# 示例输入数据
+start_date = "10-01"  # 10月1日开始
+end_date = "03-01"  # 次年3月1日结束
+typical_daily_load = [0.8, 0.7, 0.6, 0.5, 0.4, 0.5,
+                      0.8, 1.0, 1.2, 1.3, 1.4, 1.5,
+                      1.6, 1.5, 1.4, 1.3, 1.2, 1.3,
+                      1.4, 1.5, 1.2, 1.0, 0.9, 0.8]  # 24小时数据
 
-    # 生成全年负荷
-    annual_load = generate_annual_heat_load(start_date, end_date, typical_daily_load)
+# 生成全年负荷
+annual_load = generate_annual_heat_load(start_date, end_date, typical_daily_load)
 
-    # 验证结果
-    print(f"Generated annual load length: {len(annual_load)}")
-    print("First 24 hours:", annual_load[:24])
-    print("September 30th (index 6528-6551):", annual_load[6528:6552])
-    print("October 1st (index 6552-6575):", annual_load[6552:6576])
-    print("October 2nd (index 6576-6599):", annual_load[6576:6600])
-    print("February 28th (index 1392-1415):", annual_load[1392:1416])
-    print("March 1st (index 1416-1439):", annual_load[1416:1440])
-    print("March 2nd (index 1440-1463):", annual_load[1440:1464])
-
+# 验证结果
+print(f"Generated annual load length: {len(annual_load)}")
+print("First 24 hours:", annual_load[:24])
+print("September 30th (index 6528-6551):", annual_load[6528:6552])
+print("October 1st (index 6552-6575):", annual_load[6552:6576])
+print("October 2nd (index 6576-6599):", annual_load[6576:6600])
+print("February 28th (index 1392-1415):", annual_load[1392:1416])
+print("March 1st (index 1416-1439):", annual_load[1416:1440])
+print("March 2nd (index 1440-1463):", annual_load[1440:1464])
