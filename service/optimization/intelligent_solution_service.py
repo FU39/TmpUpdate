@@ -967,7 +967,7 @@ class ISService:
             if param_input["income"]["heat_type"] == "供暖面积":
                 revenue_heat = param_input["income"]["heat_price"] * param_input["objective_load"]["g_load_area"]
             elif param_input["income"]["heat_type"] == "热量":
-                revenue_heat = param_input["income"]["heat_price"] * sum(g_demand)
+                revenue_heat = param_input["income"]["heat_price"] * sum(np.multiply(g_demand, (3600 / 1e6)).tolist())
             else:
                 raise ValueError("非法 heat_type 值！")
         # TODO: (ZYL) 确认该电价是不是使用 lambda_ele_revenue
@@ -983,7 +983,7 @@ class ISService:
             if param_input["income"]["cool_type"] == "供冷面积":
                 revenue_cool = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "冷量":
-                revenue_cool = param_input["income"]["cool_price"] * sum(q_demand)
+                revenue_cool = param_input["income"]["cool_price"] * sum(np.multiply(q_demand, (3600 / 1e6)).tolist())
             else:
                 raise ValueError("非法 cool_type 值！")
         elif param_input["base"]["base_method_cooling"] == "水冷机组":
@@ -1032,7 +1032,7 @@ class ISService:
             if param_input["income"]["cool_type"] == "供冷面积":
                 opex_cool_eb = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "冷量":
-                opex_cool_eb = param_input["income"]["cool_price"] * sum(q_demand)
+                opex_cool_eb = param_input["income"]["cool_price"] * sum(np.multiply(q_demand, (3600 / 1e6)).tolist())
             else:
                 raise ValueError("非法 cool_type 值！")
         elif param_input["base"]["base_method_cooling"] == "水冷机组":
@@ -1123,7 +1123,7 @@ class ISService:
             if param_input["income"]["cool_type"] == "供冷面积":
                 opex_cool_gas = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "冷量":
-                opex_cool_gas = param_input["income"]["cool_price"] * sum(q_demand)
+                opex_cool_gas = param_input["income"]["cool_price"] * sum(np.multiply(q_demand, (3600 / 1e6)).tolist())
             else:
                 raise ValueError("非法 cool_type 值！")
         elif param_input["base"]["base_method_cooling"] == "水冷机组":
