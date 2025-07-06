@@ -350,7 +350,8 @@ class ISService:
         # -----------------------自定义设备的效率数据----------------------#
         # ------0：电   1：热   2：冷   3：氢   4：120蒸汽  5：180蒸汽  6：家用热水（仅自定义设备）------#
         # TODO: (前端, DZY, ZYL) 明确当前自定义设备输入字段合法值，确保 energy_type_list 与前端选项值一值
-        energy_type_list = ["电", "热", "冷", "氢", "120蒸汽", "180蒸汽", "生活热水"]
+        # energy_type_list = ["电", "热", "冷", "氢", "120蒸汽", "180蒸汽", "生活热水"]
+        energy_type_list = ["0", "1", "2", "3", "4", "5", "6"]
         energy_type_num = len(energy_type_list)
 
         cop_in2standard_ced = [[0] * energy_type_num] * num_custom_exchange_device
