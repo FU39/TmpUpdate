@@ -138,6 +138,7 @@
     },
     "device": {
         "co": {
+            "used": 1,
             "power_already": 1000,
             "power_max": 10000,
             "power_min": 0,
@@ -146,6 +147,7 @@
             "beta_co": 1.399
         },
         "fc": {
+            "used": 1,
             "power_already": 1,
             "power_max": 10000000,
             "power_min": 300,
@@ -156,6 +158,7 @@
             "theta_ex": 0.95
         },
         "el": {
+            "used": 1,
             "nm3_already": 0,
             "nm3_max": 100000,
             "nm3_min": 0,
@@ -166,6 +169,7 @@
             "theta_ex": 0.95
         },
         "hst": {
+            "used": 1,
             "sto_already": 0,
             "sto_max": 100000,
             "sto_min": 0,
@@ -173,6 +177,7 @@
             "crf": 15
         },
         "ht": {
+            "used": 0,
             "water_already": 1,
             "water_max": 2000000,
             "water_min": 0,
@@ -185,6 +190,7 @@
             "g_power_min_per_unit": 45
         },
         "ct": {
+            "used": 0,
             "water_already": 1,
             "water_max": 500000,
             "water_min": 0,
@@ -197,6 +203,7 @@
             "q_power_min_per_unit": 45
         },
         "bat": {
+            "used": 0,
             "power_already": 1,
             "power_max": 20000,
             "power_min": 0,
@@ -209,6 +216,7 @@
             "ele_power_min_per_unit": 45
         },
         "steam_storage": {
+            "used": 0,
             "water_already": 1,
             "water_max": 2000000,
             "water_min": 0,
@@ -221,6 +229,7 @@
             "steam_power_min_per_unit": 45
         },
         "pv": {
+            "used": 0,
             "power_already": 1,
             "power_max": 500,
             "power_min": 500,
@@ -231,6 +240,7 @@
             "s_pv_per_unit": 100
         },
         "sc": {
+            "used": 0,
             "area_already": 0,
             "area_max": 10000,
             "area_min": 0,
@@ -242,6 +252,7 @@
             "s_sc_per_unit": 100
         },
         "wd": {
+            "used": 0,
             "number_already": 0,
             "number_max": 20,
             "number_min": 0,
@@ -252,6 +263,7 @@
             "s_wd_per_unit": 100
         },
         "eb": {
+            "used": 1,
             "power_already": 1,
             "power_max": 200000,
             "power_min": 600,
@@ -260,6 +272,7 @@
             "beta_eb": 0.9
         },
         "abc": {
+            "used": 0,
             "power_already": 0,
             "power_max": 10000,
             "power_min": 0,
@@ -268,6 +281,7 @@
             "beta_abc": 1.2
         },
         "ac": {
+            "used": 1,
             "power_already": 0,
             "power_max": 10000,
             "power_min": 0,
@@ -276,6 +290,7 @@
             "beta_ac": 4
         },
         "hp": {
+            "used": 0,
             "power_already": 0,
             "power_max": 600,
             "power_min": 0,
@@ -285,6 +300,7 @@
             "beta_hpq": 6
         },
         "ghp": {
+            "used": 0,
             "power_already": 0,
             "balance_flag": 1,
             "power_max": 1000000,
@@ -295,6 +311,7 @@
             "beta_ghpq": 6
         },
         "ghp_deep": {
+            "used": 0,
             "power_already": 0,
             "power_max": 1000000,
             "power_min": 0,
@@ -303,6 +320,7 @@
             "beta_ghpg": 4.5
         },
         "gtw": {
+            "used": 0,
             "number_already": 0,
             "number_max": 100000,
             "number_min": 0,
@@ -311,6 +329,7 @@
             "beta_gtw": 7
         },
         "gtw2500": {
+            "used": 0,
             "number_already": 0,
             "number_max": 2,
             "number_min": 0,
@@ -319,6 +338,7 @@
             "beta_gtw": 410
         },
         "hp120": {
+            "used": 0,
             "power_already": 0,
             "power_max": 1000000,
             "power_min": 0,
@@ -329,6 +349,7 @@
             "temperature_out": 150
         },
         "co180": {
+            "used": 0,
             "power_already": 0,
             "power_max": 10000,
             "power_min": 0,
@@ -339,6 +360,7 @@
             "temperature_out": 150
         },
         "whp": {
+            "used": 0,
             "power_already": 1,
             "power_max": 20000,
             "power_min": 0,
@@ -350,6 +372,7 @@
     },
     "custom_device_storage": [
         {
+            "used": 0,
             "device_name": "str",
             "energy_type": "电",
             "device_already": 100,
@@ -364,6 +387,7 @@
             "energy_loss": 0.01
         },
         {
+            "used": 0,
             "device_name": "str",
             "energy_type": "冷",
             "device_already": 100,
@@ -380,6 +404,7 @@
     ],
     "custom_device_exchange": [
         {
+            "used": 0,
             "device_name": "str",
             "energy_in_type": [0, 1, 0, 0, 0, 0, 0],
             "energy_out_type": [0, 0, 1, 0, 0, 0, 0],
@@ -392,6 +417,7 @@
             "energy_out_standard_per_unit": [0, 0, 45, 0, 0, 0, 0]
         },
         {
+            "used": 0,
             "device_name": "str",
             "energy_in_type": [1, 1, 0, 0, 0, 0, 0],
             "energy_out_type": [0, 1, 1, 0, 0, 0, 0],
