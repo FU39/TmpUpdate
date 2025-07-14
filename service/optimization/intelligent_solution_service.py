@@ -98,7 +98,6 @@ def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
     n_days, n_hours, n_features = data.shape
     data = data.reshape(n_days, n_hours * n_features)
     n_samples, n_features = data.shape
-    data = minmax_normalize(data)
 
     # 1. 初始化 - 随机选择 medoids
     medoid_indices = np.random.choice(n_samples, n_clusters, replace=False)
@@ -175,13 +174,13 @@ def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
     }
 
 def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, num_date):
-    edata = np.array(edata)
-    gdata = np.array(gdata)
-    qdata = np.array(qdata)
-    hdata = np.array(hdata)
-    data120 = np.array(data120)
-    data180 = np.array(data180)
-    hwdata = np.array(hwdata)
+    edata = minmax_normalize(np.array(edata))
+    gdata = minmax_normalize(np.array(gdata))
+    qdata = minmax_normalize(np.array(qdata))
+    hdata = minmax_normalize(np.array(hdata))
+    data120 = minmax_normalize(np.array(data120))
+    data180 = minmax_normalize(np.array(data180))
+    hwdata = minmax_normalize(np.array(hwdata))
 
     day = [[[0 for _ in range(7)] for _ in range(24)] for _ in range(365)]
     for date in range(365):
