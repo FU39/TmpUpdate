@@ -109,7 +109,7 @@
         "gas_buy_price": 4.085,
         "carbon_buy_price": 0,
         "heat_resource": {
-            "flag": false,
+            "flag": true,
             "heat_resource_flow": [0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42],
             "temperature_upper_limit": 5,
             "temperature_decrease_limit": 5,
@@ -172,7 +172,7 @@
         "ht": {
             "used": true,
             "water_already": 0,
-            "water_max": 0,
+            "water_max": 10000,
             "water_min": 0,
             "cost": 0.5,
             "crf": 15,
@@ -185,7 +185,7 @@
         "ct": {
             "used": true,
             "water_already": 0,
-            "water_max": 0,
+            "water_max": 10000,
             "water_min": 0,
             "cost": 0.5,
             "crf": 15,
@@ -198,7 +198,7 @@
         "bat": {
             "used": true,
             "power_already": 0,
-            "power_max": 0,
+            "power_max": 10000,
             "power_min": 0,
             "cost": 2000,
             "crf": 5,
@@ -235,7 +235,7 @@
         "sc": {
             "used": true,
             "area_already": 0,
-            "area_max": 0,
+            "area_max": 10000,
             "area_min": 0,
             "cost": 800,
             "crf": 20,
@@ -258,7 +258,7 @@
         "eb": {
             "used": true,
             "power_already": 0,
-            "power_max": 0,
+            "power_max": 10000,
             "power_min": 0,
             "cost": 700,
             "crf": 10,
@@ -267,7 +267,7 @@
         "abc": {
             "used": true,
             "power_already": 0,
-            "power_max": 0,
+            "power_max": 10000,
             "power_min": 0,
             "cost": 1500,
             "crf": 10,
@@ -276,7 +276,7 @@
         "ac": {
             "used": true,
             "power_already": 0,
-            "power_max": 0,
+            "power_max": 100000,
             "power_min": 0,
             "cost": 3000,
             "crf": 10,
@@ -285,7 +285,7 @@
         "hp": {
             "used": true,
             "power_already": 0,
-            "power_max": 0,
+            "power_max":10000,
             "power_min": 0,
             "cost": 4000,
             "crf": 15,
@@ -295,7 +295,7 @@
         "ghp": {
             "used": true,
             "power_already": 0,
-            "balance_flag": 0,
+            "balance_flag": 1,
             "power_max": 10000,
             "power_min": 0,
             "cost": 2500,
@@ -367,8 +367,8 @@
         {
             "device_name": "储热罐2型",
             "energy_type": "1",
-            "device_already": 0,
-            "device_max": 500000,
+            "device_already": 500000,
+            "device_max": 0,
             "device_min": 0,
             "cost": 0.5,
             "crf": 15,
@@ -381,8 +381,8 @@
         {
             "device_name": "储冷罐2型",
             "energy_type": "2",
-            "device_already": 0,
-            "device_max": 500000,
+            "device_already": 500000,
+            "device_max": 0,
             "device_min": 0,
             "cost": 0.5,
             "crf": 15,
@@ -395,8 +395,8 @@
         {
             "device_name": "蓄电池2型",
             "energy_type": "0",
-            "device_already": 0,
-            "device_max": 20000,
+            "device_already": 10000,
+            "device_max": 0,
             "device_min": 0,
             "cost": 2000,
             "crf": 5,
