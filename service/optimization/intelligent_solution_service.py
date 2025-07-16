@@ -92,6 +92,25 @@ def minmax_normalize(data):
 
     return normalized_data
 
+def kmedoids_plusplus(data, n_clusters):
+    n_samples = data.shape[0]
+    # 随机选择第一个中心
+    medoid_indices = [np.random.randint(n_samples)]
+
+    for _ in range(1, n_clusters):
+        # 计算每个点到最近中心的距离
+        min_dists = np.full(n_samples, np.inf)
+        for idx in medoid_indices:
+            dists = np.sqrt(np.sum((data - data[idx]) ** 2, axis=1))
+            min_dists = np.minimum(min_dists, dists)
+
+        # 选择距离平方最大的点作为新中心
+        probabilities = min_dists ** 2 / np.sum(min_dists ** 2)
+        new_idx = np.random.choice(n_samples, p=probabilities)
+        medoid_indices.append(new_idx)
+
+    return np.array(medoid_indices)
+
 def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
 
     np.random.seed(random_state)
@@ -100,7 +119,9 @@ def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
     n_samples, n_features = data.shape
 
     # 1. 初始化 - 随机选择 medoids
-    medoid_indices = np.random.choice(n_samples, n_clusters, replace=False)
+    # medoid_indices = np.random.choice(n_samples, n_clusters, replace=False)
+    # medoids = data[medoid_indices]
+    medoid_indices = kmedoids_plusplus(data, n_clusters)
     medoids = data[medoid_indices]
 
     # 2. 迭代优化
