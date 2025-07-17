@@ -60,36 +60,22 @@
         "cool_sell_enable": false,
         "h2_buy_enable": true,
         "h2_sell_enable": false,
+        "steam_buy_enable": false,
+        "steam_sell_enable": false,
         "steam_buy": [
             {
-                "id": 0,
-                "name": "180度蒸汽",
                 "temperature": 180,
-                "price": 180,
-                "enable": true
-            },
-            {
-                "id": 0,
-                "name": "120度蒸汽",
-                "temperature": 120,
-                "price": 120,
-                "enable": true
+                "price": 180
             }
         ],
         "steam_sell": [
             {
-                "id": 0,
-                "name": "180度蒸汽",
                 "temperature": 180,
-                "price": 180,
-                "enable": false
+                "price": 180
             },
             {
-                "id": 0,
-                "name": "120度蒸汽",
                 "temperature": 120,
-                "price": 120,
-                "enable": false
+                "price": 120
             }
         ],
         "hotwater_buy_enable": false,

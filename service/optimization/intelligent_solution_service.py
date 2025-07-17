@@ -163,10 +163,30 @@ class ISService:
         lambda_q_out = param_input["trading"]["cool_sell_price"] * 3600 / 1e6  # 卖冷价格 (元/GJ -> 元/kWh)
         lambda_h_in = param_input["trading"]["hydrogen_buy_price"]  # 买氢价格 (元/kg)
         lambda_h_out = param_input["trading"]["hydrogen_sell_price"]  # 卖氢价格 (元/kg)
-        lambda_steam120_in = param_input["trading"]["steam_buy"][1]["price"]  # 120蒸汽购入价格 (元/t)
-        lambda_steam120_out = param_input["trading"]["steam_sell"][1]["price"]  # 120蒸汽出售价格 (元/t)
-        lambda_steam180_in = param_input["trading"]["steam_buy"][0]["price"]  # 180蒸汽购入价格 (元/t)
-        lambda_steam180_out = param_input["trading"]["steam_sell"][0]["price"]  # 180蒸汽出售价格 (元/t)
+        steam120_buy_enable = False
+        steam180_buy_enable = False
+        steam120_sell_enable = False
+        steam180_sell_enable = False
+        lambda_steam120_in = 0
+        lambda_steam120_out = 0
+        lambda_steam180_in = 0
+        lambda_steam180_out = 0
+        if param_input["trading"]["steam_buy_enable"] is True:
+            for steam in param_input["trading"]["steam_buy"]:
+                if steam["temperature"] == 120:
+                    steam120_buy_enable = True
+                    lambda_steam120_in = steam["price"]
+                elif steam["temperature"] == 180:
+                    steam180_buy_enable = True
+                    lambda_steam180_in = steam["price"]
+        if param_input["trading"]["steam_sell_enable"] is True:
+            for steam in param_input["trading"]["steam_sell"]:
+                if steam["temperature"] == 120:
+                    steam120_sell_enable = True
+                    lambda_steam120_out = steam["price"]
+                elif steam["temperature"] == 180:
+                    steam180_sell_enable = True
+                    lambda_steam180_out = steam["price"]
         lambda_hotwater_in = param_input["trading"]["hotwater_buy_price"]  # 生活热水购入价格 (元/kWh)
         lambda_hotwater_out = param_input["trading"]["hotwater_sell_price"]  # 生活热水出售价格 (元/kWh)
 
@@ -672,10 +692,10 @@ class ISService:
             m.addCons(q_sol[i] <= M * param_input["trading"]["cool_sell_enable"])  # 是否允许卖冷
             m.addCons(h_pur[i] <= M * param_input["trading"]["h2_buy_enable"])  # 是否允许购买氢气
             m.addCons(h_sol[i] <= M * param_input["trading"]["h2_sell_enable"])  # 是否允许出售氢气
-            m.addCons(steam120_pur[i] <= M * param_input["trading"]["steam_buy"][1]["enable"])  # 是否允许买120蒸汽
-            m.addCons(steam120_sol[i] <= M * param_input["trading"]["steam_sell"][1]["enable"])  # 是否允许卖120蒸汽
-            m.addCons(steam180_pur[i] <= M * param_input["trading"]["steam_buy"][0]["enable"])  # 是否允许买180蒸汽
-            m.addCons(steam180_sol[i] <= M * param_input["trading"]["steam_sell"][0]["enable"])  # 是否允许卖180蒸汽
+            m.addCons(steam120_pur[i] <= M * steam120_buy_enable)  # 是否允许买120蒸汽
+            m.addCons(steam120_sol[i] <= M * steam120_sell_enable)  # 是否允许卖120蒸汽
+            m.addCons(steam180_pur[i] <= M * steam180_buy_enable)  # 是否允许买180蒸汽
+            m.addCons(steam180_sol[i] <= M * steam180_sell_enable)  # 是否允许卖180蒸汽
             m.addCons(hotwater_pur[i] <= M * param_input["trading"]["hotwater_buy_enable"])  # 是否允许买热水
             m.addCons(hotwater_sol[i] <= M * param_input["trading"]["hotwater_sell_enable"])  # 是否允许卖热水
         #-----------------------------基础设备库的设备约束-----------------------------#

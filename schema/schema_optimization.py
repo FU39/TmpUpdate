@@ -1,91 +1,91 @@
 from pydantic import BaseModel
-from typing import List, Optional, Union
+from typing import List, Optional
 
 
 class Cycle(BaseModel):
     """
     供暖/供热周期 格式为MM-dd
     """
-    start: str  # 周期开始时间
-    end: str  # 周期结束时间
+    start: Optional[str] = None  # 周期开始时间，设为可选
+    end: Optional[str] = None  # 周期结束时间，设为可选
 
 
 class Base(BaseModel):
-    area_outside: float
-    power_pv_house_top: float
-    base_method_heating: str
-    base_method_cooling: str
-    base_method_steam: str
-    base_method_hotwater: str
-    cer_enable: bool
-    cer: float
-    other_investment: float
+    area_outside: Optional[float] = None
+    power_pv_house_top: Optional[float] = None
+    base_method_heating: Optional[str] = None
+    base_method_cooling: Optional[str] = None
+    base_method_steam: Optional[str] = None
+    base_method_hotwater: Optional[str] = None
+    cer_enable: Optional[bool] = None
+    cer: Optional[float] = None
+    other_investment: Optional[float] = None
 
 
 class SteamBuySellItem(BaseModel):
-    id: int
-    name: str
-    temperature: float
-    price: float
-    enable: bool
+    temperature: Optional[int] = None
+    price: Optional[float] = None
 
 
 class HeatResource(BaseModel):
     """
     供暖资源配置
     """
-    flag: bool
-    heat_resource_flow: List[float]
-    temperature_upper_limit: float
-    temperature_decrease_limit: float
-    cycle: Cycle
+    flag: Optional[bool] = None
+    heat_resource_flow: Optional[List[float]] = None
+    temperature_upper_limit: Optional[float] = None
+    temperature_decrease_limit: Optional[float] = None
+    cycle: Optional[Cycle] = None
 
 
 class Trading(BaseModel):
-    power_buy_enable: bool
-    power_sell_enable: bool
-    power_buy_price_type: str
-    heat_buy_enable: bool  # 买热许可
-    heat_sell_enable: bool  # 卖热许可
-    cool_buy_enable: bool  # 买冷许可
-    cool_sell_enable: bool  # 卖冷许可
-    h2_buy_enable: bool  # 买氢许可
-    h2_sell_enable: bool  # 卖氢许可
-    steam_buy: List[SteamBuySellItem]
-    steam_sell: List[SteamBuySellItem]
-    hotwater_buy_enable: bool  # 买热水许可
-    hotwater_sell_enable: bool  # 卖热水许可
-    power_buy_24_price: List[float]
-    power_buy_8760_price: List[float]
-    power_buy_capacity_price: float  # 容量电价
-    power_sell_24_price: List[float]
+    power_buy_enable: Optional[bool] = None
+    power_sell_enable: Optional[bool] = None
+    power_buy_price_type: Optional[str] = None
+    heat_buy_enable: Optional[bool] = None  # 买热许可
+    heat_sell_enable: Optional[bool] = None  # 卖热许可
+    cool_buy_enable: Optional[bool] = None  # 买冷许可
+    cool_sell_enable: Optional[bool] = None  # 卖冷许可
+    h2_buy_enable: Optional[bool] = None  # 买氢许可
+    h2_sell_enable: Optional[bool] = None  # 卖氢许可
+    steam_buy_enable: Optional[bool] = None  # 买蒸汽许可
+    steam_sell_enable: Optional[bool] = None  # 卖蒸汽许可
+    steam_buy: Optional[List[SteamBuySellItem]] = None
+    steam_sell: Optional[List[SteamBuySellItem]] = None
+    hotwater_buy_enable: Optional[bool] = None  # 买热水许可
+    hotwater_sell_enable: Optional[bool] = None  # 卖热水许可
+    power_buy_24_price: Optional[List[float]] = None
+    power_buy_8760_price: Optional[List[float]] = None
+    power_buy_capacity_price: Optional[float] = None  # 容量电价
+    power_sell_24_price: Optional[List[float]] = None
     # 取消 power_sell_price，若只为单值价格，请拓为 24h，即 power_sell_24_price
-    heat_buy_price: float
-    heat_sell_price: float
-    cool_buy_price: float
-    cool_sell_price: float  # 卖冷单价
-    hydrogen_buy_price: float
-    hydrogen_sell_price: float
-    hotwater_buy_price: float  # 买热水单价
-    hotwater_sell_price: float  # 卖热水单价
-    gas_buy_price: float  # 买天然气单价
-    carbon_buy_price: float
-    heat_resource: HeatResource  # 修改: 将 heat_resource 的类型从 dict 修改为 HeatResource
+    heat_buy_price: Optional[float] = None
+    heat_sell_price: Optional[float] = None
+    cool_buy_price: Optional[float] = None
+    cool_sell_price: Optional[float] = None  # 卖冷单价
+    hydrogen_buy_price: Optional[float] = None
+    hydrogen_sell_price: Optional[float] = None
+    hotwater_buy_price: Optional[float] = None  # 买热水单价
+    hotwater_sell_price: Optional[float] = None  # 卖热水单价
+    gas_buy_price: Optional[float] = None  # 买天然气单价
+    carbon_buy_price: Optional[float] = None
+    heat_resource: Optional[HeatResource] = None  # 修改: 将 heat_resource 的类型从 dict 修改为 HeatResource
 
 
 class Income(BaseModel):
-    power_type: str
-    power_price: float
-    heat_type: str
-    heat_price: float
-    cool_type: str
-    cool_price: float
-    hot_water_price: float
-    steam_price: float
+    power_type: Optional[str] = None
+    power_price: Optional[float] = None
+    heat_type: Optional[str] = None
+    heat_price: Optional[float] = None
+    cool_type: Optional[str] = None
+    cool_price: Optional[float] = None
+    hot_water_price: Optional[float] = None
+    steam_price: Optional[float] = None
 
 
 # 新增设备相关的 BaseModel 定义
 class CO(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 1000
     power_max: float = 10000
     power_min: float = 0
@@ -95,6 +95,7 @@ class CO(BaseModel):
 
 
 class FC(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 1
     power_max: float = 10000000
     power_min: float = 300
@@ -106,6 +107,7 @@ class FC(BaseModel):
 
 
 class EL(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     nm3_already: float = 0
     nm3_max: float = 100000
     nm3_min: float = 0
@@ -117,6 +119,7 @@ class EL(BaseModel):
 
 
 class HST(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     sto_already: float = 0
     sto_max: float = 100000
     sto_min: float = 0
@@ -125,6 +128,7 @@ class HST(BaseModel):
 
 
 class HT(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     water_already: float = 1
     water_max: float = 2000000
     water_min: float = 0
@@ -138,6 +142,7 @@ class HT(BaseModel):
 
 
 class CT(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     water_already: float = 1
     water_max: float = 500000
     water_min: float = 0
@@ -151,6 +156,7 @@ class CT(BaseModel):
 
 
 class BAT(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 1
     power_max: float = 20000
     power_min: float = 0
@@ -164,6 +170,7 @@ class BAT(BaseModel):
 
 
 class SteamStorage(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     water_already: float = 1
     water_max: float = 2000000
     water_min: float = 0
@@ -177,6 +184,7 @@ class SteamStorage(BaseModel):
 
 
 class PV(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 1
     power_max: float = 500
     power_min: float = 500
@@ -188,6 +196,7 @@ class PV(BaseModel):
 
 
 class SC(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     area_already: float = 0
     area_max: float = 10000
     area_min: float = 0
@@ -200,6 +209,7 @@ class SC(BaseModel):
 
 
 class WD(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     number_already: float = 0
     number_max: float = 20
     number_min: float = 0
@@ -211,6 +221,7 @@ class WD(BaseModel):
 
 
 class EB(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 1
     power_max: float = 200000
     power_min: float = 600
@@ -220,6 +231,7 @@ class EB(BaseModel):
 
 
 class ABC(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 0
     power_max: float = 10000
     power_min: float = 0
@@ -229,6 +241,7 @@ class ABC(BaseModel):
 
 
 class AC(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 0
     power_max: float = 10000
     power_min: float = 0
@@ -238,6 +251,7 @@ class AC(BaseModel):
 
 
 class HP(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 0
     power_max: float = 600
     power_min: float = 0
@@ -248,6 +262,7 @@ class HP(BaseModel):
 
 
 class GHP(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 0
     balance_flag: int = 1
     power_max: float = 1000000
@@ -259,6 +274,7 @@ class GHP(BaseModel):
 
 
 class GHPDeep(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 0
     power_max: float = 1000000
     power_min: float = 0
@@ -268,6 +284,7 @@ class GHPDeep(BaseModel):
 
 
 class GTW(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     number_already: float = 0
     number_max: float = 100000
     number_min: float = 0
@@ -277,6 +294,7 @@ class GTW(BaseModel):
 
 
 class GTW2500(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     number_already: float = 0
     number_max: float = 2
     number_min: float = 0
@@ -294,9 +312,11 @@ class HP120(BaseModel):
     cop: float = 2.26
     temperature_in: float = 120
     temperature_out: float = 150
+    used: bool = True  # 添加 used 字段，默认值为 True
 
 
 class CO180(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 0
     power_max: float = 10000
     power_min: float = 0
@@ -308,6 +328,7 @@ class CO180(BaseModel):
 
 
 class WHP(BaseModel):
+    used: bool = True  # 添加 used 字段，默认值为 True
     power_already: float = 1
     power_max: float = 20000
     power_min: float = 0
