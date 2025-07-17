@@ -1063,7 +1063,7 @@ class ISService:
             revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] / eta_hotwater_base_dict["电锅炉"] for i in range(period))
         elif param_input["base"]["base_method_hotwater"] == "hp":
             revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] / eta_hotwater_base_dict["空气源热泵"] for i in range(period))
-        elif param_input["base"]["base_method_hotwater"] == "eb":
+        elif param_input["base"]["base_method_hotwater"] == "gb":
             revenue_hotwater = sum(gas_price * hotwater_demand[i] / eta_hotwater_base_dict["燃气锅炉"] for i in range(period))
         else:
             raise ValueError("非法 base_method_hotwater 值！")
