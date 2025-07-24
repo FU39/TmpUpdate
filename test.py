@@ -67,7 +67,7 @@ opt_output_file = "./io_template/opt_output_demo.json"
 with open(opt_input_file, 'r', encoding='utf-8') as f:
     param_input = json.load(f)
 
-input_body = OptimizationBody.model_validate(param_input)
+# input_body = OptimizationBody.model_validate(param_input)
 
 service = ISService()
 result = service.planning_opt(param_input=param_input)

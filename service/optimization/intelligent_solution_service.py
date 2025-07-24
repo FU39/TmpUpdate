@@ -186,13 +186,16 @@ def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
             cluster_avg_distances.append(np.mean(cluster_dists))
         else:
             cluster_avg_distances.append(0)
-    return {
+
+    result = {
         "medoid_indices": medoid_indices,
         "medoids": medoids,
         "labels": labels,
         "cluster_avg_distances": cluster_avg_distances,
         "iterations": iteration + 1
     }
+
+    return result
 
 def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, num_date):
     edata = minmax_normalize(np.array(edata))
@@ -221,6 +224,8 @@ def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, nu
         random_state=42,
         verbose=True
     )
+    cluster_counts = np.bincount(kmedoids_result['labels'], minlength=num_date)
+    kmedoids_result["cluster_sizes"] = cluster_counts
 
     return kmedoids_result
 
@@ -238,7 +243,7 @@ class ISService:
         c = 4.2 / 3600  # 水的比热容 (kWh/(kg·℃))
 
         typical_date_mode = 1       # 1:典型日 0：8760
-        num_typical_date = 48
+        num_typical_date = 72
 
         timestamp = time.strftime('%Y-%m-%d|%H:%M:%S', time.localtime())
         print("{}: 开始进行规划建模".format(timestamp))
