@@ -197,7 +197,7 @@ def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
 
     return result
 
-def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, num_date):
+def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, pvdata, scdata, wddata, num_date):
     edata = minmax_normalize(np.array(edata))
     gdata = minmax_normalize(np.array(gdata))
     qdata = minmax_normalize(np.array(qdata))
@@ -205,8 +205,11 @@ def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, nu
     data120 = minmax_normalize(np.array(data120))
     data180 = minmax_normalize(np.array(data180))
     hwdata = minmax_normalize(np.array(hwdata))
+    pvdata = minmax_normalize(np.array(pvdata))
+    scdata = minmax_normalize(np.array(scdata))
+    wddata = minmax_normalize(np.array(wddata))
 
-    day = [[[0 for _ in range(7)] for _ in range(24)] for _ in range(365)]
+    day = [[[0 for _ in range(10)] for _ in range(24)] for _ in range(365)]
     for date in range(365):
         for hour in range(24):
             day[date][hour][0] = edata[24 * date + hour]
@@ -216,6 +219,9 @@ def typical_date_select(edata, gdata, qdata, hdata, data120, data180, hwdata, nu
             day[date][hour][4] = data120[24 * date + hour]
             day[date][hour][5] = data180[24 * date + hour]
             day[date][hour][6] = hwdata[24 * date + hour]
+            day[date][hour][7] = pvdata[24 * date + hour]
+            day[date][hour][8] = scdata[24 * date + hour]
+            day[date][hour][9] = wddata[24 * date + hour]
     day = np.array(day)
     kmedoids_result = kmedoids(
         day,
@@ -282,9 +288,18 @@ class ISService:
         # g_demand = np.multiply(g_demand, (1e6 / 3600)).tolist()  # GJ/h -> kW
         # q_demand = np.multiply(q_demand, (1e6 / 3600)).tolist()  # GJ/h -> kW
 
+        # RE: 光伏出力单位 kW/1kW
+        pv_data_8760 = param_input["device"]["pv"]["pv_data8760"]
+        sc_data_8760 = param_input["device"]["sc"]["solar_data8760"]
+        wd_data_8760 = param_input["device"]["wd"]["wd_data8760"]
+
         # --典型日数据生成---#
-        typ_date = np.sort(typical_date_select(ele_load_8760, g_demand_8760, q_demand_8760, h_demand_8760,
-                                 steam120_demand_8760, steam180_demand_8760, hotwater_demand_8760, num_typical_date)["medoid_indices"])
+        km_result = typical_date_select(ele_load_8760, g_demand_8760, q_demand_8760, h_demand_8760,
+                                 steam120_demand_8760, steam180_demand_8760, hotwater_demand_8760, pv_data_8760,
+                                               sc_data_8760, wd_data_8760, num_typical_date)
+        sort_indices = np.argsort(km_result["medoid_indices"])
+        typ_date = km_result["medoid_indices"][sort_indices]
+        num_typ_rep = km_result["cluster_sizes"][sort_indices]
         ele_load_typ = []
         g_demand_typ = []
         q_demand_typ = []
@@ -292,6 +307,9 @@ class ISService:
         steam120_demand_typ = []
         steam180_demand_typ = []
         hotwater_demand_typ = []
+        pv_data_typ = []
+        sc_data_typ = []
+        wd_data_typ = []
         for date in typ_date:
             ele_load_typ.extend(ele_load_8760[24 * date : 24 * (date+1)])
             g_demand_typ.extend(g_demand_8760[24 * date : 24 * (date+1)])
@@ -300,6 +318,9 @@ class ISService:
             steam120_demand_typ.extend(steam120_demand_8760[24 * date : 24 * (date+1)])
             steam180_demand_typ.extend(steam180_demand_8760[24 * date : 24 * (date+1)])
             hotwater_demand_typ.extend(hotwater_demand_8760[24 * date : 24 * (date+1)])
+            pv_data_typ.extend(pv_data_8760[24 * date : 24 * (date+1)])
+            sc_data_typ.extend(sc_data_8760[24 * date : 24 * (date+1)])
+            wd_data_typ.extend(wd_data_8760[24 * date : 24 * (date+1)])
         # 根据典型日模式选择负荷数据
         if typical_date_mode == 1:
             ele_load = ele_load_typ
@@ -309,6 +330,9 @@ class ISService:
             steam120_demand = steam120_demand_typ
             steam180_demand = steam180_demand_typ
             hotwater_demand = hotwater_demand_typ
+            pv_data = pv_data_typ
+            sc_data = sc_data_typ
+            wd_data = wd_data_typ
         else:
             ele_load = ele_load_8760
             g_demand = g_demand_8760
@@ -317,10 +341,10 @@ class ISService:
             steam120_demand = steam120_demand_8760
             steam180_demand = steam180_demand_8760
             hotwater_demand = hotwater_demand_8760
-        # RE: 光伏出力单位 kW/1kW
-        pv_data = param_input["device"]["pv"]["pv_data8760"]
-        sc_data = param_input["device"]["sc"]["solar_data8760"]
-        wd_data = param_input["device"]["wd"]["wd_data8760"]
+            pv_data = pv_data_8760
+            sc_data = sc_data_8760
+            wd_data = wd_data_8760
+
 
         if param_input["trading"]["heat_resource"]["flag"] == 0:
             heat_resource = [0] * 8760  # 热源数据
