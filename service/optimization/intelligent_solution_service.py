@@ -333,6 +333,7 @@ class ISService:
             pv_data = pv_data_typ
             sc_data = sc_data_typ
             wd_data = wd_data_typ
+            weight = num_typ_rep
         else:
             ele_load = ele_load_8760
             g_demand = g_demand_8760
@@ -344,6 +345,7 @@ class ISService:
             pv_data = pv_data_8760
             sc_data = sc_data_8760
             wd_data = wd_data_8760
+            weight = [1] * 365
 
 
         if param_input["trading"]["heat_resource"]["flag"] == 0:
@@ -1060,23 +1062,24 @@ class ISService:
         m.addCons(k_s_pv * p_pv_max + k_s_sc * s_sc + k_s_wd * num_wd <= s_outside + s_roof)
         m.addCons(k_s_wd * num_wd <= s_outside)
         #-----------------------------运行费用约束-----------------------------#
-        m.addCons(opex_sum_pure == (quicksum([lambda_ele_in[i] * p_pur[i] for i in range(period)]) + lambda_ele_capacity * p_pur_max * 12
-                                    + lambda_g_in * quicksum([g_pur[i] for i in range(period)])
-                                    + lambda_q_in * quicksum([q_pur[i] for i in range(period)])
-                                    + lambda_h_in * quicksum([h_pur[i] for i in range(period)])
-                                    + lambda_steam120_in * quicksum([steam120_pur[i] for i in range(period)])
-                                    + lambda_steam180_in * quicksum([steam180_pur[i] for i in range(period)])
-                                    + lambda_hotwater_in * quicksum([hotwater_pur[i] for i in range(period)])))
+        m.addCons(opex_sum_pure == (quicksum([lambda_ele_in[i] * p_pur[i] * weight[i//24] for i in range(period)])
+                                    + lambda_ele_capacity * p_pur_max * 12
+                                    + lambda_g_in * quicksum([g_pur[i] * weight[i//24] for i in range(period)])
+                                    + lambda_q_in * quicksum([q_pur[i] * weight[i//24] for i in range(period)])
+                                    + lambda_h_in * quicksum([h_pur[i] * weight[i//24] for i in range(period)])
+                                    + lambda_steam120_in * quicksum([steam120_pur[i] * weight[i//24] for i in range(period)])
+                                    + lambda_steam180_in * quicksum([steam180_pur[i] * weight[i//24] for i in range(period)])
+                                    + lambda_hotwater_in * quicksum([hotwater_pur[i] * weight[i//24] for i in range(period)])))
         for i in range(period):
             m.addCons(p_pur[i] <= p_pur_max)
         m.addCons(opex_sum == (opex_sum_pure
-                               - quicksum([lambda_ele_out[i] * p_sol[i] for i in range(period)])
-                               - lambda_g_out * quicksum([g_sol[i] for i in range(period)])
-                               - lambda_q_out * quicksum([q_sol[i] for i in range(period)])
-                               - lambda_h_out * quicksum([h_sol[i] for i in range(period)])
-                               - lambda_steam120_out * quicksum([steam120_sol[i] for i in range(period)])
-                               - lambda_steam180_out * quicksum([steam180_sol[i] for i in range(period)])
-                               - lambda_hotwater_out * quicksum([hotwater_sol[i] for i in range(period)])))
+                               - quicksum([lambda_ele_out[i] * p_sol[i] * weight[i//24] for i in range(period)])
+                               - lambda_g_out * quicksum([g_sol[i] * weight[i//24] for i in range(period)])
+                               - lambda_q_out * quicksum([q_sol[i] * weight[i//24] for i in range(period)])
+                               - lambda_h_out * quicksum([h_sol[i] * weight[i//24] for i in range(period)])
+                               - lambda_steam120_out * quicksum([steam120_sol[i] * weight[i//24] for i in range(period)])
+                               - lambda_steam180_out * quicksum([steam180_sol[i] * weight[i//24] for i in range(period)])
+                               - lambda_hotwater_out * quicksum([hotwater_sol[i] * weight[i//24] for i in range(period)])))
         m.addCons(opex_sum <= M)
         #-----------------------------碳减排的约束-----------------------------#
         load2ele_sum = sum(ele_load)
@@ -1086,44 +1089,44 @@ class ISService:
         load2co_steam = 0
         # 基准方案供热模式
         if param_input["base"]["base_method_heating"] == "central":
-            load2co_heat = sum(g_demand) * 319.5 / 1000             # 使用燃煤锅炉供热 供热1000kwh 碳排319.5kg
+            load2co_heat = sum(g_demand_8760) * 319.5 / 1000             # 使用燃煤锅炉供热 供热1000kwh 碳排319.5kg
         elif param_input["base"]["base_method_heating"] == "eb":
-            load2ele_sum += sum(g_demand) / eta_g_base_dict["电锅炉"]
+            load2ele_sum += sum(g_demand_8760) / eta_g_base_dict["电锅炉"]
         elif param_input["base"]["base_method_heating"] == "hp":
-            load2ele_sum += sum(g_demand) / eta_g_base_dict["空气源热泵"]
+            load2ele_sum += sum(g_demand_8760) / eta_g_base_dict["空气源热泵"]
         elif param_input["base"]["base_method_heating"] == "gb":
-            load2gas_sum += sum(g_demand) / eta_g_base_dict["燃气锅炉"]
+            load2gas_sum += sum(g_demand_8760) / eta_g_base_dict["燃气锅炉"]
         else:
             raise ValueError("非法 base_method_heating 值！")
         # 基准方案供冷模式
         if param_input["base"]["base_method_cooling"] == "central":
-            load2ele_sum += sum(q_demand) / k_ac # 用电制冷
+            load2ele_sum += sum(q_demand_8760) / k_ac # 用电制冷
         elif param_input["base"]["base_method_cooling"] == "ac":
-            load2ele_sum += sum(q_demand) / eta_q_base_dict["冷水机组"]
+            load2ele_sum += sum(q_demand_8760) / eta_q_base_dict["冷水机组"]
         else:
             raise ValueError("非法 base_method_cooling 值！")
         # 基准方案供氢模式
-        load2h_sum += sum(h_demand)
+        load2h_sum += sum(h_demand_8760)
         # 基准方案供蒸汽模式（测试时先统一为 base_method_steam）
         # 按燃煤系数计算
         if param_input["base"]["base_method_steam"] == "pur":
-            load2co_steam += sum(steam120_demand) * 750 * 319.5 / 1000
-            load2co_steam += sum(steam180_demand) * 770 * 319.5 / 1000
+            load2co_steam += sum(steam120_demand_8760) * 750 * 319.5 / 1000
+            load2co_steam += sum(steam180_demand_8760) * 770 * 319.5 / 1000
         elif param_input["base"]["base_method_steam"] == "eb":
-            load2ele_sum += sum(steam120_demand) / eta_steam120_base_dict["电锅炉"]
-            load2ele_sum += sum(steam180_demand) / eta_steam180_base_dict["电锅炉"]
+            load2ele_sum += sum(steam120_demand_8760) / eta_steam120_base_dict["电锅炉"]
+            load2ele_sum += sum(steam180_demand_8760) / eta_steam180_base_dict["电锅炉"]
         elif param_input["base"]["base_method_steam"] == "gb":
-            load2gas_sum += sum(steam120_demand) / eta_steam120_base_dict["燃气锅炉"]
-            load2gas_sum += sum(steam180_demand) / eta_steam180_base_dict["燃气锅炉"]
+            load2gas_sum += sum(steam120_demand_8760) / eta_steam120_base_dict["燃气锅炉"]
+            load2gas_sum += sum(steam180_demand_8760) / eta_steam180_base_dict["燃气锅炉"]
         else:
             raise ValueError("非法 base_method_steam 值！")
         # 基准方案供热水模式
         if param_input["base"]["base_method_hotwater"] == "eb":
-            load2ele_sum += sum(hotwater_demand) / eta_hotwater_base_dict["电锅炉"]
+            load2ele_sum += sum(hotwater_demand_8760) / eta_hotwater_base_dict["电锅炉"]
         elif param_input["base"]["base_method_hotwater"] == "hp":
-            load2ele_sum += sum(hotwater_demand) / eta_hotwater_base_dict["空气源热泵"]
+            load2ele_sum += sum(hotwater_demand_8760) / eta_hotwater_base_dict["空气源热泵"]
         elif param_input["base"]["base_method_hotwater"] == "gb":
-            load2gas_sum += sum(hotwater_demand) / eta_hotwater_base_dict["燃气锅炉"]
+            load2gas_sum += sum(hotwater_demand_8760) / eta_hotwater_base_dict["燃气锅炉"]
         else:
             raise ValueError("非法 base_method_hotwater 值！")
 
@@ -1131,7 +1134,7 @@ class ISService:
         if param_input["base"]["cer_enable"] is True:
             cerr = param_input["base"]["cer"] / 100  # 碳减排率
             m.addCons(ce_h <= (1 - cerr) * ce_base)
-        m.addCons(ce_h == quicksum(p_pur) * alpha_e)
+        m.addCons(ce_h == quicksum(p_pur[i] * weight[i//24] for i in range(period)) * alpha_e)
         #-----------------------------规划设备花费约束-----------------------------#
         m.addCons(capex_sum == (p_co_max * cost_co + p_fc_max * cost_fc + p_el_max * cost_el
                                 + hst * cost_hst + m_ht * cost_ht + m_ct * cost_ct
@@ -1156,10 +1159,8 @@ class ISService:
                                 + quicksum([crf_csd[i] * csd_install[i] * cost_csd[i] for i in range(num_custom_storage_device)])))
 
         #-----------------------------目标函数-----------------------------#
-        if typical_date_mode == 0:
-            m.setObjective(capex_crf + opex_sum, "minimize")
-        else:
-            m.setObjective(capex_crf + opex_sum * 365 / num_typical_date, "minimize")
+        m.setObjective(capex_crf + opex_sum, "minimize")
+
 
         #-----------------------------gurobi参数设置-----------------------------#
         # m.params.MIPGap = 0.01
@@ -1208,19 +1209,22 @@ class ISService:
         #---------------------------计算投资回报等信息-----------------------------#
         sys_life = 20  # 系统设计年限
         # whole_energy，包含负荷和出售能量，单位为 kWh
-        whole_energy = (sum(ele_load)
-                        + sum(g_demand) + sum(q_demand)
-                        + sum(h_demand) * 33.3                    # 33.3 为kg转kWh
-                        + sum(steam120_demand) * 750 + sum(steam180_demand) * 770
-                        + sum(hotwater_demand)
-                        + sum(m.getVal(p_sol[i]) for i in range(period))
-                        + sum(m.getVal(g_sol[i]) for i in range(period)) + sum(m.getVal(q_sol[i]) for i in range(period))
-                        + sum(m.getVal(steam120_sol[i]) for i in range(period)) * 750
-                        + sum(m.getVal(steam180_sol[i]) for i in range(period)) * 770) * (8760/period)
+        whole_energy = (sum(ele_load[i] * weight[i//24] for i in range(period))
+                        + sum(g_demand[i] * weight[i//24] for i in range(period))
+                        + sum(q_demand[i] * weight[i//24] for i in range(period))
+                        + sum(h_demand[i] * weight[i//24] for i in range(period)) * 33.3                    # 33.3 为kg转kWh
+                        + sum(steam120_demand[i] * weight[i//24] for i in range(period)) * 750
+                        + sum(steam180_demand[i] * weight[i//24] for i in range(period)) * 770
+                        + sum(hotwater_demand[i] * weight[i//24] for i in range(period))
+                        + sum(m.getVal(p_sol[i]) * weight[i//24] for i in range(period))
+                        + sum(m.getVal(g_sol[i]) * weight[i//24] for i in range(period))
+                        + sum(m.getVal(q_sol[i]) * weight[i//24] for i in range(period))
+                        + sum(m.getVal(steam120_sol[i]) * weight[i//24] for i in range(period)) * 750
+                        + sum(m.getVal(steam180_sol[i]) * weight[i//24] for i in range(period)) * 770)
         capex_all = m.getVal(capex_sum) * (1 + param_input["base"]["other_investment"])
         capex_all_crf = m.getVal(capex_crf) + m.getVal(capex_sum) * param_input["base"]["other_investment"] / sys_life
         capex_other = m.getVal(capex_sum) * param_input["base"]["other_investment"]
-        cost_annual = capex_all_crf + m.getVal(opex_sum_pure) * (8760/period)
+        cost_annual = capex_all_crf + m.getVal(opex_sum_pure)
         cost_annual_per_energy = cost_annual / (whole_energy + 1e-7)
 
         # TODO: (前端) 确认返回值
@@ -1236,16 +1240,16 @@ class ISService:
                 revenue_heat = param_input["income"]["heat_price"] * param_input["objective_load"]["g_load_area"]
             elif param_input["income"]["heat_type"] == "energy":
                 # revenue_heat = param_input["income"]["heat_price"] * sum(np.multiply(g_demand, (3600 / 1e6)).tolist())    # 热是GJ时使用
-                revenue_heat = param_input["income"]["heat_price"] * sum(g_demand) * (8760/period)
+                revenue_heat = param_input["income"]["heat_price"] * sum(g_demand[i] * weight[i//24] for i in range(period))
             else:
                 raise ValueError("非法 heat_type 值！")
         # TODO: (ZYL) 确认该电价是不是使用 lambda_ele_revenue
         elif param_input["base"]["base_method_heating"] == "eb":
-            revenue_heat = sum(lambda_ele_revenue[i] * g_demand[i] / eta_g_base_dict["电锅炉"] for i in range(period)) * (8760/period)
+            revenue_heat = sum(lambda_ele_revenue[i] * g_demand[i] * weight[i//24] / eta_g_base_dict["电锅炉"] for i in range(period))
         elif param_input["base"]["base_method_heating"] == "hp":
-            revenue_heat = sum(lambda_ele_revenue[i] * g_demand[i] / eta_g_base_dict["空气源热泵"] for i in range(period)) * (8760/period)
+            revenue_heat = sum(lambda_ele_revenue[i] * g_demand[i] * weight[i//24] / eta_g_base_dict["空气源热泵"] for i in range(period))
         elif param_input["base"]["base_method_heating"] == "gb":
-            revenue_heat = sum(gas_price * g_demand[i] / eta_g_base_dict["燃气锅炉"] for i in range(period)) * (8760/period)
+            revenue_heat = sum(gas_price * g_demand[i] * weight[i//24] / eta_g_base_dict["燃气锅炉"] for i in range(period))
         else:
             raise ValueError("非法 base_method_heating 值！")
         if param_input["base"]["base_method_cooling"] == "central":
@@ -1253,42 +1257,42 @@ class ISService:
                 revenue_cool = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "energy":
                 # revenue_cool = param_input["income"]["cool_price"] * sum(np.multiply(q_demand, (3600 / 1e6)).tolist())
-                revenue_cool = param_input["income"]["cool_price"] * sum(q_demand) * (8760/period)
+                revenue_cool = param_input["income"]["cool_price"] * sum(q_demand[i] * weight[i//24] for i in range(period))
             else:
                 raise ValueError("非法 cool_type 值！")
         elif param_input["base"]["base_method_cooling"] == "ac":
-            revenue_cool = sum(lambda_ele_revenue[i] * q_demand[i] / eta_q_base_dict["冷水机组"] for i in range(period)) * (8760/period)
+            revenue_cool = sum(lambda_ele_revenue[i] * q_demand[i] * weight[i//24] / eta_q_base_dict["冷水机组"] for i in range(period))
         else:
             raise ValueError("非法 base_method_cooling 值！")
-        revenue_h = lambda_h_in * sum([h_demand[i] for i in range(period)]) * (8760/period)
+        revenue_h = lambda_h_in * sum([h_demand[i] * weight[i//24] for i in range(period)])
         if param_input["base"]["base_method_steam"] == "pur":
             # TODO: (DZY, ZYL) 确认计价方式，是使用 income.steam_price 还是使用 lambda_steam_in
-            revenue_steam120 = param_input["income"]["steam_price"] * sum(steam120_demand) * (8760/period)
-            revenue_steam180 = param_input["income"]["steam_price"] * sum(steam180_demand) * (8760/period)
+            revenue_steam120 = param_input["income"]["steam_price"] * sum(steam120_demand[i] * weight[i//24] for i in range(period))
+            revenue_steam180 = param_input["income"]["steam_price"] * sum(steam180_demand[i] * weight[i//24] for i in range(period))
         elif param_input["base"]["base_method_steam"] == "eb":
-            revenue_steam120 = sum(lambda_ele_revenue[i] * steam120_demand[i] / eta_steam120_base_dict["电锅炉"] for i in range(period)) * (8760/period)
-            revenue_steam180 = sum(lambda_ele_revenue[i] * steam180_demand[i] / eta_steam180_base_dict["电锅炉"] for i in range(period)) * (8760/period)
+            revenue_steam120 = sum(lambda_ele_revenue[i] * steam120_demand[i] * weight[i//24] / eta_steam120_base_dict["电锅炉"] for i in range(period))
+            revenue_steam180 = sum(lambda_ele_revenue[i] * steam180_demand[i] * weight[i//24] / eta_steam180_base_dict["电锅炉"] for i in range(period))
         elif param_input["base"]["base_method_steam"] == "gb":
-            revenue_steam120 = sum(gas_price * steam120_demand[i] / eta_steam120_base_dict["燃气锅炉"] for i in range(period)) * (8760/period)
-            revenue_steam180 = sum(gas_price * steam180_demand[i] / eta_steam180_base_dict["燃气锅炉"] for i in range(period)) * (8760/period)
+            revenue_steam120 = sum(gas_price * steam120_demand[i] * weight[i//24] / eta_steam120_base_dict["燃气锅炉"] for i in range(period))
+            revenue_steam180 = sum(gas_price * steam180_demand[i] * weight[i//24] / eta_steam180_base_dict["燃气锅炉"] for i in range(period))
         else:
             raise ValueError("非法 base_method_steam 值！")
 
         if param_input["base"]["base_method_hotwater"] == "eb":
-            revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] / eta_hotwater_base_dict["电锅炉"] for i in range(period)) * (8760/period)
+            revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] * weight[i//24] / eta_hotwater_base_dict["电锅炉"] for i in range(period))
         elif param_input["base"]["base_method_hotwater"] == "hp":
-            revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] / eta_hotwater_base_dict["空气源热泵"] for i in range(period)) * (8760/period)
+            revenue_hotwater = sum(lambda_ele_revenue[i] * hotwater_demand[i] * weight[i//24] / eta_hotwater_base_dict["空气源热泵"] for i in range(period))
         elif param_input["base"]["base_method_hotwater"] == "eb":
-            revenue_hotwater = sum(gas_price * hotwater_demand[i] / eta_hotwater_base_dict["燃气锅炉"] for i in range(period)) * (8760/period)
+            revenue_hotwater = sum(gas_price * hotwater_demand[i] * weight[i//24] / eta_hotwater_base_dict["燃气锅炉"] for i in range(period))
         else:
             raise ValueError("非法 base_method_hotwater 值！")
         revenue = (revenue_ele + revenue_heat + revenue_cool + revenue_h
                    + revenue_steam120 + revenue_steam180 + revenue_hotwater)
         # 根据基准方案所得投资回收期
-        payback_period = capex_all / (revenue - m.getVal(opex_sum) * (8760/period) + 1e-7)
+        payback_period = capex_all / (revenue - m.getVal(opex_sum) + 1e-7)
         # TODO: (前端) 添加年化净收益字段
-        pure_revenue = revenue - m.getVal(opex_sum) * (8760/period) + 1e-7
-        carbon_emission = m.getVal(ce_h) * (8760/period)
+        pure_revenue = revenue - m.getVal(opex_sum) + 1e-7
+        carbon_emission = m.getVal(ce_h)
         cer = ce_base - carbon_emission
         cer_rate = cer / (ce_base + 1e-7)
 
@@ -1303,7 +1307,7 @@ class ISService:
                 opex_cool_eb = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "energy":
                 # opex_cool_eb = param_input["income"]["cool_price"] * sum(np.multiply(q_demand, (3600 / 1e6)).tolist())
-                opex_cool_eb = param_input["income"]["cool_price"] * sum(q_demand) * (8760/period)
+                opex_cool_eb = param_input["income"]["cool_price"] * sum(q_demand[i] * weight[i//24] for i in range(period))
             else:
                 raise ValueError("非法 cool_type 值！")
         elif param_input["base"]["base_method_cooling"] == "ac":
@@ -1323,18 +1327,20 @@ class ISService:
         p_pur_eb = [(ele_load[i] + g_demand[i] / k_eb + q_demand[i] / k_ac
                      + steam120_demand[i] * 750 / k_eb + steam180_demand[i] * 770 / k_eb
                      + hotwater_demand[i] / k_eb) for i in range(period)]
-        opex_sum_eb = (sum(lambda_ele_in[i] * p_pur_eb[i] for i in range(period)) * (8760/period)
+        opex_sum_eb = (sum(lambda_ele_in[i] * p_pur_eb[i] * weight[i//24] for i in range(period))
                        + lambda_ele_capacity * max(p_pur_eb) * 12
-                       + sum(lambda_h_in * h_demand[i] for i in range(period)) * (8760/period)
+                       + sum(lambda_h_in * h_demand[i] * weight[i//24] for i in range(period))
                        + opex_cool_eb)
 
         cost_annual_eb = capex_all_crf_eb + opex_sum_eb
 
-        whole_energy_contrast = (sum(ele_load)
-                                 + sum(g_demand) + sum(q_demand)
-                                 + sum(h_demand) * 33.33
-                                 + sum(steam120_demand) * 750 + sum(steam180_demand) * 770
-                                 + sum(hotwater_demand)) * (8760/period)
+        whole_energy_contrast = (sum(ele_load[i] * weight[i//24] for i in range(period))
+                                 + sum(g_demand[i] * weight[i//24] for i in range(period))
+                                 + sum(q_demand[i] * weight[i//24] for i in range(period))
+                                 + sum(h_demand[i] * weight[i//24] for i in range(period)) * 33.33
+                                 + sum(steam120_demand[i] * weight[i//24] for i in range(period)) * 750
+                                 + sum(steam180_demand[i] * weight[i//24] for i in range(period)) * 770
+                                 + sum(hotwater_demand[i] * weight[i//24] for i in range(period)))
         cost_annual_per_energy_eb = cost_annual_eb / whole_energy_contrast
 
         revenue_eb = revenue
@@ -1342,7 +1348,8 @@ class ISService:
         payback_period_diff_eb = ((capex_all - capex_all_eb)
                                   / ((revenue - m.getVal(opex_sum)) - (revenue_eb - opex_sum_eb) + 1e-7))
         pure_revenue_eb = revenue_eb - opex_sum_eb + 1e-7
-        carbon_emission_eb = sum(p_pur_eb) * (8760/period) * alpha_e + sum(h_demand) * (8760/period) * alpha_h
+        carbon_emission_eb = (sum(p_pur_eb[i] * weight[i//24] for i in range(period)) * alpha_e
+                              + sum(h_demand[i] * weight[i//24] for i in range(period)) * alpha_h)
         cer_eb = ce_base - carbon_emission_eb
         cer_rate_eb = cer_eb / (ce_base + 1e-7)
 
@@ -1367,9 +1374,9 @@ class ISService:
                     + steam120_demand[i] * 750 / k_hp_g + steam180_demand[i] * 770 / k_hp_g
                     + hotwater_demand[i] / k_hp_g) for i in range(period)]
 
-        opex_sum_hp = (sum(lambda_ele_in[i] * p_pur_hp[i] for i in range(period)) * (8760/period)
+        opex_sum_hp = (sum(lambda_ele_in[i] * p_pur_hp[i] * weight[i//24] for i in range(period))
                        + lambda_ele_capacity * max(p_pur_hp) * 12
-                       + sum(lambda_h_in * h_demand[i] for i in range(period)) * (8760/period))
+                       + sum(lambda_h_in * h_demand[i] * weight[i//24] for i in range(period)))
         cost_annual_hp = capex_all_crf_hp + opex_sum_hp
         cost_annual_per_energy_hp = cost_annual_hp / whole_energy_contrast
 
@@ -1378,7 +1385,8 @@ class ISService:
         payback_period_diff_hp = ((capex_all - capex_all_hp)
                                   / ((revenue - m.getVal(opex_sum)) - (revenue_hp - opex_sum_hp) + 1e-7))
         pure_revenue_hp = revenue_hp - opex_sum_hp + 1e-7
-        carbon_emission_hp = sum(p_pur_hp) * (8760/period) * alpha_e + sum(h_demand) * (8760/period) * alpha_h
+        carbon_emission_hp = (sum(p_pur_hp[i] * weight[i//24] for i in range(period)) * alpha_e
+                              + sum(h_demand[i] * weight[i//24] for i in range(period)) * alpha_h)
         cer_hp = ce_base - carbon_emission_hp
         cer_rate_hp = cer_hp / (ce_base + 1e-7)
 
@@ -1394,7 +1402,7 @@ class ISService:
                 opex_cool_gas = param_input["income"]["cool_price"] * param_input["objective_load"]["q_load_area"]
             elif param_input["income"]["cool_type"] == "energy":
                 # opex_cool_gas = param_input["income"]["cool_price"] * sum(np.multiply(q_demand, (3600 / 1e6)).tolist())
-                opex_cool_gas = param_input["income"]["cool_price"] * sum(q_demand) * (8760/period)
+                opex_cool_gas = param_input["income"]["cool_price"] * sum(q_demand[i] * weight[i//24] for i in range(period))
             else:
                 raise ValueError("非法 cool_type 值！")
         elif param_input["base"]["base_method_cooling"] == "ac":
@@ -1413,10 +1421,10 @@ class ISService:
         gas_pur_gas = [(g_demand[i] / k_gas + q_demand[i] / k_ac
                         + steam120_demand[i] * 750 / k_gas + steam180_demand[i] * 770 / k_gas
                         + hotwater_demand[i] / k_gas) for i in range(period)]
-        opex_sum_gas = (sum(lambda_ele_in[i] * p_pur_gas[i] for i in range(period)) * (8760/period)
+        opex_sum_gas = (sum(lambda_ele_in[i] * p_pur_gas[i] * weight[i//24] for i in range(period))
                         + lambda_ele_capacity * max(p_pur_gas) * 12
-                        + sum(gas_price * gas_pur_gas[i] for i in range(period)) * (8760/period)
-                        + sum(lambda_h_in * h_demand[i] for i in range(period)) * (8760/period)
+                        + sum(gas_price * gas_pur_gas[i] * weight[i//24] for i in range(period))
+                        + sum(lambda_h_in * h_demand[i] * weight[i//24] for i in range(period))
                         +opex_cool_gas)
         cost_annual_gas = capex_all_crf_gas + opex_sum_gas
         cost_annual_per_energy_gas = cost_annual_gas / whole_energy_contrast
@@ -1425,25 +1433,27 @@ class ISService:
         payback_period_diff_gas = ((capex_all - capex_all_gas)
                                    / ((revenue - m.getVal(opex_sum)) - (revenue_gas - opex_sum_gas) + 1e-7))
         pure_revenue_gas = revenue_gas - opex_sum_gas + 1e-7
-        carbon_emission_gas = sum(p_pur_gas) * (8760/period) * alpha_e + sum(gas_pur_gas) * (8760/period) * alpha_gas + sum(h_demand) * (8760/period) * alpha_h
+        carbon_emission_gas = (sum(p_pur_gas[i] * weight[i//24] for i in range(period)) * alpha_e
+                               + sum(gas_pur_gas[i] * weight[i//24] for i in range(period))  * alpha_gas
+                               + sum(h_demand[i] * weight[i//24] for i in range(period))* alpha_h)
         cer_gas = ce_base - carbon_emission_gas
         cer_rate_gas = cer_gas / (ce_base + 1e-7)
 
         # ---------------------------输出结果-----------------------------#
-        ele_sell = sum(m.getVal(p_sol[i]) for i in range(period)) * (8760/period)   # kw
-        heat_sell = sum(m.getVal(g_sol[i]) * 3600 / 1e6 for i in range(period)) * (8760/period)  # 年售热量 (GJ)
-        cooling_sell = sum(m.getVal(q_sol[i]) * 3600 / 1e6 for i in range(period)) * (8760/period)  # 年售冷量 (GJ)
-        hydrogen_sell = sum(m.getVal(h_sol[i]) for i in range(period)) * (8760/period)  # kg
-        steam120_sell = sum(m.getVal(steam120_sol[i]) for i in range(period)) * (8760/period)   # t
-        steam180_sell = sum(m.getVal(steam180_sol[i]) for i in range(period)) * (8760/period)  # t
-        heat_water_sell = sum(m.getVal(hotwater_sol[i]) for i in range(period)) * (8760/period) # kwh
-        income_ele_sell = sum(lambda_ele_out[i] * m.getVal(p_sol[i]) for i in range(period))  * (8760/period)   # 元
-        income_heat_sell = lambda_g_out * sum(m.getVal(g_sol[i]) for i in range(period)) * (8760/period)    # 元
-        income_cooling_sell = lambda_q_out * sum(m.getVal(q_sol[i]) for i in range(period)) * (8760/period) # 元
-        income_hydrogen_sell = lambda_h_out * sum(m.getVal(h_sol[i]) for i in range(period)) * (8760/period)   # 元
-        income_steam120_sell = lambda_steam120_out * sum(m.getVal(steam120_sol[i]) for i in range(period)) * (8760/period)  # 元
-        income_steam180_sell = lambda_steam180_out * sum(m.getVal(steam180_sol[i]) for i in range(period)) * (8760/period)  # 元
-        income_heat_water_sell = lambda_hotwater_out * sum(m.getVal(hotwater_sol[i]) for i in range(period)) * (8760/period)  # 元
+        ele_sell = sum(m.getVal(p_sol[i]) * weight[i//24] for i in range(period))   # kw
+        heat_sell = sum(m.getVal(g_sol[i]) * weight[i//24] * 3600 / 1e6 for i in range(period))  # 年售热量 (GJ)
+        cooling_sell = sum(m.getVal(q_sol[i]) * weight[i//24] * 3600 / 1e6 for i in range(period))  # 年售冷量 (GJ)
+        hydrogen_sell = sum(m.getVal(h_sol[i]) * weight[i//24] for i in range(period))  # kg
+        steam120_sell = sum(m.getVal(steam120_sol[i]) * weight[i//24] for i in range(period))   # t
+        steam180_sell = sum(m.getVal(steam180_sol[i]) * weight[i//24] for i in range(period))  # t
+        heat_water_sell = sum(m.getVal(hotwater_sol[i]) * weight[i//24] for i in range(period)) # kwh
+        income_ele_sell = sum(lambda_ele_out[i] * m.getVal(p_sol[i]) * weight[i//24] for i in range(period))  # 元
+        income_heat_sell = lambda_g_out * sum(m.getVal(g_sol[i]) * weight[i//24] for i in range(period))    # 元
+        income_cooling_sell = lambda_q_out * sum(m.getVal(q_sol[i]) * weight[i//24] for i in range(period)) # 元
+        income_hydrogen_sell = lambda_h_out * sum(m.getVal(h_sol[i]) * weight[i//24] for i in range(period))   # 元
+        income_steam120_sell = lambda_steam120_out * sum(m.getVal(steam120_sol[i]) * weight[i//24] for i in range(period))  # 元
+        income_steam180_sell = lambda_steam180_out * sum(m.getVal(steam180_sol[i]) * weight[i//24] for i in range(period))  # 元
+        income_heat_water_sell = lambda_hotwater_out * sum(m.getVal(hotwater_sol[i]) * weight[i//24] for i in range(period))  # 元
 
         co_capex = m.getVal(p_co_max) * cost_co  # 氢气压缩机投资成本 (元)
         fc_capex = m.getVal(p_fc_max) * cost_fc  # 氢气燃料电池投资成本 (元)
@@ -1468,7 +1478,7 @@ class ISService:
         co180_capex = m.getVal(p_co180_max) * cost_co180  # 蒸汽压缩机投资成本 (元)
         whp_capex = m.getVal(p_whp_max) * cost_whp  # 水源热泵投资成本 (元)
 
-        p_pv_theory = [eta_pv * (m.getVal(p_pv_max) + param_input["device"]["pv"]["power_already"]) * pv_data[i] * (8760/period) for i in range(period)]
+        p_pv_theory = [eta_pv * (m.getVal(p_pv_max) + param_input["device"]["pv"]["power_already"]) * pv_data[i] * weight[i//24] for i in range(period)]
 
         custom_storage_installed = []
         custom_exchange_installed = []
@@ -1532,7 +1542,7 @@ class ISService:
                     "capex_all": format(capex_all / 1e4, ".2f"),  # 初始投资成本 (万元)
                     "capex_all_crf": format(capex_all_crf / 1e4, ".2f"),  # 年化投资成本 (万元)
                     "capex_other": format(capex_other / 1e4, ".2f"),  # 其他投资成本 (万元)
-                    "opex_sum": format(m.getVal(opex_sum) * (8760/period) / 1e4, ".2f"),  # 年化运行成本 (万元)
+                    "opex_sum": format(m.getVal(opex_sum) / 1e4, ".2f"),  # 年化运行成本 (万元)
                     "cost_annual": format(cost_annual / 1e4, ".2f"),  # 年化总成本 (万元)
                     "pure_revenue": format(pure_revenue, ".2f"),    # 年净收益
                     "cost_annual_per_energy": format(cost_annual_per_energy, ".4f"),  # 单位能源成本 (元/kWh)
