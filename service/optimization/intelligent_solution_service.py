@@ -92,7 +92,7 @@ def minmax_normalize(data):
 
     return normalized_data
 
-def kmedoids_plusplus(data, n_clusters):
+def kmedoids_initial(data, n_clusters):
     n_samples = data.shape[0]
     # 随机选择第一个中心
     medoid_indices = [np.random.randint(n_samples)]
@@ -121,7 +121,7 @@ def kmedoids(data, n_clusters, max_iter=300, random_state=None, verbose=False):
     # 1. 初始化 - 随机选择 medoids
     # medoid_indices = np.random.choice(n_samples, n_clusters, replace=False)
     # medoids = data[medoid_indices]
-    medoid_indices = kmedoids_plusplus(data, n_clusters)
+    medoid_indices = kmedoids_initial(data, n_clusters)
     medoids = data[medoid_indices]
 
     # 2. 迭代优化
@@ -249,7 +249,7 @@ class ISService:
         c = 4.2 / 3600  # 水的比热容 (kWh/(kg·℃))
 
         typical_date_mode = 1       # 1:典型日 0：8760
-        num_typical_date = 72
+        num_typical_date = 48
 
         timestamp = time.strftime('%Y-%m-%d|%H:%M:%S', time.localtime())
         print("{}: 开始进行规划建模".format(timestamp))
@@ -346,6 +346,20 @@ class ISService:
             sc_data = sc_data_8760
             wd_data = wd_data_8760
             weight = [1] * 365
+        # debug kmediods
+        debug_max = {
+            "eload": [sum(ele_load[i] * weight[i//24] for i in range(period)), sum(ele_load_8760)],
+            "gload": [max(g_demand), max(g_demand_8760)],
+            "qload": [max(q_demand), max(q_demand_8760)],
+            "hload": [max(h_demand), max(h_demand_8760)],
+            "st120": [max(steam120_demand), max(steam120_demand_8760)],
+            "st180": [max(steam180_demand), max(steam180_demand_8760)],
+            "hw": [max(hotwater_demand), max(hotwater_demand_8760)],
+            "pv": [max(pv_data), max(pv_data_8760)],
+            "sc": [max(sc_data), max(sc_data_8760)],
+            "wd": [max(wd_data), max(wd_data_8760)]
+
+        }
 
 
         if param_input["trading"]["heat_resource"]["flag"] == 0:
@@ -1164,7 +1178,7 @@ class ISService:
 
         #-----------------------------gurobi参数设置-----------------------------#
         # m.params.MIPGap = 0.01
-        m.setRealParam("limits/gap", 0.1)  # 设置优化求解的最大间隙
+        m.setRealParam("limits/gap", 0.01)  # 设置优化求解的最大间隙
         # m.setPresolve(SCIP_PARAMSETTING.OFF)
         presolve_setting = m.getParam("presolving/maxrounds")
         print(f"当前预求解设置: {presolve_setting}")
